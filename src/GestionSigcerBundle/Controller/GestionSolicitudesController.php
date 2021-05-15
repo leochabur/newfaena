@@ -1155,13 +1155,13 @@ class GestionSolicitudesController extends Controller
                         $files["sol_exp_".$sol->getId().".xml"] = $name;
                     }
                 }
-                
+                $zipName = 'solicitudesExportacionFecha'.$grupo->getFecha()->format('dmY').'.zip';
         }
 
-        $zipName = 'e:/solicitudesExportacionFecha.zip';
         $archivo = new \ZipArchive();
-        
-        $archivo->open($zipName,  \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
+
+        $archivo->open($zip.$zipName,  \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
+
 
         foreach ($files as $k => $v) 
         {
