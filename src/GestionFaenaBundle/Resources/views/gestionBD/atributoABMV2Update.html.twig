@@ -1,0 +1,161 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+        
+
+{% block fos_user_content %}
+	<br>
+	<hr>
+<spam class="h5 mb-5">Modificar atributos de articulos</spam>
+<hr>
+
+	<div class="form-row">
+		<div class="col-6 h5">
+			{{  art.vistaEdicion }}
+		</div>
+	</div>
+	<hr>
+		{{ form_start(fupd, {'attr': {'novalidate': 'novalidate', 'class': 'updart'}}) }}
+		{{ form_widget(fupd.articulos, {'attr' : {'class' : 'form-control-sm col-lg-4'}}) }}
+		{{ form_widget(fupd.update, {'attr' : {'class' : 'btn btn-primary btn-sm'}}) }}
+		{{ form_end(fupd) }}
+	<hr>
+	<table class="table table-bordered table-hover table-striped table-sm">
+		<thead>
+			<tr>
+				<th>Atributo</th>
+				<th>Tipo</th>
+				<th>Acumula</th>
+				<th>Admite Cero</th>
+				<th>Promedia</th>
+				<th>Redondea</th>
+				<th>Espejo</th>
+				<th>Mostrar al cargar</th>
+				<th>Atr. Base</th>
+				<th>Mostrar</th>
+				<th>Decimales</th>
+				<th>Posicion</th>
+				<th></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for atrib in art.atributos %}
+				{% if not atrib.eliminado %}
+					{% set atr = formsAtr[atrib.id] %}
+					{{ form_start(atr, {'attr' : {'novalidate' : 'novalidate', 'class' : 'editatr'}}) }}
+					<tr class="h6 small">
+						<td title="{{ atrib.calculo }} - {{ atrib.atributoAbstracto }}"><a href="{{ path('bd_editar_factor_calculo', {atr : atrib.id})}}">{{ atrib }}</a></td>
+						<td title="{{ atrib.calculo }}">{{ atrib.tipo }}</td>
+						<td class="text-center">{{ form_widget(atr.acumula, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td class="text-center">{{ form_widget(atr.admiteCero, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td class="text-center">{{ form_widget(atr.promedia, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td class="text-center">{{ form_widget(atr.redondea, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td class="text-center">{{ form_widget(atr.espejo, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td class="text-center">{{ form_widget(atr.mostrarAlCargar, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td>{{ form_widget(atr.atributoBase, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td class="text-center">{{ form_widget(atr.mostrar, {'attr' : {'class' : 'form-control-sm'}}) }}</td>
+						<td>{{ form_widget(atr.decimales, {'attr' : {'class' : 'form-control-sm col-4'}}) }}</td>
+						<td>{{ form_widget(atr.posicion, {'attr' : {'class' : 'form-control-sm col-5'}}) }}</td>
+						<td>{{ form_widget(atr.guardar, {'attr' : {'class' : 'btn-sm btn-warning'}}) }}</td>
+						<td>{{ form_widget(atr.delete, {'attr' : {'class' : 'btn-sm btn-danger btn-delete', 'data-id' : atrib.id}}) }}</td>
+					</tr>
+					{{ form_end(atr) }}
+				{% endif %}
+			{% endfor %}
+		</tbody>
+	</table>
+	{{ form_start(formAdd) }}
+		Procesos Destino
+		<div class="form-row">
+			{{ form_widget(formAdd.proceso, {'attr' : {'class' : 'form-control-sm col-lg-6 mt-2'}}) }}
+			{{ form_widget(formAdd.guardar, {'attr' : {'class' : 'btn btn-sm btn-default col-lg-1 assign'}}) }}
+		</div>
+	{{ form_end(formAdd) }}
+	Procesos destino asignados
+	<table class="table table-bordered table-hover table-striped table-sm">
+		<thead>
+			<tr>
+				<th>Proceso</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+				{% for proc in art.procesosDestino %}
+					<tr>
+						<td>{{ proc }}</td>
+						<td><a href="{{ path('bd_remove_proceso_default_art_atr_con', { art : art.id, proc : proc.id})}}" class="btn btn-sm btn-danger">Quitar</a></td>
+					</tr>
+				{% endfor %}
+		</tbody>
+	</table>
+	<button class="btn btn-success back"><< Volver</button>
+
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+	{{ parent() }}
+	<script type="text/javascript">
+		$(document).ready(function(){
+
+									$('.updart').submit(function (event){
+																		event.preventDefault();
+																		var form = $(this);
+																		$.post(form.attr('action'),
+																			   form.serialize(),
+																			   function(data){
+																			   					alert(data);
+																			   });
+									});
+
+									$('.back').click(function(){window.history.back();});
+									var route = "{{ path('bd_delete_atributo', {atr : '_ID_ATR'}) }}";
+									$('.editatr').submit(function(event){
+																			event.preventDefault();
+																			var form = $(this);
+																			$.post(form.attr('action'),
+																				   form.serialize(),
+																				   function(data){
+																				   					alert(data.posicion);
+																				   });
+									});
+
+									$('.btn-delete').click(function(event){
+																			event.preventDefault();
+																			var btn = $(this);
+																			
+																			bootbox.confirm({
+																			    message: "Seguro eliminar el atributo?",
+																			    buttons: {
+																			        confirm: {
+																			            label: 'Si',
+																			            className: 'btn-success'
+																			        },
+																			        cancel: {
+																			            label: 'No',
+																			            className: 'btn-danger'
+																			        }
+																			    },
+																			    callback: function (result) {
+																			        if (result){
+																			        	$.post(route.replace('_ID_ATR', btn.data('id')),
+																			        		   function(data){
+																			        		   			location.reload();
+																			        		   });
+																			        }
+																			    }
+																			});
+									});
+									$('.assign').click(function(event){
+																			event.preventDefault();
+																			var btn = $(this);
+																			var form = btn.closest('form');
+																        	$.post(form.attr('action'),
+																        		   form.serialize(),
+																        		   function(data){
+																        		   			location.reload();
+																        		   });
+																			
+									});
+		});
+	</script>
+
+{% endblock %}

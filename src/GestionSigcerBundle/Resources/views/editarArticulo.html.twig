@@ -1,0 +1,72 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Modificar Articulo Solicitud</span>
+<hr>
+{% for message in app.flashes('sussecc') %}
+	<div class="alert alert-success" role="alert">
+	  {{ message }}
+	</div>
+{% endfor %}
+
+<div class="">
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-6">
+        {{ form_label(form.solicitud) }}
+        {{ form_widget(form.solicitud) }}
+      </div>
+    </div>
+    <br>
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.articulo) }}
+        {{ form_widget(form.articulo) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.envasePrimario) }}
+        {{ form_widget(form.envasePrimario) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.envaseSecundario) }}
+        {{ form_widget(form.envaseSecundario) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.cantidad) }}
+        {{ form_widget(form.cantidad) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.pesoNeto) }}
+        {{ form_widget(form.pesoNeto) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.pesoBruto) }}
+        {{ form_widget(form.pesoBruto) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-6">
+        {{ form_label(form.tropa) }}
+        {{ form_widget(form.tropa) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.certificadoOrigen) }}
+        {{ form_widget(form.certificadoOrigen) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+	{{ form_end(form) }}
+    <br>
+</div>
+    <hr>
+    <div>
+        <a href="{{ path('sigcer_add_articulos_a_solicitud', {sol : sol.id}) }}" class="btn btn-success"><< Volver</a>
+    </div>
+{% endblock fos_user_content %}

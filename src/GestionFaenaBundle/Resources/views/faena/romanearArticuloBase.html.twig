@@ -1,0 +1,209 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<p class="h5 card-title">{{ proceso }} - Fecha: {{ faena }}</p>
+
+<div class="card">
+	<div class="card-header">
+		{% set idPallet = 0 %}
+		{% if pallet is defined %}
+			<div class="h5">
+				<span>Pallet: {{ pallet }}</span><br>
+				<span class="pt-2">Articulo: {{ pallet.articulosPallet }}</span><br>
+				<span class="pt-2">Capacidad libre: {{ pallet.tipoPallet.capacidad }} Bultos</span>
+			</div>
+			{% set idPallet = pallet.id %}
+		{% else %}
+			<div class="h5">
+				Articulo : {{ articulo }} {% if proceso.procesoFaena.id != 14 %}- Stock: <span id="stock">{{ stock.cantidad }}</span> {% endif %}
+			</div>
+		{% endif %}
+  	</div>
+	<div class="card-body">
+		<table class="table table-bordered table-sm table-fit">
+			<tbody>
+				
+				{% for k, v in articulos %}
+					{% set color = 'blue' %}
+					{% if loop.index % 2 == 0 %}
+						{% set color = 'teal' %}
+					{% endif %}
+					<tr>
+						<td rowspan="{{ v.cant}}" class="{{ color }} align-middle">
+							{{ v.categoria }}
+						</td>
+					{% for ks, vs in v.subcategorias %}
+							{% if loop.index > 1 %}
+								<tr>
+							{% endif %}
+							<td rowspan="{{ vs.cant }}" class="{{ color }} lighten-2 align-middle">
+								{{vs.subcategoria}}
+							</td>
+
+							{% for ka, va in vs.articulos %}
+								{% if loop.index > 1 %}
+									<tr>
+								{% endif %}
+								<td class="{{ color }} lighten-3">
+										{{ va.art }}
+								</td>
+								<td class="{{ color }} lighten-3">									
+					
+											{{ form_start(va.form, {'attr' : { 'class' : 'form-inline form-romanear'}}) }}
+											<div class="text-left">
+												{{ form_widget(va.form.cantidad, {'attr' : {'class' : 'col-lg-4 cant field-amount'}}) }}									
+												{{ form_widget(va.form.fecha, 
+															  {'attr' : 
+															  			{
+															  				'data-art': ka, 
+															  			 	'data-proc': proceso.id,
+															  			 	'class' : 'col-lg-4 fecha_elaboracion update',
+															  			 	'data-pallet' : idPallet
+															  			 }
+															  	}) 
+												}}
+											</div>
+											<div class="rta">
+											</div>
+											{{ form_end(va.form) }}							
+								</td>
+							</tr>
+
+						{% endfor %}
+					{% endfor %}
+				{% endfor %}
+							
+
+			</tbody>
+		</table>
+	<hr>
+	<div>
+		<p>Detalle Pallet</p>
+		<div class="det-pallet">
+
+		</div>
+		<hr>
+	</div>
+	<a href="{{ path('bd_adm_proc_fan_day', {proc : proceso.id, fd : faena.id}) }}" class="btn btn-success"><< Volver</a>
+	</div>
+</div>
+
+
+
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+{{ parent() }}
+<script type="text/javascript">
+
+	$('.field-amount').keypress(function(event) {
+									    var keycode = (event.keyCode ? event.keyCode : event.which);
+									    var input = $(this);
+									    if(keycode == 13)
+									    {
+	            							input.next().focus();
+	            						}
+	        });
+
+	{% if pallet is defined %}
+		const loadDetalle = ($id) => {
+			$('.det-pallet').html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+			const baseURL = "{{ path('ver_detalle_pallet_faena', { pallet : '_PALLET'}) }}";
+			const realURL = baseURL.replace('_PALLET', $id);
+			$('.det-pallet').load(realURL);
+		};
+
+		loadDetalle({{ pallet.id }});
+
+		const deleteMovimiento = (pallet, valor) => {
+			const baseURLdelete = "{{ path('eliminar_movimiento_pallet', { pallet : '_PALLET', valor: '_VALOR'}) }}";
+			const realURLdelete = baseURLdelete.replace('_PALLET', pallet).replace('_VALOR', valor);
+			
+			bootbox.confirm({
+						    message: 'Seguro eliminar el item?',
+						    size: "large",
+						    buttons: {
+						        confirm: {
+						            label: 'Si',
+						            className: 'btn-success'
+						        },
+						        cancel: {
+						            label: 'No',
+						            className: 'btn-danger'
+						        }
+						    },
+						    callback: function (result) {
+						        if (result)
+						        {
+									$.post(realURLdelete,
+										   function (data){
+										   					if (data.status)
+										   					{
+																loadDetalle(pallet);
+										   					}
+										   					else
+										   					{
+										   						alert(data.message);
+										   					}
+										   });
+						        }
+						    }
+						 });			
+		};
+
+	{% endif %}
+
+	const route = "{{ path ('bd_adm_proc_romaneo_articulos', {proc: '_PROC', art : '_ART', val : '_VAL', fd : faena.id, base : articulo.id})}}";
+
+	const update = (input) => 
+	{			
+		var ruta = route.replace('_PROC', input.data('proc')).replace('_ART', input.data('art')).replace('_VAL', input.data('idv'));
+		input.parent().siblings('div .rta').html('');
+		const count = input.siblings('.cant').val();
+		const date = input.val();
+		const codigo = input.data('pallet');
+		$.post(ruta,
+			   {data: count, fecha: date, palletiza: 1, idPallet: codigo},
+			   function(response)
+			   {
+				  	if (response.status)
+				  	{
+				  		input.parent().siblings('div .rta').html('<i class="far fa-check-circle fa-2x"></i>');
+						input.trigger("keypress", [9]);
+						$('#stock').html(response.stb);
+						$(".form-romanear").trigger("reset");
+						$('.field-amount').focus();
+						{% if pallet is defined %}
+							loadDetalle({{ pallet.id }});
+						{% endif %}
+				  	}
+				  	else
+				  	{
+
+				  		input.parent().siblings('div .rta').html('<i class="far fa-times-circle fa-2x"></i>');
+				  		alert(response.message);
+				  	}
+			  	}
+		);
+	};
+
+	$('.update').keypress(function(event) {
+									    var keycode = (event.keyCode ? event.keyCode : event.which);
+									    var input = $(this);
+									    if(keycode == '13')
+									    {
+									    	update(input);
+										}
+											
+	});
+
+	$( ".fecha_elaboracion" ).inputmask({
+							mask: '99/99/2099',
+							showMaskOnHover: true,
+							showMaskOnFocus: true
+	});
+
+</script>
+
+{% endblock javascripts %}

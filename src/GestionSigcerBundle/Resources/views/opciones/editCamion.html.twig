@@ -1,0 +1,35 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Modificar Camion</span>
+<hr>
+
+<div class="">
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.tipo) }}
+        {{ form_widget(form.tipo) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.patente) }}
+        {{ form_widget(form.patente) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.senasa, 'SENASA') }}
+        {{ form_widget(form.senasa) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.cantPrecintos, 'Precintos') }}
+        {{ form_widget(form.cantPrecintos) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+	{{ form_end(form) }}
+</div>
+{% endblock fos_user_content %}

@@ -1,0 +1,312 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+<style type="text/css">
+.rotate {
+    height: 140px;
+    white-space: nowrap;
+	width: 0;
+	
+    > div {
+      transform: 
+        translate(0px, 110px)
+        rotate(-90deg);
+    }
+    > div > span {
+      border-bottom: 1px solid #ccc;
+      padding: 5px 10px;
+    }
+  }
+</style>
+<br>
+<hr>
+<p class="h5 card-title">Proceso: {{ proceso }} - Fecha: {{ faena }}</p>
+
+
+<div class="card">
+	<div class="card-header">
+		<div class="h5">
+			Articulos pendientes de clasificar
+			<hr>
+		</div>
+			<ul class="list-group">
+				{% for c in clasificables %}
+					  <li class="list-group-item d-flex justify-content-between align-items-center">
+					    {{ c.nombre }}:  {{ c.cantidad }} 
+					    <span class="badge" title="Clasificar">
+					    		<a href="{{ path('clasifiar_articulo_base', {proc : proceso.id, fd : faena.id, art : c.idArt})}}"><i class="far fa-calendar-check fa-2x"></i></a></span>
+					  </li>
+				{% endfor %}
+			</ul>
+  	</div>
+	<div class="card-body">
+		<span class="h5">
+			Registrar Salidas
+		</span>
+		{{ form_start(ventas, {'attr':{'novalidate':'novalidate'}})  }}
+		<div class="form-row">
+			{{ form_widget(ventas.conceptoVenta, {'attr' : {'class' : 'form-control col-lg-3'}}) }}
+		</div>
+		<div class="form-row">
+			{{ form_widget(ventas.asignar) }}
+		</div>
+		{{ form_end(ventas) }}
+	</div>
+</div>
+<br>
+<div class="card">
+	<div class="card-header">
+		<div class="h5">
+			Existencias Totales
+		</div>
+  	</div>
+	<div class="card-body">
+		<a href="{{ path('bd_view_procesos_faena_diaria', {fan : faena.id}) }}" class="btn btn-success"><< Volver</a>
+		<table class="table table-bordered table-sm table-fit table-hover">
+			<thead>
+				<tr>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th>Stock Inicial</th>
+					{% for c in conceptos %}
+						<th>{{ c.resumido }}</th>
+					{% endfor %}
+					<th>Produccion</th>
+					<th>Stock Final</th>
+				</tr>
+			</thead>
+			<tbody>
+				
+				{% for key, art in articulos %}
+					{% if loop.index0 is divisible by(2) %}
+					    {% set color = ' light-blue lighten-3' %}
+					{% else %}
+						{% set color = 'light-blue lighten-2' %}						
+					{% endif %}
+					<tr class="{{ color }}">
+						<td class="align-middle" rowspan="{{ ccat[key] }}">
+							{{  cates[key] }}
+						</td>
+						{% set count = 0 %}
+
+						{% for ks, sub in art %} 
+
+							{% if count == 0 %}
+								<td class="align-middle" rowspan="{{ csub[key][ks] }}">
+									{{ subcates[ks] }}
+								</td>
+								{% set count = 1 %}
+							{% else %}
+								<tr class="{{ color }}">
+									<td class="align-middle" rowspan="{{ csub[key][ks] }}">
+										{{ subcates[ks] }}
+									</td>
+							{% endif %}
+							{% set count2 = 0 %}
+							{% for k, v in sub %}
+								{% set idV = 0 %}
+								{% set valV = '' %}
+								{% if v[1] != null %}
+									{% set idV = v[1].id %}
+									{% set valV = v[1].data %}
+								{% endif %}
+								{% if count2 == 0 %}
+										<td>
+											{{ v[0].nombreResumido }}
+										</td>
+										<td>
+											{% if si[v[0].id]  is defined%}
+												<input readonly class="text-right form-control form-control-sm align-center col-lg-10" value="{{ si[v[0].id] }}"/>
+											{% else %}
+												<input readonly class="text-right form-control form-control-sm align-center col-lg-10" value="0"/>
+											{% endif %}
+										</td>
+										{% for c in conceptos %}
+											<td>
+												{% if ventasTotales[c.id][v[0].id] is defined %}
+													<input readonly class="text-right form-control form-control-sm align-center col-lg-10" value="{{ ventasTotales[c.id][v[0].id] }}"/>													
+												{% else %}
+													<input readonly class="text-right form-control form-control-sm align-center col-lg-10"/>		
+												{% endif %}
+
+											</td>												
+										{% endfor %}
+										<td>
+											<div class="row">
+												<div class="col-lg-10">
+													<input readonly type="text" data-idv="{{ idV }}" data-proc="{{ proceso.id }}" data-art="{{ v[0].id }}"  class="form-control form-control-sm align-center update" value="{{ valV }}"/>
+												</div>
+												<div class="col-lg-2">
+												</div>
+											</div>
+										</td>	
+										<td>
+											{% if sf[v[0].id]  is defined%}
+												<input readonly class="form-control form-control-sm align-center col-lg-10" value="{{ sf[v[0].id] }}"/>
+											{% else %}
+												<input readonly class="form-control form-control-sm align-center col-lg-10" value="0"/>
+											{% endif %}
+										</td>								
+									</tr>
+									{% set count2 = 1 %}
+								{% else %}
+									<tr class="{{ color }}">
+										<td>
+											{{ v[0].nombreResumido }}
+										</td>
+										<td>
+											{% if si[v[0].id]  is defined%}
+												<input readonly class="text-right form-control form-control-sm align-center col-lg-10" value="{{ si[v[0].id] }}"/>
+											{% else %}
+												<input readonly class="text-right form-control form-control-sm align-center col-lg-10" value="0"/>
+											{% endif %}
+										</td>
+										{% for c in conceptos %}
+											<td>
+												{% if ventasTotales[c.id][v[0].id] is defined %}
+													<input readonly class="text-right form-control form-control-sm align-center col-lg-10" value="{{ ventasTotales[c.id][v[0].id] }}"/>													
+												{% else %}
+													<input readonly class="text-right form-control form-control-sm align-center col-lg-10"/>		
+												{% endif %}
+
+											</td>												
+										{% endfor %}
+										<td class="align-middle">
+											<div class="row">
+												<div class="col-lg-10">
+													<input readonly type="text" data-idv="{{ idV }}" data-proc="{{ proceso.id }}" data-art="{{ v[0].id }}" class="form-control form-control-sm align-center update" value="{{ valV }}"/>
+												</div>
+												<div class="col-lg-2">
+												</div>
+											</div>
+										</td>
+										<td>
+											{% if sf[v[0].id]  is defined%}
+												<input readonly class="form-control form-control-sm align-center col-lg-10" value="{{ sf[v[0].id] }}"/>
+											{% else %}
+												<input readonly class="form-control form-control-sm align-center col-lg-10" value="0"/>
+											{% endif %}
+										</td>	
+									</tr>
+								{% endif %}
+							{% endfor %}
+						{% endfor %}
+				{% endfor %}
+
+			</tbody>
+		</table>
+	
+	</div>
+</div>
+
+
+
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+
+<script type="text/javascript">
+	var tipos = $('.tipos');
+	var conceptos = $('.conceptos');
+	var articulos = $('.articulos');
+	conceptos.html('');
+	articulos.html('');
+	tipos.change(function() {
+	  var form = $(this).closest('form');
+	  $.ajax({
+			    url : "{{ path('bd_change_tipo_movimiento') }}",
+			    type: "POST",
+			    data : {proceso: form.find('.proceso').val(), tipoMovimiento: $(this).val()},
+			    success: function(data) {
+						articulos.html('');
+		                conceptos.html('<option>Selecciona...</option>');
+		                for (var i = 0, total = data.length; i < total; i++) {
+		                    conceptos.append('<option value="' + data[i].id + '">' + data[i].show + '</option>');
+			    		}
+			    },
+			    failed: function(data){
+			    	alert('error');
+			    }
+	  		});
+	});
+
+	conceptos.change(function() {
+	  $.ajax({
+			    url : "{{ path('bd_change_concepto_movimiento') }}",
+			    type: "POST",
+			    data : {concepto: $(this).val()},
+			    success: function(data) {
+						articulos.html('<option value="null">Selecciona...</option>');
+		                for (var i = 0, total = data.length; i < total; i++) {
+		                    articulos.append('<option value="' + data[i].id + '">' + data[i].show + '</option>');
+			    		}
+			    }
+	  		});
+	});
+
+
+	$('.update').keypress(function(event) {
+									    var keycode = (event.keyCode ? event.keyCode : event.which);
+									    var input = $(this);
+									    if(keycode == '13')
+									    {
+											var route = "{{ path ('bd_adm_proc_romaneo_articulos', {proc: '_PROC', art : '_ART', val : '_VAL', fd : faena.id, base : 0})}}";
+											var btn = $(this);
+											var ruta = route.replace('_PROC', btn.data('proc')).replace('_ART', btn.data('art')).replace('_VAL', btn.data('idv'));
+											input.parent().siblings('div').html('');
+											$.post(ruta,
+												   {data : btn.val()},
+												  function(response)
+												  {
+												  	if (response.status)
+												  	{
+												  		input.parent().siblings('div').html('<i class="far fa-check-circle fa-2x"></i>');
+														input.trigger("keypress", [9]);
+												  	}
+												  	else
+												  	{
+												  		input.parent().siblings('div').html('<i class="far fa-times-circle fa-2x"></i>');
+												  	}
+												  }
+											);
+										}
+											
+	});
+
+	$('.view-art').click(function(){
+									var url = "{{ path('bd_view_art_proc_fan', {'articulo' : 'id_article'}) }}"; 
+									url = url.replace('id_article', $(this).data('id'));
+									$('.modal-body-article').load(url);
+									$('#viewArticle').modal('show');
+	});
+
+	$('.sender').submit(function (event){
+										 event.preventDefault();
+										 var form = $(this);
+										 $.post(form.attr('action'),
+										 		form.serialize(),
+										 		function(data){
+										 						if (data.status)
+										 						{
+
+										 						}
+										 						else
+										 						{
+
+										 						}
+
+
+										 		});
+										
+	});
+
+	{% if tipo is defined %}
+		{% if tipo == 'M' %}
+		$(".type option[value='{{ tipo }}']").attr('selected','selected');
+
+		{% endif %}
+	{% endif %}
+</script>
+
+{% endblock %}

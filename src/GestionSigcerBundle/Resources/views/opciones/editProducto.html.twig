@@ -1,0 +1,59 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Editar Producto</span>
+<hr>
+<div class="">
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.nombre) }}
+        {{ form_widget(form.nombre) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.marca) }}
+        {{ form_widget(form.marca) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.codigoCapa, 'Codigo CAPA') }}
+        {{ form_widget(form.codigoCapa) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.envasePrimario) }}
+        {{ form_widget(form.envasePrimario) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.envaseSecundario) }}
+        {{ form_widget(form.envaseSecundario) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.destino) }}
+        {{ form_widget(form.destino) }}
+      </div>
+      </div>
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.ajusteBruto, 'Factor Calculo Peso Bruto') }}
+        {{ form_widget(form.ajusteBruto) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.ajusteNeto, 'Factor Calculo Peso Neto') }}
+        {{ form_widget(form.ajusteNeto) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.ajusteCantidad, 'Ajuste Cantidad') }}
+        {{ form_widget(form.ajusteCantidad) }}
+      </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+	{{ form_end(form) }}
+</div>
+{% endblock fos_user_content %}

@@ -1,0 +1,36 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+        
+
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Configurar articulos por concepto</span>
+<hr>
+<small id="defaultRegisterFormPasswordHelpBlock" class="form-text text-muted mb-4">
+        Desde aqui se configuran cuales son los atributos -de cada articulo- que se manejaran para cada concepto
+    </small>
+	{{ form_start(form) }}
+				
+
+	{{ form_label(form.concepto) }}
+	{{ form_widget(form.concepto) }}
+	{{ form_label(form.articulo) }}
+	{{ form_widget(form.articulo) }}
+	{{ form_label(form.atributos) }}
+	{{ form_widget(form.atributos) }}
+<small id="defaultRegisterFormPasswordHelpBlock" class="form-text text-muted mb-4">
+        Seleccione los atributos a incluir manteniendo la tecla CTRL presionada
+    </small>
+	{{ form_end(form) }}
+
+
+
+
+
+
+
+
+
+
+
+{% endblock fos_user_content %}

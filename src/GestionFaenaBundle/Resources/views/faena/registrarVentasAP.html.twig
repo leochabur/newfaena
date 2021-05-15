@@ -1,0 +1,232 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+<style type="text/css">
+
+.table-container-x 
+{
+	max-width: 100%;
+	overflow-x: scroll;
+}
+
+.table-container-y 
+{
+	max-height: 600px;
+	overflow-y: scroll;
+}
+
+.sticky 
+{
+  position: sticky;
+  top: 0;
+  background: #ccc;
+  z-index:9999;
+}
+
+table thead tr th
+{
+	background: #ccc;
+}
+
+table td
+{
+	min-width:100px;
+	background: #ccc;
+}
+
+.col0
+{
+	background: #ccc;
+	position: sticky;
+	top:0;
+	left:0;
+	z-index: 9999;
+}
+.sticky2
+{
+	position: sticky;
+	left: 0;
+	z-index: 9999;
+  	background: #fff;
+}
+
+</style>
+
+
+<br>
+<hr>
+<p class="h5 card-title">{{ proceso }} - Fecha: {{ faena }}</p>
+{% endblock fos_user_content %}
+{% block out_container %}
+<div class="card">
+	<div class="card-header">
+		<div class="h5">
+			Concepto : <span id="">{{ concepto}}</span>
+		</div>
+  	</div>
+	<div class="card-body">
+		<a href="{{ path('bd_adm_proc_fan_day', {proc : proceso.id, fd : faena.id}) }}" class="btn btn-success"><< Volver</a>
+		<br>
+		<div class='table-container-x'>
+		<div class='table-container-y'>
+			<table id="myTable" class="table table-bordered table-hover table-sm table-striped" cellspacing="0" width="100%">
+				<thead>
+					<tr>
+						<th class=" col0">
+
+						</th>
+						{% for c in cates %}
+							<th class="text-center sticky" colspan="{{ ccat[c.id] }}">
+								{{ c }}
+							</th>
+						{% endfor %}
+					</tr>
+					<tr>
+						<th class="col0">
+
+						</th>
+						{% for kc, sub in  csub %}
+							{% for ks, vs in sub %}
+								<th class="text-center sticky" colspan="{{ vs }}">
+									{{ subcates[ks] }}
+								</th>
+							{% endfor %}
+						{% endfor %}
+					</tr>
+					<tr>
+						<th class=" col0">
+
+						</th>
+						{% for key, art in articulos %}
+							{% for ks, sub in art %} 
+								{% for k, v in sub %}
+									<th class="col-lg-12 sticky">
+										<span class=" mr-3 ml-3">{{ v[0].nombreResumido }}</span>
+									</th>
+								{% endfor %}
+							{% endfor %}
+						{% endfor %}
+					</tr>
+				</thead>
+
+				<tbody>
+					
+					{% for e in entidades %}
+						<tr>
+							<td class="sticky2">{{ e }}</td>
+							{% for key, art in articulos %}
+								{% for ks, sub in art %} 
+									{% for k, v in sub %}
+										<td>
+												{% set idV = 0 %}
+												{% set valV = '' %}
+												{% if salidas[e.id][v[0].id] is defined %}
+													{% set idV = salidas[e.id][v[0].id].id %}
+													{% set valV = salidas[e.id][v[0].id].data %}
+													
+												{% endif %}
+												<div class="row">
+													<div class="col-12">
+														<input type="text" 
+															   data-idv="{{ idV }}" 
+															   data-proc="{{ proceso.id }}" 
+															   data-art="{{ v[0].id }}"  
+															   data-ent="{{ e.id }}"
+															   class="form-control form-control-sm align-center update" 
+															   value="{{ valV }}"/>
+													</div>
+													<div class="col">
+													</div>
+												</div>
+										</td>
+									{% endfor %}
+								{% endfor %}
+							{% endfor %}
+
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	</div>
+</div>
+
+
+
+{% endblock out_container %}
+
+{% block javascripts %}
+
+<script type="text/javascript">
+
+
+
+	$('.update').keypress(function(event) {
+									    var keycode = (event.keyCode ? event.keyCode : event.which);
+									    var input = $(this);
+									    if(keycode == '13')
+									    {
+											var route = "{{ path ('bd_adm_proc_registrar_venta', {proc: '_PROC', art : '_ART', val : '_VAL', fd : faena.id, cv : concepto.id, ent : '_ENT'})}}";
+											var btn = $(this);
+											var ruta = route.replace('_PROC', btn.data('proc')).replace('_ART', btn.data('art')).replace('_VAL', btn.data('idv')).replace('_ENT', btn.data('ent'));
+											input.removeClass('green');
+											input.removeClass('red');
+											$.post(ruta,
+												   {data : btn.val()},
+												  function(response)
+												  {
+												  	if (response.status)
+												  	{
+												  		input.addClass('green');
+														input.trigger("keypress", [9]);
+														input.data('idv', response.idm);
+												  	}
+												  	else
+												  	{
+
+												  		input.addClass('red');
+												  		alert(response.message);
+												  	}
+												  }
+											);
+										}
+											
+	});
+
+	$('.view-art').click(function(){
+									var url = "{{ path('bd_view_art_proc_fan', {'articulo' : 'id_article'}) }}"; 
+									url = url.replace('id_article', $(this).data('id'));
+									$('.modal-body-article').load(url);
+									$('#viewArticle').modal('show');
+	});
+
+	$('.sender').submit(function (event){
+										 event.preventDefault();
+										 var form = $(this);
+										 $.post(form.attr('action'),
+										 		form.serialize(),
+										 		function(data){
+										 						if (data.status)
+										 						{
+
+										 						}
+										 						else
+										 						{
+
+										 						}
+
+
+										 		});
+										
+	});
+
+	{% if tipo is defined %}
+		{% if tipo == 'M' %}
+		$(".type option[value='{{ tipo }}']").attr('selected','selected');
+
+		{% endif %}
+	{% endif %}
+</script>
+
+{% endblock %}

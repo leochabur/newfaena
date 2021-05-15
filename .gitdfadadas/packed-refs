@@ -1,0 +1,4 @@
+# pack-refs with: peeled fully-peeled sorted 
+e4bb37bfca25dcfe914871f0bb20e2483ec0f059 refs/heads/master
+c2ec29d91df64bfd1c501aa30551cf46e4fa405e refs/remotes/origin/dependabot/composer/symfony/symfony-3.4.35
+cdd389bdad84fe6f3850b7543458b97f9f110aba refs/remotes/origin/master

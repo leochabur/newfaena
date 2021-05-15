@@ -1,0 +1,48 @@
+<?php
+
+namespace GestionFaenaBundle\Entity\faena;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * TransformarTransferirStock
+ *
+ * @ORM\Table(name="sp_st_trans_transf_st")
+ * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\faena\TransformarTransferirStockRepository")
+ */
+class TransformarTransferirStock extends MovimientoStock
+{
+    //En el proceso de congelamiento, los articulos abstractos que se incorporan al stock salen ya romaneados a la camara
+    public function __toString()
+    {
+        return "Transformar-Transferir";
+    }
+
+    public function getType()
+    {
+        return 7;
+    }
+
+    public function updateValues($promedio, $entityManager, $automatico = false)
+    {
+       /* $iterator = $this->getValores()->getIterator();
+        $iterator->uasort(function ($first, $second) {
+            return (int) $first->getAtributo()->getPosition() > (int) $second->getAtributo()->getPosition() ? 1 : -1;
+        });
+        
+        foreach ($this->getValores() as $valor) 
+        {
+            $valor->calcularValor($this, $entityManager, $automatico);
+        }*/
+    }
+
+    public static function getInstance()
+    {
+        return 7;
+    }
+
+    protected function updateVisible()
+    {
+        $this->setVisible(false);
+    }
+}

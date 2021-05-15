@@ -1,0 +1,71 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Nueva Zona</span>
+<hr>
+{% for message in app.flashes('sussecc') %}
+	<div class="alert alert-success" role="alert">
+	  {{ message }}
+	</div>
+{% endfor %}
+
+<div class="">
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.region) }}
+        {{ form_widget(form.region) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.codigo) }}
+        {{ form_widget(form.codigo) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.zona, 'Localidad') }}
+        {{ form_widget(form.zona) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.camion) }}
+        {{ form_widget(form.camion) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+	{{ form_end(form) }}
+    <br>
+    <span class="h5">Zonas Existentes</span>
+    <hr>
+    <table class="table table-bordered table-hover table-sm table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Region</th>
+            <th>Codigo</th>
+            <th>Zona</th>
+            <td>Camion</td>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in zonas %}
+            <tr>
+                
+                    <td>{{ loop.index }}</td>
+                    <td>{{ p.region }}</td>
+                    <td>{{ p.codigo }}</td>
+                    <td>{{ p.zona|upper }}</td>
+                    <td>{{ p.camion }}</td>
+                    <td class="text-center"><a href="{{ path('sigcer_editar_zona', {zna : p.id}) }}" class="btn btn-sm btn-success">Modificar</a></td>
+
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock fos_user_content %}

@@ -1,0 +1,96 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Nuevo Producto</span>
+<hr>
+{% for message in app.flashes('sussecc') %}
+	<div class="alert alert-success" role="alert">
+	  {{ message }}
+	</div>
+{% endfor %}
+
+<div class="">
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.nombre) }}
+        {{ form_widget(form.nombre) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.marca) }}
+        {{ form_widget(form.marca) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.codigoCapa, 'Codigo CAPA') }}
+        {{ form_widget(form.codigoCapa) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.envasePrimario) }}
+        {{ form_widget(form.envasePrimario) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.envaseSecundario) }}
+        {{ form_widget(form.envaseSecundario) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.destino) }}
+        {{ form_widget(form.destino) }}
+      </div>
+      </div>
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.ajusteBruto, 'Factor Calculo Peso Bruto') }}
+        {{ form_widget(form.ajusteBruto) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.ajusteNeto, 'Factor Calculo Peso Neto') }}
+        {{ form_widget(form.ajusteNeto) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.ajusteCantidad, 'Ajuste Cantidad') }}
+        {{ form_widget(form.ajusteCantidad) }}
+      </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+	{{ form_end(form) }}
+    <br>
+    <span class="h5">Productos Existentes</span>
+    <hr>
+    <table class="table table-striped table-bordered table-hover table-sm ">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Marca</th>
+            <th>Codigo CAPA</th>
+            <th>Env. Prim.</th>
+            <th>Env. Sec.</th>
+            <th>Destino</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in productos %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ p.nombre|upper }}</td>
+                <td>{{ p.marca|upper }}</td>
+                <td>{{ p.codigoCapa|upper }}</td>
+                <td>{{ p.envasePrimario }}</td>
+                <td>{{ p.envaseSecundario }}</td>
+                <td>{{ p.destinoTxt }}</td>
+                <td><a class="btn btn-sm btn-success" href="{{ path('sigcer_editar_producto', {prod : p.id}) }}">Modificar</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock fos_user_content %}

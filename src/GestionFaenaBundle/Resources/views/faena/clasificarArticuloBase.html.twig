@@ -1,0 +1,229 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+<br>
+<hr>
+<p class="h5 card-title">{{ proceso }} - Fecha: {{ faena }}</p>
+
+<div class="card">
+	<div class="card-header">
+		<div class="h5">
+			Articulo : {{ articulo }} {% if proceso.procesoFaena.id != 14 %}- Stock: <span id="stock">{{ stock.cantidad }}</span> {% endif %}
+		</div>
+  	</div>
+	<div class="card-body">
+		<table class="table table-bordered table-sm table-fit">
+			<tbody>
+				
+				{% for key, art in articulos %}
+					{% if loop.index0 is divisible by(2) %}
+					    {% set color = ' light-blue lighten-3' %}
+					{% else %}
+						{% set color = 'light-blue lighten-2' %}						
+					{% endif %}
+					<tr class="{{ color }}">
+						<td class="align-middle" rowspan="{{ ccat[key] }}">
+							{{  cates[key] }}
+						</td>
+						{% set count = 0 %}
+
+						{% for ks, sub in art %} 
+
+							{% if count == 0 %}
+								<td class="align-middle" rowspan="{{ csub[key][ks] }}">
+									{{ subcates[ks] }}
+								</td>
+								{% set count = 1 %}
+							{% else %}
+								<tr class="{{ color }}">
+									<td class="align-middle" rowspan="{{ csub[key][ks] }}">
+										{{ subcates[ks] }}
+									</td>
+							{% endif %}
+							{% set count2 = 0 %}
+							{% for k, v in sub %}
+								{% set idV = 0 %}
+								{% set valV = '' %}
+								{% if v[1] != null %}
+									{% set idV = v[1].id %}
+									{% set valV = v[1].data %}
+								{% endif %}
+								{% if count2 == 0 %}
+										<td>
+											{{ v[0].nombreResumido }}
+										</td>
+										<td>
+											<div class="row">
+												<div class="col-4">
+													<input type="text" class="field-amount form-control form-control-sm align-center" value="{{ valV }}"/>				
+												</div>
+												<div class="col-2">
+													<button data-idv="{{ idV }}" data-proc="{{ proceso.id }}" data-art="{{ v[0].id }}"  class="btn btn-sm btn-warning update">	Guardar
+													</button>
+												</div>
+											</div>
+										</td>									
+									</tr>
+									{% set count2 = 1 %}
+								{% else %}
+									<tr class="{{ color }}">
+										<td>
+											{{ v[0].nombreResumido }}
+										</td>
+										<td class="align-middle">
+											<div class="row">
+												<div class="col-4">
+													<input type="text" class="mt-1 field-amount form-control form-control-sm align-center" value="{{ valV }}"/>
+												</div>
+												<div class="col-2">
+													<button data-idv="{{ idV }}" data-proc="{{ proceso.id }}" data-art="{{ v[0].id }}" class="btn btn-sm btn-warning update">	Guardar
+													</button>
+												</div>
+											</div>
+										</td>
+									</tr>
+								{% endif %}
+							{% endfor %}
+						{% endfor %}
+				{% endfor %}
+
+			</tbody>
+		</table>
+	<a href="{{ path('bd_adm_proc_fan_day', {proc : proceso.id, fd : faena.id}) }}" class="btn btn-success"><< Volver</a>
+	</div>
+</div>
+
+
+
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+
+<script type="text/javascript">
+	var tipos = $('.tipos');
+	var conceptos = $('.conceptos');
+	var articulos = $('.articulos');
+	conceptos.html('');
+	articulos.html('');
+	tipos.change(function() {
+	  var form = $(this).closest('form');
+	  $.ajax({
+			    url : "{{ path('bd_change_tipo_movimiento') }}",
+			    type: "POST",
+			    data : {proceso: form.find('.proceso').val(), tipoMovimiento: $(this).val()},
+			    success: function(data) {
+						articulos.html('');
+		                conceptos.html('<option>Selecciona...</option>');
+		                for (var i = 0, total = data.length; i < total; i++) {
+		                    conceptos.append('<option value="' + data[i].id + '">' + data[i].show + '</option>');
+			    		}
+			    },
+			    failed: function(data){
+			    	alert('error');
+			    }
+	  		});
+	});
+
+	conceptos.change(function() {
+	  $.ajax({
+			    url : "{{ path('bd_change_concepto_movimiento') }}",
+			    type: "POST",
+			    data : {concepto: $(this).val()},
+			    success: function(data) {
+						articulos.html('<option value="null">Selecciona...</option>');
+		                for (var i = 0, total = data.length; i < total; i++) {
+		                    articulos.append('<option value="' + data[i].id + '">' + data[i].show + '</option>');
+			    		}
+			    }
+	  		});
+	});
+
+	$('.field-amount').keyup(function(event) {
+									    var keycode = (event.keyCode ? event.keyCode : event.which);
+									    var input = $(this);
+									    if(keycode == 13)
+									    {
+									    	var btn = $(this);
+											var parent = btn.parent().parent();
+											var input = parent.find('button');	
+											input.focus();
+	            							//alert(input.data('art'));
+	            						}
+	        });
+
+	$('.update').click(function(event) {
+										var btn = $(this);
+										var parent = btn.parent().parent();
+										var input = parent.find('input');									   
+
+									    if($.isNumeric(input.val()))
+									    {
+									    	btn.addClass('invisible');
+
+											var route = "{{ path ('bd_adm_proc_romaneo_articulos', {proc: '_PROC', art : '_ART', val : '_VAL', fd : faena.id, base : articulo.id})}}";
+
+											var ruta = route.replace('_PROC', btn.data('proc')).replace('_ART', btn.data('art')).replace('_VAL', btn.data('idv'));
+											
+											$.post(ruta,
+												   {data : input.val(), palletiza: 0},
+												  function(response)
+												  {
+												  	if (response.status)
+												  	{
+												  		btn.next().focus();
+												  		btn.parent().html('<i class="far fa-check-circle fa-2x"></i>');
+														$('#stock').html(response.stb);
+
+												  	}
+												  	else
+												  	{
+												  		btn.removeClass('invisible');
+												  		alert(response.message);
+												  	}
+												  }
+											);
+										}
+										else
+										{
+											alert('Valor invalido '+input.val());
+										}
+										
+											
+	});
+
+	$('.view-art').click(function(){
+									var url = "{{ path('bd_view_art_proc_fan', {'articulo' : 'id_article'}) }}"; 
+									url = url.replace('id_article', $(this).data('id'));
+									$('.modal-body-article').load(url);
+									$('#viewArticle').modal('show');
+	});
+
+	$('.sender').submit(function (event){
+										 event.preventDefault();
+										 var form = $(this);
+										 $.post(form.attr('action'),
+										 		form.serialize(),
+										 		function(data){
+										 						if (data.status)
+										 						{
+
+										 						}
+										 						else
+										 						{
+
+										 						}
+
+
+										 		});
+										
+	});
+
+	{% if tipo is defined %}
+		{% if tipo == 'M' %}
+		$(".type option[value='{{ tipo }}']").attr('selected','selected');
+
+		{% endif %}
+	{% endif %}
+</script>
+
+{% endblock %}

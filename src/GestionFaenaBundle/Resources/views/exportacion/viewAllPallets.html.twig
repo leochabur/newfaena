@@ -1,0 +1,91 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Tipo Pallet</span>
+<hr>
+{% include '@GestionFaena/messages.html.twig'  %}
+
+
+<div class="">
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-lg-4">
+        {{ form_label(form.pallet) }}
+        {{ form_widget(form.pallet) }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+	{{ form_end(form) }}
+    {% if pallet is defined %}
+          <hr>
+          <p class="h5">Codigo Pallet: {{ pallet }}</p>
+          <p class="h5">Tipo Pallet: {{ pallet.tipoPallet }}</p>
+          <p class="h5">Estado Pallet: {% if pallet.completo %} Completo {% else %} Pendiente {% endif %}</p>
+          <hr>
+          <div class="det-pallet">
+          </div>
+    {% endif %}
+</div>
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script type="text/javascript">
+  {% if pallet is defined %}
+      const loadDetalle = ($id) => {
+        $('.det-pallet').html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+        const baseURL = "{{ path('ver_detalle_pallet_faena', { pallet : '_PALLET'}) }}";
+        const realURL = baseURL.replace('_PALLET', $id);
+        $('.det-pallet').load(realURL);
+      };
+
+      loadDetalle({{ pallet.id }});
+
+
+    const deleteMovimiento = (pallet, valor) => {
+      const baseURLdelete = "{{ path('eliminar_movimiento_pallet', { pallet : '_PALLET', valor: '_VALOR'}) }}";
+      const realURLdelete = baseURLdelete.replace('_PALLET', pallet).replace('_VALOR', valor);
+      
+      bootbox.confirm({
+                message: 'Seguro eliminar el item?',
+                size: "large",
+                buttons: {
+                    confirm: {
+                        label: 'Si',
+                        className: 'btn-success'
+                    },
+                    cancel: {
+                        label: 'No',
+                        className: 'btn-danger'
+                    }
+                },
+                callback: function (result) {
+                    if (result)
+                    {
+                  $.post(realURLdelete,
+                       function (data){
+                                if (data.status)
+                                {
+                                loadDetalle(pallet);
+                                }
+                                else
+                                {
+                                  alert(data.message);
+                                }
+                       });
+                    }
+                }
+             });      
+    };
+
+  {% endif %}
+  </script>
+
+{% endblock javascripts %}

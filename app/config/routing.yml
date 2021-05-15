@@ -1,0 +1,17 @@
+gestion_ventas:
+    resource: "@GestionVentasBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+gestion_sigcer:
+    resource: "@GestionSigcerBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+gestion_faena:
+    resource: "@GestionFaenaBundle/Controller/"
+    type:     annotation
+    prefix:   /
+    
+fos_user:
+    resource: "@FOSUserBundle/Resources/config/routing/all.xml"

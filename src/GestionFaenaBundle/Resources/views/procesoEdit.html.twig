@@ -1,0 +1,628 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+        
+
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Editar proceso</span>
+<hr>
+
+	
+
+	    <p class="h4 mb-4 text-center">{{ proccess.nombre }}</p>
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Reporta articulos a...
+				  </div>
+				  <div class="card-body">
+					<table class="table table-striped table-bordered table-hover table-sm ">
+								<thead>
+									<tr>
+										<th>Proceso Destino</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+					  	{% for send in proccess.procesosDestino %}
+					  	  <tr>
+								<td>{{ send.nombre }}</td>
+						  		<td>
+						  			<a href="{{ path('delete_destination', {origen : proccess.id, destino : send.id}) }}" 
+						  			   class="btn btn-sm btn-danger col">
+						  			   	Quitar
+						  			 </a>
+						  		</td>
+					  	  </tr>
+						  
+						{% endfor %}	
+						</tbody>
+						</table>		
+						<button type="button" class="btn btn-primary col-6" data-toggle="modal" data-target="#modalSubscriptionForm">Agregar proceso</button>		
+				  </div>
+				  
+				  </div>
+		  </div>
+		  </div>
+		  <br>
+		  <div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				    Configurar manejo stock
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+								<thead>
+									<tr>
+										<th>Articulo</th>
+										<th>Atributo</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for proceso in proccess.manejosStock %}
+										<tr>
+											<td>{{ proceso.articulo }}</td>
+											<td>{{ proceso.atributo }}</td>
+											<td class="text-center"><a href="{{ path('bd_delete_manejo_stock_from_proccess', {proccess : proccess.id, manejo : proceso.id}) }}" class="btn btn-sm btn-danger">Quitar</a></td>
+										</tr>
+									{% endfor %}
+								</tbody>
+						</table>
+				  	{{ form_start(stock) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col">
+				  				{{ form_widget(stock.articulo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col">
+				  				{{ form_widget(stock.atributo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col">
+				  				{{ form_widget(stock.asignar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  		</div>
+				  	
+				  	{{ form_end(stock) }}
+				  </div>
+				</div>
+			</div>
+		</div>
+
+		<br>
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Ajusta movimiento
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Articulo</th>
+											<th>Tipo Movimiento</th>
+											<th>Concepto Movimiento</th>
+											<th>Factor Ajuste</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for aj in proccess.ajustes %}
+											<tr>
+												<td>{{ aj.articulo }}</td>
+												<td>{{ aj.tipoMovimiento }}</td>
+												<td>{{ aj.conceptoMovimiento }}</td>
+												<td>{{ aj.factorAjuste }}</td>
+												<td>
+													<td class="text-center"><a href="{{ path('bd_edit_procesos_delete_ajuste', {ajuste : aj.id}) }}" class="btn btn-sm btn-danger">-</a></td>
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+						</table>
+				  	{{ form_start(ajuste) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col">
+				  				{{ form_widget(ajuste.proceso, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+
+				  			<div class="col">
+				  				{{ form_widget(ajuste.tipoMovimiento, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col">
+				  				{{ form_widget(ajuste.conceptoMovimiento, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-2">
+				  				{{ form_widget(ajuste.articulo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-2">
+				  				{{ form_widget(ajuste.factorAjuste, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-1">
+				  				{{ form_widget(ajuste.asignar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  		</div>
+				  	
+				  	{{ form_end(ajuste) }}		
+	
+				  </div>
+				  
+				  </div>
+		  </div>
+		</div>
+		<br>
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Movimientos Automaticos
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<tbody>
+										{% for aj in proccess.automaticos %}
+											{% set el = "" %}
+											{% if aj.eliminado %}
+												{% set el = " (E)" %}
+											{% endif %}
+											<tr>
+												<td><a target="_blanck" href="{{ path('bd_edit_grupo_movimientos_automaticos', {gpo : aj.id}) }}">Nombre: {{ aj }} {{ el }}</a></td>
+												<td></td>
+												<td></td>
+												<td></td>
+												<td><a href="{{ path('bd_edit_procesos_delete_grupo_movimientos_automatic', {proc : proccess.id, gpo : aj.id }) }}" class="btn btn-sm btn-danger">-</a></td>
+											</tr>
+											{% for auto in aj.automaticos %}
+												{% set el = "" %}
+												{% if aj.eliminado %}
+													{% set el = " (E)" %}
+												{% endif %}
+												<tr>
+													<td></td>
+													<td>{{ auto.ordenEjecucion }}</td>
+													<td>{{ auto.articuloAtributoConcepto.vistaEdicion }} {{ el }}</td>
+													<td>{{ auto.procesoDestinoDefault }}</td>
+													<td><a href="{{ path('bd_edit_procesos_delete_automatic', {proccess : proccess.id, automatic : auto.id }) }}" class="btn btn-sm btn-warning">-</a></td>
+												</tr>
+											{% endfor %}
+										
+										{% endfor %}
+									</tbody>
+						</table>
+				  	{{ form_start(auto) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col">
+				  				{{ form_label(auto.grupo) }}
+				  				{{ form_widget(auto.grupo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col">
+				  				{{ form_label(auto.articuloAtributoConcepto) }}
+				  				{{ form_widget(auto.articuloAtributoConcepto, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-2">
+				  				{{ form_label(auto.ordenEjecucion) }}
+				  				{{ form_widget(auto.ordenEjecucion, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-2">
+				  				{{ form_label(auto.procesoDestinoDefault) }}
+				  				{{ form_widget(auto.procesoDestinoDefault, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+
+				  			<div class="col-2 mt-3">
+				  				{{ form_widget(auto.guardar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block mt-2'}}) }}
+				  			</div>
+				  		</div>				  	
+				  	{{ form_end(auto) }}		
+	
+					{{ form_start(grupoMov) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col-1">
+				  				{{ form_label(grupoMov.manual, 'Manual') }}
+				  				{{ form_widget(grupoMov.manual, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+
+				  			<div class="col">
+				  				{{ form_label(grupoMov.orden) }}
+				  				{{ form_widget(grupoMov.orden, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col">
+				  				{{ form_label(grupoMov.nombre) }}
+				  				{{ form_widget(grupoMov.nombre, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-2">
+				  				{{ form_label(grupoMov.detalle) }}
+				  				{{ form_widget(grupoMov.detalle, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-1">
+				  				{{ form_label(grupoMov.procesoFaena, 'Proc.') }}
+				  				{{ form_widget(grupoMov.procesoFaena, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+
+				  			<div class="col-2 mt-3">
+				  				{{ form_widget(grupoMov.guardar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block mt-2'}}) }}
+				  			</div>
+				  		</div>				  	
+				  	{{ form_end(grupoMov) }}	
+				  </div>
+				  
+				  </div>
+		  </div>
+		</div>
+		<br>
+		<div class="row mt-4">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Proceso destino defecto..
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Proceso</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% if proccess.procesosDestinoDefault is defined %}
+											<tr>
+												<td>{{ proccess.procesosDestinoDefault}}</td>
+												
+													<td class="text-center"><a href="{{ path('bd_delete_proceso_default', {proc : proccess.id}) }}" class="btn btn-sm btn-danger">-</a></td>
+												
+											</tr>
+										{% endif %}
+									</tbody>
+						</table>
+				  	{{ form_start(default) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col">
+				  				{{ form_widget(default.proceso, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-1">
+				  				{{ form_widget(default.asignar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  		</div>
+				  	{{ form_end(default) }}		
+	
+				  </div>
+				  
+				  </div>
+		  </div>
+		</div>
+		<br>
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Definir articulo base
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Articulo</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+
+											<tr>
+												<td>{{ proccess.articuloBase}}</td>
+												
+													<td class="text-center"><a href="{{ path('bd_delete_proceso_default', {proc : proccess.id}) }}" class="btn btn-sm btn-danger">-</a></td>												
+											</tr>
+									</tbody>
+						</table>
+				  	{{ form_start(base) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col">
+				  				{{ form_widget(base.articulo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-2">
+				  				{{ form_widget(base.asignar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  		</div>
+				  	{{ form_end(base) }}		
+	
+				  </div>
+				  
+				  </div>
+		  </div>
+	</div>
+ 	<br>
+ 		<div class="row mt-4">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Atributo Base
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Atributo</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+											<tr>
+												<td>{{ proccess.atributoAbstractoBase}}</td>
+												
+													<td class="text-center"><a href="{{ path('bd_delete_proceso_default', {proc : proccess.id}) }}" class="btn btn-sm btn-danger">-</a></td>
+												
+											</tr>
+									</tbody>
+						</table>
+				  	{{ form_start(atrBase) }}
+				  		<div class="form-row align-items-center">
+				  			<div class="col">
+				  				{{ form_widget(atrBase.atributo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-1">
+				  				{{ form_widget(atrBase.asignar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  		</div>
+				  	{{ form_end(atrBase) }}		
+	
+				  </div>
+				  
+				  </div>
+		  </div>
+	</div>
+	<hr>
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Pasos ejecucion proceso
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Orden Ejecucion</th>
+											<th>Descripcion</th>
+											<th>Grupo Automatico</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for aj in proccess.pasos %}
+											{% if not aj.eliminado %}
+												<tr>
+													<td>
+														<a href="{{ path('bd_edit_paso_proceso', { pp : aj.id}) }}">
+															{{ aj.orden }}
+														</a>
+													</td>
+													<td>{{ aj.detalle }}</td>
+													<td>{{ aj.grupoMovimiento }}</td>
+													<td class="text-center"><a href="{{ path('bd_edit_procesos_delete_paso_proceso', {proc : proccess.id, paso : aj.id}) }}" class="btn btn-sm btn-danger">-</a></td>
+												</tr>
+											{% endif %}
+										{% endfor %}
+									</tbody>
+						</table>
+				  	{{ form_start(fpaso) }}
+				  		<div class="form-row align-items-center">
+				  			<div class=" col-lg-1 col">
+				  				{{ form_label(fpaso.orden) }}
+				  				{{ form_widget(fpaso.orden, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class=" col-lg-2 col">
+				  				{{ form_label(fpaso.grupoMovimiento) }}
+				  				{{ form_widget(fpaso.grupoMovimiento, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-5 mt-2">
+				  				{{ form_label(fpaso.detalle) }}
+				  				{{ form_widget(fpaso.detalle, {'attr' : {'class' : 'form-control-sm mt-2'}}) }}
+				  			</div>
+				  			<div class="col-lg-2">
+				  				{{ form_label(fpaso.procesoFaena, 'Proceso') }}
+				  				{{ form_widget(fpaso.procesoFaena, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-2 mt-2">
+				  				{{ form_widget(fpaso.guardar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block mt-4'}}) }}
+				  			</div>
+				  		</div>
+				  	
+				  	{{ form_end(fpaso) }}		
+	
+				  </div>
+				  
+				  </div>
+		  </div>
+		</div>
+		<hr>
+		{% if proccess.generaVentas %}
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Concepto venta
+				  </div>
+				  <div class="card-body">
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Concepto</th>
+											<th>Atributo</th>
+											<th>Entidad Externa</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for aj in proccess.ventas %}
+												<tr>
+													<td>
+											
+															{{ aj.concepto }}
+													
+													</td>
+													<td>{{ aj.atributo }}</td>
+													<td>{{ aj.entidadExterna }}</td>
+													<td class="text-center"><a href="{{ path('bd_edit_procesos_delete_paso_proceso', {proc : proccess.id, paso : aj.id}) }}" class="btn btn-sm btn-danger">-</a></td>
+												</tr>
+										{% endfor %}
+									</tbody>
+						</table>
+				  	{{ form_start(formConcepto) }}
+				  		<div class="form-row align-items-center">
+				  			<div class=" col-lg-3 col">
+				  				{{ form_label(formConcepto.entidadExterna) }}
+				  				{{ form_widget(formConcepto.entidadExterna, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class=" col-lg-3 col">
+				  				{{ form_label(formConcepto.concepto) }}
+				  				{{ form_widget(formConcepto.concepto, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-2">
+				  				{{ form_label(formConcepto.atributo) }}
+				  				{{ form_widget(formConcepto.atributo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-2">
+				  				{{ form_label(formConcepto.procesoFaena, 'Proceso') }}
+				  				{{ form_widget(formConcepto.procesoFaena, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-2 mt-2">
+				  				{{ form_widget(formConcepto.guardar, {'attr' : {'class' : 'btn btn-sm btn-success btn-block mt-4'}}) }}
+				  			</div>
+				  		</div>
+				  	
+				  	{{ form_end(formConcepto) }}		
+	
+				  </div>
+				  
+				  </div>
+		  </div>
+		</div>
+		<div class="row">
+		  <div class="col">
+				<div class="card">
+				  <div class="card-header">
+				     Atributos Ventas
+				  </div>
+				  <div class="card-body">
+
+				  	{{ form_start(fventas) }}
+				  		<div class="form-row align-items-center">
+				  			<div class=" col-lg-2 col">
+				  				{{ form_widget(fventas.atributo, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-2 mt-1">
+				  				{{ form_widget(fventas.chAtributo, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  			<div class=" col-lg-2 col">
+				  				{{ form_widget(fventas.conceptos, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class=" col-lg-2 col">
+				  				{{ form_widget(fventas.entidades, {'attr' : {'class' : 'form-control-sm'}}) }}
+				  			</div>
+				  			<div class="col-lg-1 mt-1">
+				  				{{ form_widget(fventas.chArticulo, {'attr' : {'class' : 'btn btn-sm btn-success btn-block'}}) }}
+				  			</div>
+				  		</div>
+				  	
+				  	{{ form_end(fventas) }}		
+				  <hr>
+						<table class="table table-striped table-bordered table-hover table-sm ">
+									<thead>
+										<tr>
+											<th>Entidad Externa</th>
+											<th>Concepto Movimiento</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for aj in proccess.entidadesConcepto %}
+												<tr>
+													<td>
+											
+															{{ aj.entidad }}
+													
+													</td>
+													<td>{{ aj.concepto }}</td>
+													<td class="text-center"></td>
+												</tr>
+										{% endfor %}
+									</tbody>
+						</table>
+				  </div>
+				  
+				  </div>
+		  </div>
+		</div>
+		{% endif %}
+
+<div class="modal fade" id="modalSubscriptionForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Agregar proceso destino</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+			{{ form_start(form, {'attr': {'class': 'sender'}}) }}
+			{{ form_widget(form) }}
+			{{ form_end(form) }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="viewArticle" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Detalle Articulo</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3 modal-body-article">
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+
+<script type="text/javascript">
+	$('.view-art').click(function(){
+									var url = "{{ path('bd_view_art_proc_fan', {'articulo' : 'id_article'}) }}"; 
+									url = url.replace('id_article', $(this).data('id'));
+									$('.modal-body-article').load(url);
+									$('#viewArticle').modal('show');
+	});
+
+	$('.sender').submit(function (event){
+										 event.preventDefault();
+										 var form = $(this);
+										 $.post(form.attr('action'),
+										 		form.serialize(),
+										 		function(data){
+										 						if (data.status)
+										 						{
+										 							location.reload();
+										 						}
+										 						else
+										 						{
+
+										 						}
+
+
+										 		});
+										
+	});
+</script>
+
+{% endblock %}
