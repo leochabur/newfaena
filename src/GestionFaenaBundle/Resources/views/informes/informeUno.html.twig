@@ -33,7 +33,9 @@
 					<tr>
 						{% for h in header %}
 							{% if h.visible %}
-								<td class="{% if mov['total'] is defined %}font-weight-bold {% endif %}{% if h.sumariza or h.promedia %}text-right{% endif %}">
+								<td class="{% if mov['total'] is defined %}font-weight-bold {% endif %}
+											{% if mov['parcial'] is defined %} font-italic text-monospace{% endif %}
+											{% if h.sumariza or h.promedia %}text-right{% endif %}">
 									{% if mov[h.atributo.id] is defined %}
 
 										{% if mov['total'] is defined %}
@@ -43,7 +45,15 @@
 												{{ mov[h.atributo.id] }}
 											{% endif %}
 										{% else %}
-											{{ mov[h.atributo.id] }}
+											{% if mov['parcial'] is defined %}
+												{% if h.atributo.id == 4 %}
+													{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
+												{% else %}
+													{{ mov[h.atributo.id] }}
+												{% endif %}
+											{% else %}
+													{{ mov[h.atributo.id] }}
+											{% endif %}
 										{% endif %}
 										
 									{% endif %}
