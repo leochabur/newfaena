@@ -78,6 +78,18 @@ class ArticuloAtributoConcepto
      */
     private $listeners; //lista de todos los ArticuloAtributoConcepto que escuchan, y ejecutaran acciones cuando este realize alguna accion
 
+    /**
+    * @ORM\ManyToOne(targetEntity="ArticuloAtributoConcepto")
+    * @ORM\JoinColumn(name="id_art_atr_cn_asoc", referencedColumnName="id", nullable=true)
+    **/
+    private $artAtrConAsociado; //para el caso de las incorporaciones de Transito...deberia traer el tansito de la faena inmediatamente anterior (ArticuloAtributoConcepto)
+
+    /**
+    * @ORM\ManyToOne(targetEntity="AtributoAbstracto")
+    * @ORM\JoinColumn(name="id_atr_asoc", referencedColumnName="id", nullable=true)
+    **/
+    private $atrAbsAsociado; //para el caso de las incorporaciones de Transito...deberia traer el tansito de la faena inmediatamente anterior (Atributo)
+
     public function getFormaCalculoAutomatico()
     {
         $stock = $this->concepto->getProcesoFaena()->existeArticuloDefinidoManejoStock($this->articulo);
@@ -432,5 +444,53 @@ class ArticuloAtributoConcepto
     public function getListeners()
     {
         return $this->listeners;
+    }
+
+    /**
+     * Set artAtrConAsociado
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $artAtrConAsociado
+     *
+     * @return ArticuloAtributoConcepto
+     */
+    public function setArtAtrConAsociado(\GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $artAtrConAsociado = null)
+    {
+        $this->artAtrConAsociado = $artAtrConAsociado;
+
+        return $this;
+    }
+
+    /**
+     * Get artAtrConAsociado
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto
+     */
+    public function getArtAtrConAsociado()
+    {
+        return $this->artAtrConAsociado;
+    }
+
+    /**
+     * Set atrAbsAsociado
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atrAbsAsociado
+     *
+     * @return ArticuloAtributoConcepto
+     */
+    public function setAtrAbsAsociado(\GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atrAbsAsociado = null)
+    {
+        $this->atrAbsAsociado = $atrAbsAsociado;
+
+        return $this;
+    }
+
+    /**
+     * Get atrAbsAsociado
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto
+     */
+    public function getAtrAbsAsociado()
+    {
+        return $this->atrAbsAsociado;
     }
 }

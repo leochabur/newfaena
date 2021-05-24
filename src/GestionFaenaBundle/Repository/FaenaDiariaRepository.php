@@ -27,4 +27,14 @@ class FaenaDiariaRepository extends \Doctrine\ORM\EntityRepository
 			        ->getQuery()
 			        ->getOneOrNullResult(); 
 	} 
+
+	public function getFaenaAnteriorDeFecha(\DateTime $fecha) { 
+	    return $this->createQueryBuilder('f')
+			        ->where('f.fechaFaena < :fecha')
+			        ->orderBy('f.fechaFaena', 'DESC')
+			        ->setParameter('fecha', $fecha->format('Y-m-d'))
+			        ->getQuery()
+			        ->setMaxResults(1)
+			        ->getOneOrNullResult(); 
+	} 
 }

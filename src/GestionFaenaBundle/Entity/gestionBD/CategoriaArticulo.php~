@@ -101,4 +101,28 @@ class CategoriaArticulo
     {
         return $this->orden;
     }
+
+    /**
+     * Set grupo
+     *
+     * @param integer $grupo
+     *
+     * @return CategoriaArticulo
+     */
+    public function setGrupo($grupo)
+    {
+        $this->grupo = $grupo;
+
+        return $this;
+    }
+
+    /**
+     * Get grupo
+     *
+     * @return integer
+     */
+    public function getGrupo()
+    {
+        return $this->grupo;
+    }
 }

@@ -19,7 +19,7 @@ use GestionFaenaBundle\Entity\faena\ValorTexto;
 class AtributoInformableArbitrario extends AtributoInformable
 {
     
-    public function getEntityValorAtributo(\GestionFaenaBundle\Entity\gestionBD\Atributo $atributo)
+    public function getEntityValorAtributo(\GestionFaenaBundle\Entity\gestionBD\Atributo $atributo, $default = null)
     {
         //throw new \Exception("valor  ".get_class($atributo->getAtributoAbstracto()), 1);
         $value = new ValorTexto();

@@ -1,3 +1,0 @@
-0
-%255BGestionFaenaBundle%255CEntity%255Cfaena%255COrdenCarga%2524comprobantes%255D%255B1%255D
-a:2:{i:0;O:30:"Doctrine\ORM\Mapping\OneToMany":6:{s:8:"mappedBy";s:10:"ordenCarga";s:12:"targetEntity";s:16:"ComprobanteVenta";s:7:"cascade";N;s:5:"fetch";s:4:"LAZY";s:13:"orphanRemoval";b:0;s:7:"indexBy";N;}i:1;O:28:"Doctrine\ORM\Mapping\OrderBy":1:{s:5:"value";a:1:{s:6:"numero";s:3:"ASC";}}}

@@ -77,13 +77,13 @@ class Articulo
 
     /**
     * @ORM\ManyToOne(targetEntity="CategoriaArticulo") 
-    * @ORM\JoinColumn(name="id_categ", referencedColumnName="id")
+    * @ORM\JoinColumn(name="id_categ", referencedColumnName="id", nullable=true)
     */      
     private $categoria;
 
     /**
     * @ORM\ManyToOne(targetEntity="SubcategoriaArticulo") 
-    * @ORM\JoinColumn(name="id_subcateg", referencedColumnName="id")
+    * @ORM\JoinColumn(name="id_subcateg", referencedColumnName="id", nullable=true)
     */      
     private $subcategoria;
 
@@ -121,9 +121,28 @@ class Articulo
     private $descVenta;
 
 
+    public function getNombrePallet()
+    {
+        return ($this->nombre.' - '.$this->codigoInterno);
+    }
+
     public function getNombreVenta()
     {
         return ($this->descVenta?$this->descVenta:$this->nombre);
+    }
+
+    public function serialize()
+    {
+        $sub = $this->getSubcategoria();
+        $cat = $this->getCategoria();
+        return [    
+                    'categoria' => $cat->getCategoria(),
+                    'subcategoria' => $sub->getSubcategoria(),
+                    'articulo' => $this->nombreResumido,
+                    'idCategoria' => $cat->getId(),
+                    'idSubcategoria' => $sub->getId(),
+                    'idArticulo' => $this->id,
+                ];
     }
 
 

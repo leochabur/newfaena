@@ -684,7 +684,7 @@ class InformesController extends Controller
                 $result[] = $resTotales;
                 $second = null;
                 $parciales[$carga.'-'.$gja] = $this->getInitializeArray($atributosAcumulables);
-                
+
                 $resTotales = array('total' => true);
                 foreach ($totales as $line) 
                 {
@@ -705,13 +705,9 @@ class InformesController extends Controller
                         $totalGeneral[$key] = $resTotales[$key];
                   }
                 }
-
                 $cant++;
                 $result[] = $resTotales;
                 $last = null;
-
-
-
                 $totales = array();
                 $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
               }
@@ -849,23 +845,51 @@ class InformesController extends Controller
         $columns_2 = array_column($detalle, $informe->getAtrWhitSort(2)->getAtributo()->getId());
         array_multisort($columns_1, SORT_DESC, $columns_2, SORT_ASC ,$detalle);
         $result = array(); //una vez que esta ordenado debe recorrer para realizar las sumas correspondientes, lo que seria la tabla efinitiva
-        $totales = array(); //array para acumular los totoales
-        $last = null;
+        $totales = $parciales = array(); //array para acumular los totoales
+        $last = $second = null;
         $agrupa = $informe->getAtributoAgrupa(); //atributo el cual sumariza los datos x Ej: Cargador
         $atributosAcumulables = $informe->getAtributosAcumulables(); //Devuelve lista de atributos que se acumulan ('s' -> sumable 'p' -> promediable)
         $totalGeneral = array('total' => true, $informe->getAtributos()->first()->getAtributo()->getId() => 'Totales:');
         $cant = 0; //para indicar la cantidad por la cual debe dividir el totoal para realizar el promedio
+        $granja =  $informe->getAtrWhitSort(2)->getAtributo();
         foreach ($detalle as $det) 
         {          
+          $gja = $det[$granja->getId()];
+          $carga = $det[$agrupa->getAtributo()->getId()];
+
           if (!$last)
           {
-            $totales = array();
+            $totales = $parciales = array();
             $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
+            $parciales[$carga.'-'.$gja] = $this->getInitializeArray($atributosAcumulables);
           }
           else
           {
               if ($last != $det[$agrupa->getAtributo()->getId()])
-              {                
+              {             
+
+                $resTotales = array('parcial' => true);
+
+                foreach ($parciales as $line) 
+                {
+                 // throw new \Exception(" ".print_r($line));
+                  foreach ($line as $key => $value) 
+                  {
+                    if ($value['action'] == 's')
+                    {
+                      $resTotales[$key] = $value['sum'];
+                    }
+                    else
+                    {
+                      $resTotales[$key] = number_format($value['sum'],3);
+                    }
+                  }
+                }
+                $result[] = $resTotales;
+                $second = null;
+                $parciales[$carga.'-'.$gja] = $this->getInitializeArray($atributosAcumulables);
+
+
                 $resTotales = array('total' => true);
                 foreach ($totales as $line) 
                 {
@@ -887,16 +911,68 @@ class InformesController extends Controller
                 $totales = array();
                 $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
               }
+              else
+              {
+                 if ($second != $gja) //cambia de granja pero no de cargador
+                 {
+
+                    $resTotales = array('parcial' => true);
+
+                    foreach ($parciales as $line) 
+                    {
+                     // throw new \Exception(" ".print_r($line));
+                      foreach ($line as $key => $value) 
+                      {
+                        if ($value['action'] == 's')
+                        {
+                          $resTotales[$key] = $value['sum'];
+                        }
+                        else
+                        {
+                          $resTotales[$key] = number_format($value['sum'],3);
+                        }
+                      }
+                    }
+                    $result[] = $resTotales;
+                    $second = null;
+                    $parciales[$carga.'-'.$gja] = $this->getInitializeArray($atributosAcumulables);
+                 }
+              }
           }
           foreach ($atributosAcumulables as $key => $value)
           {
               $totales[$det[$agrupa->getAtributo()->getId()]][$key]['sum']+= $det[$key];
               $totales[$det[$agrupa->getAtributo()->getId()]][$key]['cant']++;
               $totales[$det[$agrupa->getAtributo()->getId()]][$key]['value'] = $value;
+
+              $parciales[$carga.'-'.$gja][$key]['sum']+= $det[$key];
+              $parciales[$carga.'-'.$gja][$key]['cant']++;
+              $parciales[$carga.'-'.$gja][$key]['value'] = $value;
           }
           $last = $det[$agrupa->getAtributo()->getId()];
+          $second = $gja;
           $result[] = $det;
         }
+
+        $resTotales = array('parcial' => true);
+
+        foreach ($parciales as $line) 
+        {
+         // throw new \Exception(" ".print_r($line));
+          foreach ($line as $key => $value) 
+          {
+            if ($value['action'] == 's')
+            {
+              $resTotales[$key] = $value['sum'];
+            }
+            else
+            {
+              $resTotales[$key] = number_format($value['sum'],3);
+            }
+          }
+        }
+        $result[] = $resTotales;
+        
         $resTotales = array('total' => true);
         $cant++;
         foreach ($totales as $line) 

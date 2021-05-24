@@ -1497,6 +1497,21 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $proceso = $em->find(ProcesoFaenaDiaria::class, $proc);
         $faena = $em->find(FaenaDiaria::class, $fd);
 
+        $default = null;
+
+        if ($articulo->getArtAtrConAsociado())
+        {
+          $repository = $em->getRepository(FaenaDiaria::class);
+          $faenaAnterior = $repository->getFaenaAnteriorDeFecha($faena->getFechaFaena());
+
+          $repositoryValor = $em->getRepository(ValorNumerico::class);
+
+          $total = $repositoryValor->getAcumuladoAtributoWhitAAC($faenaAnterior, 
+                                                                 $articulo->getArtAtrConAsociado(),
+                                                                 $articulo->getAtrAbsAsociado());
+          $default = [0 =>  $articulo->getAtrAbsAsociado(), 1 => $total['stock']];
+        }
+
         $tipoMovimiento = $articulo->getConcepto()->getTipoMovimiento();
 
         $movimiento = $tipoMovimiento->getInstanciaMovimiento();
@@ -1504,7 +1519,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $movimiento->setFaenaDiaria($faena);
         $movimiento->setArtProcFaena($articulo);
 
-        $movimiento->generateAtributes();
+        $movimiento->generateAtributes($default);
         $formAtr = $this->getFormAddMovStock($movimiento, $proceso, $articulo, 'bd_adm_proc_mov_st', $faena);
         return $this->render('@GestionFaena/faena/adminProcFanDay.html.twig', array('fatr' => $formAtr->createView(), 'movimiento' => $movimiento, 'proceso' => $proceso, 'faena' => $faena));
     }

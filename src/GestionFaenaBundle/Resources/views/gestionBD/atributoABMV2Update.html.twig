@@ -87,6 +87,20 @@
 				{% endfor %}
 		</tbody>
 	</table>
+	<hr>
+	Articulo anterior asociado
+	<ul>
+		<li> {% if art.artAtrConAsociado is defined %} {{ art.artAtrConAsociado.vistaEdicionV2 }} - {{ art.atrAbsAsociado }} {% endif %}</li>
+	</ul>
+	{{ form_start(asoc, {'attr': {'novalidate': 'novalidate'}}) }}
+		<div class="form-row">
+			{{ form_widget(asoc.articuloBase, {'attr' : {'class' : 'form-control-sm col-lg-3 mt-2'}}) }}
+			{{ form_widget(asoc.atributo, {'attr' : {'class' : 'form-control-sm col-lg-3 mt-2'}}) }}
+			{{ form_widget(asoc.articulos, {'attr' : {'class' : 'form-control-sm col-lg-3 mt-2'}}) }}
+			{{ form_widget(asoc.setAnterior, {'attr' : {'class' : 'btn btn-sm btn-default col-lg-3'}}) }}
+		</div>
+	{{ form_end(asoc) }}
+	<hr>
 	<button class="btn btn-success back"><< Volver</button>
 
 {% endblock fos_user_content %}

@@ -78,6 +78,18 @@ class ArticuloAtributoConcepto
      */
     private $listeners; //lista de todos los ArticuloAtributoConcepto que escuchan, y ejecutaran acciones cuando este realize alguna accion
 
+    /**
+    * @ORM\ManyToOne(targetEntity="ArticuloAtributoConcepto")
+    * @ORM\JoinColumn(name="id_art_atr_cn_asoc", referencedColumnName="id", nullable=true)
+    **/
+    private $artAtrConAsociado; //para el caso de las incorporaciones de Transito...deberia traer el tansito de la faena inmediatamente anterior (ArticuloAtributoConcepto)
+
+    /**
+    * @ORM\ManyToOne(targetEntity="AtributoAbstracto")
+    * @ORM\JoinColumn(name="id_atr_asoc", referencedColumnName="id", nullable=true)
+    **/
+    private $atrAbsAsociado; //para el caso de las incorporaciones de Transito...deberia traer el tansito de la faena inmediatamente anterior (Atributo)
+
     public function getFormaCalculoAutomatico()
     {
         $stock = $this->concepto->getProcesoFaena()->existeArticuloDefinidoManejoStock($this->articulo);
@@ -131,7 +143,7 @@ class ArticuloAtributoConcepto
         {
             $destino = " (".$this->articuloOrigenTransformacion.")";
         }
-        return $this->concepto->getProcesoFaena()." - ".$this->concepto->getConcepto()." - ".$this->articulo."  -  ".$this->concepto->getTipoMovimiento().$destino."($procDest)";
+        return $this->concepto->getProcesoFaena()." - ".$this->concepto->getConcepto()." - ".$this->articulo."  -  ".$this->concepto->getTipoMovimiento().$destino."($procDest) - ".$this->getId();
     }
 
     public function getVistaEdicionV2()
@@ -291,6 +303,7 @@ class ArticuloAtributoConcepto
     {
         $this->atributos = new \Doctrine\Common\Collections\ArrayCollection();
         $this->procesosDestino = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->listeners = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -397,5 +410,63 @@ class ArticuloAtributoConcepto
     public function getDesencadenado()
     {
         return $this->desencadenado;
+    }
+
+    /**
+     * Add listener
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $listener
+     *
+     * @return ArticuloAtributoConcepto
+     */
+    public function addListener(\GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $listener)
+    {
+        $this->listeners[] = $listener;
+
+        return $this;
+    }
+
+    /**
+     * Remove listener
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $listener
+     */
+    public function removeListener(\GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $listener)
+    {
+        $this->listeners->removeElement($listener);
+    }
+
+    /**
+     * Get listeners
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getListeners()
+    {
+        return $this->listeners;
+    }
+
+    /**
+     * Set artAtrConAsociado
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $artAtrConAsociado
+     *
+     * @return ArticuloAtributoConcepto
+     */
+    public function setArtAtrConAsociado(\GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $artAtrConAsociado = null)
+    {
+        $this->artAtrConAsociado = $artAtrConAsociado;
+
+        return $this;
+    }
+
+    /**
+     * Get artAtrConAsociado
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto
+     */
+    public function getArtAtrConAsociado()
+    {
+        return $this->artAtrConAsociado;
     }
 }

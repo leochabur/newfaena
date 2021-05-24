@@ -171,7 +171,7 @@ abstract class Atributo
         
     }
 
-    public abstract function getEntityValorAtributo(\GestionFaenaBundle\Entity\gestionBD\Atributo $atributo);///devuelve a que entidad debe instanciar para asignar el valor
+    public abstract function getEntityValorAtributo(\GestionFaenaBundle\Entity\gestionBD\Atributo $atributo, $data = null);///devuelve a que entidad debe instanciar para asignar el valor
     public abstract function getType(); //devuleve el codigo de cada clase
 
     public function getManual()

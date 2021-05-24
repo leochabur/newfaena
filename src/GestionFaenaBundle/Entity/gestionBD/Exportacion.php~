@@ -17,4 +17,3 @@ class Exportacion extends EntidadExterna
         return true;
     }
 }
-

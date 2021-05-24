@@ -23,4 +23,3 @@ class Consignatario extends EntidadExterna
         return true;
     }
 }
-

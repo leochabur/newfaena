@@ -616,7 +616,7 @@ class GestionBDController extends Controller
             {
                 return $this->redirectToRoute('bd_add_atributo', array('art' => $data['articulos']->getId()));
             }
-            else 
+            elseif ($form->getClickedButton() === $form->get('modificar'))
             {
                 $articulo = $data['articulos'];
                 $fuaac = $this->getFormUpdateArticuloOfAAC($articulo->getId());
@@ -626,14 +626,86 @@ class GestionBDController extends Controller
                     $forms[$atr->getId()] = $this->getFormUpdateAtributo($atr)->createView();                    
                 }
                 $formAddDest = $this->getFormAddDestinoArtAtrCon($articulo->getId());
+                $formAsoc = $this->getFormArtAsociado();
                 return $this->render('@GestionFaena/gestionBD/atributoABMV2Update.html.twig', 
                                      array('formAdd' => $formAddDest->createView(),
                                             'art' => $articulo, 
+                                            'asoc' => $formAsoc->createView(),
                                             'fupd' => $fuaac->createView(),
                                             'formsAtr' => $forms));
             }
         }
         return $this->render('@GestionFaena/gestionBD/atributoABMV2.html.twig', array('form' => $form->createView()));
+    }
+
+
+    /**
+     * @Route("/config/asocproc", name="bd_asociar_atributos")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function asociarAtributo(Request $request)
+    {
+        $form = $this->getFormArtAsociado();
+        $form->handleRequest($request);
+        $data = $form->getData();
+
+        $em = $this->getDoctrine()->getManager();
+        $base = $data['articuloBase'];
+        $asoc = $data['articulos'];
+        $atr = $data['atributo'];
+
+        $base->setArtAtrConAsociado($asoc);
+        $base->setAtrAbsAsociado($atr);
+        $em->flush();
+
+        return $this->redirectToRoute('bd_editar_articulo');
+    }     
+
+    private function getFormArtAsociado()
+    {
+        $form =    $this->createFormBuilder()
+                        ->add('articuloBase',
+                              EntityType::class,
+                              ['class' => 'GestionFaenaBundle:gestionBD\ArticuloAtributoConcepto',
+                              'query_builder' => function (ArticuloAtributoConceptoRepository $er){
+                                                                                        return $er->createQueryBuilder('a')
+                                                                                                  ->innerJoin('a.articulo', 'art')
+                                                                                                  ->innerJoin('a.concepto', 'con')
+                                                                                                  ->innerJoin('con.procesoFaena', 'pfa')
+                                                                                                  ->innerJoin('con.concepto', 'cmf')
+                                                                                                  ->where('a.activo = :activo')   
+                                                                                                  ->andWhere('con.automatico = :auto')      
+                                                                                                  ->setParameter('activo', true)
+                                                                                                  ->setParameter('auto', false)
+                                                                                                  ->orderBy('pfa.nombre, cmf.concepto, art.nombre');
+                                                                                                 },
+                                'choice_label' => 'vistaEdicionV2',
+
+                                ])
+                        ->add('atributo',
+                              EntityType::class,
+                              ['class' => 'GestionFaenaBundle:gestionBD\AtributoAbstracto'])
+                        ->add('articulos', 
+                              EntityType::class, [
+                              'class' => 'GestionFaenaBundle:gestionBD\ArticuloAtributoConcepto',
+                              'query_builder' => function (ArticuloAtributoConceptoRepository $er){
+                                                                                        return $er->createQueryBuilder('a')
+                                                                                                  ->innerJoin('a.articulo', 'art')
+                                                                                                  ->innerJoin('a.concepto', 'con')
+                                                                                                  ->innerJoin('con.procesoFaena', 'pfa')
+                                                                                                  ->innerJoin('con.concepto', 'cmf')
+                                                                                                  ->where('a.activo = :activo')   
+                                                                                                  ->andWhere('con.automatico = :auto')      
+                                                                                                  ->setParameter('activo', true)
+                                                                                                  ->setParameter('auto', false)
+                                                                                                  ->orderBy('pfa.nombre, cmf.concepto, art.nombre');
+                                                                                                 },
+                                'choice_label' => 'vistaEdicionV2',
+                        ])
+                        ->add('setAnterior', SubmitType::class, array('label' => 'Asociar Movimiento Anterior'))
+                        ->setAction($this->generateUrl('bd_asociar_atributos'))               
+                        ->getForm();
+        return $form;
     }
 
     /**

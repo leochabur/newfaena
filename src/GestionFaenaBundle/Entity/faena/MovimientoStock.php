@@ -213,7 +213,7 @@ abstract class MovimientoStock
         return $value;
     }
 
-    public function generateAtributes()
+    public function generateAtributes($default = null)
     {
 
         $atributoConcepto = $this->artProcFaena->getAtributos()->toArray();
@@ -230,7 +230,7 @@ abstract class MovimientoStock
                                               });
         foreach ($atributos as $atributo) {
             if (!$atributo->getEliminado())
-                $this->addValore($atributo->getEntityValorAtributo($atributo));
+                $this->addValore($atributo->getEntityValorAtributo($atributo, $default));
         }        
     }
 
