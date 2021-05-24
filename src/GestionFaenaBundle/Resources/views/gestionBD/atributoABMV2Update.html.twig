@@ -90,7 +90,7 @@
 	<hr>
 	Articulo anterior asociado
 	<ul>
-		<li> {% if art.artAtrConAsociado is defined %} {{ art.artAtrConAsociado.vistaEdicionV2 }} - {{ art.atrAbsAsociado }} {% endif %}</li>
+		<li> {{ art.artAtrConAsociado }} - {{ art.atrAbsAsociado }} </li>
 	</ul>
 	{{ form_start(asoc, {'attr': {'novalidate': 'novalidate'}}) }}
 		<div class="form-row">
