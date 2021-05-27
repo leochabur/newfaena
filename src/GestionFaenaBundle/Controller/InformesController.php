@@ -706,7 +706,7 @@ class InformesController extends Controller
                   }
                 }
                 $cant++;
-                $result[] = $resTotales;
+             //   $result[] = $resTotales;
                 $last = null;
                 $totales = array();
                 $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
@@ -806,7 +806,7 @@ class InformesController extends Controller
                     }
           }
         }
-        $result[] = $resTotales;
+      //  $result[] = $resTotales;
 
         $result[] = $totalGeneral;
         return $this->render('@GestionFaena/informes/informeUno.html.twig', 
@@ -906,7 +906,7 @@ class InformesController extends Controller
                   }
                 }
                 $cant++;
-                $result[] = $resTotales;
+               // $result[] = $resTotales;
                 $last = null;
                 $totales = array();
                 $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
@@ -993,7 +993,7 @@ class InformesController extends Controller
                       $totalGeneral[$key] = number_format(($totalGeneral[$key]/$cant),3);
           }
         }
-        $result[] = $resTotales;
+       // $result[] = $resTotales;
         $result[] = $totalGeneral;
         if ($aplicar)
           $em->flush();
