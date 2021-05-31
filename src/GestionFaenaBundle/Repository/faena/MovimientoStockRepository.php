@@ -33,7 +33,29 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                 ->getResult();
     }
 
-
+    //IDEM ANTERIOR PERO DEVUELVE UN UNICO MOVIMIENTO
+    public function getMovimientoEntrada(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso,
+                                           \GestionFaenaBundle\Entity\FaenaDiaria $faenaDiaria,
+                                           $idArticulo)
+    {
+        return $this->getEntityManager()
+                ->createQuery('SELECT e
+                               FROM GestionFaenaBundle:faena\EntradaStock e
+                               JOIN e.artProcFaena apf
+                               JOIN apf.articulo art
+                               WHERE e.procesoFnDay = :proceso AND
+                                     e.faenaDiaria = :faenaDiaria AND
+                                     e.visible = :visible AND
+                                     e.eliminado = :eliminado AND
+                                     art.id = :idArticulo')
+                ->setParameter('proceso', $proceso)
+                ->setParameter('faenaDiaria', $faenaDiaria)
+                ->setParameter('visible', true)
+                ->setParameter('eliminado', false)
+                ->setParameter('idArticulo', $idArticulo)
+                ->setMaxResults(1)
+                ->getOneOrNullResult();
+    }
 
     public function findAllMovimientos(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso)
     {

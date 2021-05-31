@@ -24,10 +24,23 @@ class ArticuloRepository extends \Doctrine\ORM\EntityRepository
             		->getResult();
 	} 
 
-    public function getListaArticulosConCategoria() 
+    public function getListaArticulosConCategoriaSingle() 
     { 
         return $this->getEntityManager()
                     ->createQuery('SELECT a.id as id, c.id as idCate, s.id as idSubcate, c.categoria as cate, s.subcategoria as subcate, a.nombreResumido as nombreResumido
+                                   FROM GestionFaenaBundle:gestionBD\Articulo a 
+                                   JOIN a.categoria c
+                                   JOIN a.subcategoria s
+                                   WHERE a.eliminado = :eliminado
+                                   ORDER BY c.orden, s.orden, a.orden, a.id')
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    } 
+
+    public function getListaArticulosConCategoria() 
+    { 
+        return $this->getEntityManager()
+                    ->createQuery('SELECT a
                                    FROM GestionFaenaBundle:gestionBD\Articulo a 
                                    JOIN a.categoria c
                                    JOIN a.subcategoria s

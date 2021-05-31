@@ -892,12 +892,13 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $faena = $em->find(FaenaDiaria::class, $fd);
         $articulo = $em->find(Articulo::class, $art);
 
+        $repoMov = $em->getRepository(MovimientoStock::class);
         if ($proceso->getProcesoFaena()->getId() == 14)
         {
           $procesoAux = $proceso->getProcesoFaena()->getProcesosDestinoDefault();
           $proceso = $faena->getProceso($procesoAux->getId());
 
-          $stock = $em->getRepository(MovimientoStock::class)->getStockArticulosProcesoPermanente($proceso, $articulo);
+          $stock = $repoMov->getStockArticulosProcesoPermanente($proceso, $articulo);
         }
         else
         {
@@ -935,7 +936,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
               $valor = 0;
               if ($factor)
               {
-                  $movimiento = $proceso->getMovimientosArticulo($art, $faena);
+                  $movimiento =  $repoMov->getMovimientoEntrada($proceso, $faena, $art->getId()); //$proceso->getMovimientosArticulo($art, $faena);
                   if ($movimiento)
                   {
                     $val = $movimiento->getValorWhitAtribute($factor->getAtributo());
@@ -1281,7 +1282,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             $categorias = [];
             $subcategorias = [];
             $data = [];
-            $articulos = $em->getRepository(Articulo::class)->getListaArticulosConCategoria();
+            $articulos = $em->getRepository(Articulo::class)->getListaArticulosConCategoriaSingle();
             $cantCateg = [];
             $cantSubcates = [];
             $arrayArticulos = [];
