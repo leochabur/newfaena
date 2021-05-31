@@ -1241,6 +1241,9 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         }
         if ($proceso->getProcesoFaena()->getRomanea())
         {
+                $logger = $this->get('logger');
+
+
             $repoMov = $em->getRepository(MovimientoStock::class);
 
             $clasificables = $repoMov->getStockArticulosClasificablesPorProcesoParaFaena($proceso->getProcesoFaena(), $faena);
@@ -1253,6 +1256,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             }
 
             ///////////calcula el stock total de cada articulo
+
             $finales = $repoMov->getStockArticulosPorProcesoHastaFaena($proceso->getProcesoFaena(), $faena);
             $stockFinal = [];
             foreach ($finales as $fin)
@@ -1281,17 +1285,23 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             $cantCateg = [];
             $cantSubcates = [];
             $arrayArticulos = [];
+
             foreach ($articulos as $art)
-            {   
-                $arrayArticulos[$art->getId()] = $art;
+            {
+                $arrayArticulos[$art['id']] = $art;
                 $procesoFaena = $proceso->getProcesoFaena();
 
-                $factor = $procesoFaena->existeArticuloDefinidoManejoStock($art); //obtiene si el articulo se encuentra en el proceso para realizar el manejo de stock
+                $factor = $procesoFaena->existeArticuloConIdDefinidoManejoStock($art['id']); //obtiene si el articulo se encuentra en el proceso para realizar el manejo de stock
 
                 $valor = 0;
                 if ($factor)
                 {
-                        $movimientos = $proceso->getAllMovimientosArticulo($art, $faena);
+                        $logger->info('EMPIEZA A BUSCAR LOS MOVIMIENTOS  '.date('h:i:s'));
+
+                        //$movimientos = $proceso->getAllMovimientosArticuloConId($art['id'], $faena);
+                        $movimientos = $repoMov->getMovimientosEntrada($proceso, $faena, $art['id']);
+                        $logger->info('FINALIZA BUSCAR LOS MOVIMIENTOS  '.date('h:i:s'));
+                     //   throw new \Exception("no se encuentra definido el articulo base en el proceso");
 
                         foreach ($movimientos as $movimiento)
                         {
@@ -1302,24 +1312,11 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                           }
                         }
                         
-
-                    //$valor = $proceso->getStockArticuloConFaenaDiaria($faena, $art, $factor->getAtributo());
-                  /*  $movimiento = $proceso->getMovimientosArticulo($art, $faena);
-
-
-                        if ($movimiento)
-                        {
-                          $val = $movimiento->getValorWhitAtribute($factor->getAtributo());
-                          if ($val)
-                          {
-                            $valor = $val->getData();
-                          }
-                        }*/
                 }
-             //   throw new \Exception("Articulo ".$art."  Factor ".$factor."  Valor ".$valor);
+
                 ////finaliza recuperacion
-                $idCat = $art->getCategoria()->getId();
-                $idSub = $art->getSubcategoria()->getId();
+                $idCat = $art['idCate'];
+                $idSub = $art['idSubcate'];
                 if (!array_key_exists($idCat, $cantCateg))
                 {
                   $cantCateg[$idCat] = 0;
@@ -1334,9 +1331,9 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                     $cantSubcates[$idCat][$idSub] = 0;
                 }
                 $cantSubcates[$idCat][$idSub]++;
-                $categorias[$idCat] = $art->getCategoria();
+                $categorias[$idCat] = ['id' => $art['idCate'], 'cate' => $art['cate']];
 
-                $subcategorias[$idSub] = $art->getSubcategoria();
+                $subcategorias[$idSub] = $art['subcate'];
 
                 if (!array_key_exists($idCat, $data))
                 {
@@ -1347,15 +1344,17 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                   $data[$idCat][$idSub] = [];
                 }
 
-                if (!array_key_exists($art->getId(), $data[$idCat][$idSub]))
+                if (!array_key_exists($art['id'], $data[$idCat][$idSub]))
                 {
-                  $data[$idCat][$idSub][$art->getId()] = [0 => $art, 1 => 0];
+                  $data[$idCat][$idSub][$art['id']] = [0 => $art, 1 => 0];
                 }
 
-                  $data[$idCat][$idSub][$art->getId()][1]+= $valor;
+                  $data[$idCat][$idSub][$art['id']][1]+= $valor;
                 
             }
-            $em->flush();
+                      //  $logger->info('ESTA HACIENDO ALGO MAS  '.date('h:i:s'));
+          //  throw new \Exception("no se encuentra el concepto del movimiento");
+          //  $em->flush();
             $ventasTotales = [];            
             $movimientosVenta = $repoMov->getAllMovimientosConConcepto($proceso, $faena);
             $procFaena = $proceso->getProcesoFaena();
@@ -3233,6 +3232,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
           /*    if (count($artAtrCon))
               {
                 $artAtrCon = $artAtrCon[0];
+                $logger = $this->get('logger');
                 $logger->info('CANTIDAD '.$artAtrCon->getId());
               }*
              // $logger->info('CANTIDAD '.$artAtrCon->getId());

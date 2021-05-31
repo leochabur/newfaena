@@ -10,6 +10,30 @@ namespace GestionFaenaBundle\Repository\faena;
  */
 class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
 {
+    //Se cambio la forma de generar la informacion que se muestra en camara 31-05-2021
+    public function getMovimientosEntrada(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso,
+                                           \GestionFaenaBundle\Entity\FaenaDiaria $faenaDiaria,
+                                           $idArticulo)
+    {
+        return $this->getEntityManager()
+                ->createQuery('SELECT e
+                               FROM GestionFaenaBundle:faena\EntradaStock e
+                               JOIN e.artProcFaena apf
+                               JOIN apf.articulo art
+                               WHERE e.procesoFnDay = :proceso AND
+                                     e.faenaDiaria = :faenaDiaria AND
+                                     e.visible = :visible AND
+                                     e.eliminado = :eliminado AND
+                                     art.id = :idArticulo')
+                ->setParameter('proceso', $proceso)
+                ->setParameter('faenaDiaria', $faenaDiaria)
+                ->setParameter('visible', true)
+                ->setParameter('eliminado', false)
+                ->setParameter('idArticulo', $idArticulo)
+                ->getResult();
+    }
+
+
 
     public function findAllMovimientos(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso)
     {
