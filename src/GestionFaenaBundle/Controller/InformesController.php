@@ -287,6 +287,26 @@ class InformesController extends Controller
                 $transitoInicial['stock'] = 0;
               }
 
+              //////////////////////
+
+                $trozadoACongelar = $em->find(Articulo::class, 96);
+
+                $procesoTrozado = $em->find(ProcesoFaena::class, 9);
+
+                $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                                  $procesoTrozado, 
+                                                                                                  $trozadoACongelar, 
+                                                                                                  $conceptoTransf,
+                                                                                                   $atributoPeso,
+                                                                                                  TransformarStock::class);
+                $trozadoCongelado = $stock;
+                if (!$stock)
+                {
+                  $trozadoCongelado['stock'] = 0;
+                }
+                
+
+              /////////////////////
               $unidadTrozadoFresco = $em->find(Articulo::class, 91); //Unidad de Trozado Fresco
               $procesoCamara = $em->find(ProcesoFaena::class, 2);
 
@@ -314,7 +334,8 @@ class InformesController extends Controller
                                     'kgAtrozar' => $kgATrozado,
                                     'transitoInicial' => $transitoInicial,
                                     'kgAtransito' => $kgATransito,
-                                    'trozadoCamara' => $totalRomaneo,                                    
+                                    'trozadoCamara' => $totalRomaneo,   
+                                    'trozadoCongelado' => $trozadoCongelado,                                
                                     'cajones' => ['f' => $produccionFrescos, 'c' => $produccionCongelados, 't' => $totalesCajones], 
                                     'form' => $form->createView()]);
             }
