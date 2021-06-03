@@ -94,7 +94,8 @@ class InformesController extends Controller
     {
         //$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY')
         $form = $this->getFormSelectFaena();
-        if ($request->isMethod('POST')){
+        if ($request->isMethod('POST'))
+        {
             $form->handleRequest($request);
             if ($form->isValid())
             {
@@ -145,34 +146,123 @@ class InformesController extends Controller
               $kmDPM['stock'] = (($kgTotalAves['stock']-$stockDAM['stock'])/($cantTotalAves['stock']-$cantDAM['stock'])) * $cantDPM['stock'];
 
 
-              $articuloCajonFresco = $em->find(Articulo::class, 104); //Articulo Cajon Pollo Fresco
-              $articuloCajonCongelado = $em->find(Articulo::class, 105); //Articulo Cajon Pollo Congelado
+              $frescoSA = $em->find(Articulo::class, 119); //Articulo SIN ALAS
+
+              $frescoMI = $em->find(Articulo::class, 117); //Articulo FRESCO MERCADO INTERNO
+              $frescoPP = $em->find(Articulo::class, 118); //Articulo PREMIUM
+
+              $repoMov = $em->getRepository(MovimientoStock::class);
+
+              $procesoFaena = $em->find(ProcesoFaena::class, 2);
+
+            //  throw new \Exception(" ".$data['faena']);
+
+              $utf = $em->find(Articulo::class, 91); //Arti
+
+             // throw new \Exception(" ".$utf);
+
+
+              $transformaciones = $repoMov->getTransformacionConOrigen($procesoFaena, $data['faena'], 91);
+
+              $kgRomaneoCamaraTrozadoFresco = 0;
+
+              foreach ($transformaciones as $tr)
+              {
+                $kgRomaneoCamaraTrozadoFresco+= ($tr['valor'] * $tr['presentacion']);
+              }
+
+               //Articulo Cajon Pollo Congelado
               $atributoBulto = $em->find(AtributoAbstracto::class, 27); //Bulto
 
               $procesoEmpaque = $em->find(ProcesoFaena::class, 5);
 
               $conceptoTransf = $em->find(ConceptoMovimiento::class, 7);
 
-              $cajonesFrescos = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+              $produccionFrescos = [];
+
+              $totalesCajones['f'] = ['cantidad' => 0, 'peso' => 0 ];
+              $totalesCajones['c'] = ['cantidad' => 0, 'peso' => 0 ];
+              $totalesCajones['t'] = ['cantidad' => 0, 'peso' => 0 ];
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
                                                                                             $procesoEmpaque, 
-                                                                                            $articuloCajonFresco, 
+                                                                                            $frescoMI, 
                                                                                             $conceptoTransf,
                                                                                             $atributoBulto,
                                                                                             TransformarStock::class);
-              if (!$cajonesFrescos)
+              if ($stock)
               {
-                $cajonesFrescos['stock'] = 0;
+                $kg = ($stock['stock'] * $frescoMI->getPresentacionKg());
+                $produccionFrescos[0] = ['articulo' => 'FRESCO M.I.', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['f']['cantidad']+= $stock['stock'];
+                $totalesCajones['f']['peso']+= $kg;
               }
-              $cajonesCongelados = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                            $procesoEmpaque, 
+                                                                                            $frescoPP, 
+                                                                                            $conceptoTransf,
+                                                                                            $atributoBulto,
+                                                                                            TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $frescoPP->getPresentacionKg());
+                $produccionFrescos[1] = ['articulo' => 'PREMIUM', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['f']['cantidad']+= $stock['stock'];
+                $totalesCajones['f']['peso']+= $kg;
+              }
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                            $procesoEmpaque, 
+                                                                                            $frescoSA, 
+                                                                                            $conceptoTransf,
+                                                                                            $atributoBulto,
+                                                                                            TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $frescoSA->getPresentacionKg());
+                $produccionFrescos[2] = ['articulo' => 'FRESCO S/Alas', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['f']['cantidad']+= $stock['stock'];
+                $totalesCajones['f']['peso']+= $kg;
+              }
+
+              $totalesCajones['t']['cantidad']+= $totalesCajones['f']['cantidad'];
+              $totalesCajones['t']['peso']+= $totalesCajones['f']['peso'];
+
+              $produccionCongelados = [];
+
+              $cajonCongeladoMI = $em->find(Articulo::class, 115);
+              $cajonCongeladoCHI = $em->find(Articulo::class, 116);
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
                                                                                                 $procesoEmpaque, 
-                                                                                                $articuloCajonCongelado, 
+                                                                                                $cajonCongeladoMI, 
                                                                                                 $conceptoTransf,
                                                                                                 $atributoBulto,
                                                                                                 TransformarStock::class);
-              if (!$cajonesCongelados)
+              if ($stock)
               {
-                $cajonesCongelados['stock'] = 0;
+                $kg = ($stock['stock'] * $cajonCongeladoMI->getPresentacionKg());
+                $produccionCongelados[0] = ['articulo' => 'CONGELADO M.I.', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['c']['cantidad']+= $stock['stock'];
+                $totalesCajones['c']['peso']+= $kg;
               }
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                                $procesoEmpaque, 
+                                                                                                $cajonCongeladoCHI, 
+                                                                                                $conceptoTransf,
+                                                                                                $atributoBulto,
+                                                                                                TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $cajonCongeladoCHI->getPresentacionKg());
+                $produccionCongelados[1] = ['articulo' => 'CONGELADO CHILE', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['c']['cantidad']+= $stock['stock'];
+                $totalesCajones['c']['peso']+= $kg;
+              }
+              $totalesCajones['t']['cantidad']+= $totalesCajones['c']['cantidad'];
+              $totalesCajones['t']['peso']+= $totalesCajones['c']['peso'];
 
               $artAtrConceptoTrozado = $em->find(ArticuloAtributoConcepto::class, 146); //AAC para indicar la transferencia de Carcazas desde Empaque a Trozado
 
@@ -189,6 +279,13 @@ class InformesController extends Controller
                 $kgATransito['stock'] = 0;
               }
 
+              $artAtrTrozadoDeTransito = $em->find(ArticuloAtributoConcepto::class, 595);
+
+              $transitoInicial = $repository->getAcumuladoAtributoWhitAAC($data['faena'], $artAtrTrozadoDeTransito, $atributoPeso);
+              if (!$transitoInicial)
+              {
+                $transitoInicial['stock'] = 0;
+              }
 
               $unidadTrozadoFresco = $em->find(Articulo::class, 91); //Unidad de Trozado Fresco
               $procesoCamara = $em->find(ProcesoFaena::class, 2);
@@ -203,7 +300,7 @@ class InformesController extends Controller
                 $totalRomaneo+= ($r['stock'] * $kg*-1);
               }
 
-              $transitoInicial['stock'] = 0;
+             // $transitoInicial['stock'] = 0;
             //  return $this->render('@GestionFaena/informes/informeRendimiento.html.twig', ['form' => $form->createView(), 'stock' => $stock]);
               return $this->render('@GestionFaena/informes/informeRendimiento.html.twig', 
                                    ['dam' => $stockDAM, 
@@ -212,12 +309,13 @@ class InformesController extends Controller
                                     'cantidad' => $cantTotalAves,
                                     'cantDPM' => $cantDPM,
                                     'faena' => $data['faena'],
+                                    'prodCamaraFresco' => $kgRomaneoCamaraTrozadoFresco,
                                     'kmDPM' => $kmDPM,
                                     'kgAtrozar' => $kgATrozado,
                                     'transitoInicial' => $transitoInicial,
                                     'kgAtransito' => $kgATransito,
-                                    'trozadoCamara' => $totalRomaneo,
-                                    'cajones' => ['f' => $cajonesFrescos, 'c' => $cajonesCongelados], 
+                                    'trozadoCamara' => $totalRomaneo,                                    
+                                    'cajones' => ['f' => $produccionFrescos, 'c' => $produccionCongelados, 't' => $totalesCajones], 
                                     'form' => $form->createView()]);
             }
 
