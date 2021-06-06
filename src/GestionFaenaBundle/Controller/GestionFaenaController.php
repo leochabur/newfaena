@@ -96,15 +96,19 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $artAtCon = $movimiento->getArtProcFaena();
         if ($artAtCon->getListeners()->count())
         {
+
             $destino = $movimiento->getMovimientoDestino(); //Seria la entrada al proceso por ejemplo al Transito Congelado
             //se asume que cada Articulo solo tiene un listener....se deberia extender facilmente recorriendo el array de  listeners
+
             $entrada = new EntradaStock();
             $entrada->setProcesoFnDay($destino->getProcesoFnDay());
             $entrada->setFaenaDiaria($destino->getFaenaDiaria());
             $entrada->setArtProcFaena($artAtCon->getListeners()->first());
+            //throw new \Exception("disapro expecpsion".$artAtCon->getListeners()->first());
             $entrada->setVisible(true);            
 
-            foreach ($movimiento->getValores() as $valor) {
+            foreach ($movimiento->getValores() as $valor) 
+            {
                 $valorAtr = new ValorNumerico();
                 $valorAtr->setAtributoAbstracto($valor->getAtributo()->getAtributoAbstracto());
                 $valorAtr->setValor($valor->getValor());
@@ -114,6 +118,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 $valorAtr->setAcumula($valor->getAtributo()->getAcumula());
                 $entrada->addValore($valorAtr);
             }
+
             $destino->setVisible(false);
             $entrada->setMovimientoAsociado($movimiento);
             $em->persist($entrada);
@@ -878,6 +883,157 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
           return $form;
     }
 
+    private function getFormSendToCongelar($proc, $fd, $art)
+    {
+          $form =  $this->createFormBuilder()
+                        ->add('cantidad', 
+                              TextType::class,
+                              [
+                                'attr' => ['placeholder' => 'Cantidad']
+                                ]
+                            )   
+                        ->add('enviar', SubmitType::class, ['label' => 'Enviar a congelar...'])
+                        ->setMethod('POST')
+                        ->setAction($this->generateUrl('enviar_a_congelar', ['proc' => $proc, 'fd' => $fd, 'art' => $art]))
+                        ->getForm();
+          return $form;
+    }
+
+    /**
+     * @Route("/sendtocong/{proc}/{fd}/{art}", name="enviar_a_congelar")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function enviarATransitoCongelado($proc, $fd, $art, Request $request)
+    {
+
+        $form = $this->getFormSendToCongelar($proc, $fd, $art);
+
+        $form->handleRequest($request);
+        $data = $form->getData();
+        $cantidad = $data['cantidad'];
+        if ((!is_numeric($cantidad)) || (!$cantidad))
+        {
+            return new JsonResponse(['status' => false, 'message' => 'Cantidad invalida!']);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $proceso = $em->find(ProcesoFaenaDiaria::class, $proc);
+
+        $faena = $em->find(FaenaDiaria::class, $fd);
+        $articulo = $em->find(Articulo::class, $art);
+        $concepto = $em->find(ConceptoMovimiento::class, 2);
+        $bulto = $em->find(AtributoAbstracto::class, 27);        
+
+        $artAtrConc = $this->getArticuloAtributoConceptoForMovimientoAction($articulo,
+                                                                       $concepto,
+                                                                       TransferirStock::getInstance(),
+                                                                       $proceso->getProcesoFaena(),
+                                                                        $em); 
+        $destinos = $artAtrConc->getProcesosDestino();
+        if (count($destinos) != 1)
+        {
+            return new JsonResponse(['status' => false, 'message' => 'El articulo solo debe tener un proceso destino']);
+        }
+
+        $destino = $destinos->first();
+
+        $transferencia = new TransferirStock();
+        $transferencia->setArtProcFaena($artAtrConc);
+        $transferencia->setProcesoFnDay($proceso);
+        $transferencia->setFaenaDiaria($faena);
+        $transferencia->setVisible(false);
+        $transferencia->setProcesado(true);
+        $transferencia->generateAtributes();
+        $transferencia->setValorConAtributo($bulto, $cantidad);
+
+        $listaAtributos = $transferencia->getValores();
+
+        $aacSalida = $this->getArticuloAtributoConceptoForMovimientoAction($articulo,
+                                                                           $concepto,
+                                                                           SalidaStock::getInstance(),
+                                                                           $proceso->getProcesoFaena(),
+                                                                            $em); 
+        $salida = new SalidaStock();
+        $salida->setArtProcFaena($aacSalida);
+        $salida->setProcesoFnDay($proceso);
+        $salida->setFaenaDiaria($faena);
+        $salida->setVisible(true);
+        $salida->setProcesado(true);
+        foreach ($listaAtributos as $val)
+        {
+            $salida->addValore(clone $val);
+        }
+
+
+        $aacEntrada= $this->getArticuloAtributoConceptoForMovimientoAction($articulo,
+                                                                           $concepto,
+                                                                           EntradaStock::getInstance(),
+                                                                           $destino,
+                                                                            $em); 
+        $entrada = new EntradaStock();
+        $entrada->setArtProcFaena($aacEntrada);
+        $entrada->setProcesoFnDay($faena->getProceso($destino->getId()));
+        $entrada->setFaenaDiaria($faena);
+        $entrada->setVisible(true);
+        $entrada->setProcesado(true);
+        foreach ($listaAtributos as $val)
+        {
+            $entrada->addValore(clone $val);
+        }
+        
+        try
+        {
+            $em->persist($transferencia);
+            $em->persist($entrada);
+            $em->persist($salida);
+            $transferencia->setMovimientoDestino($entrada);
+            $transferencia->setMovimientoOrigen($salida);              
+            
+            $evento = new MovimientoEvent($transferencia, $em);
+            $this->dispatcher->dispatch('movimiento.generar', $evento);
+            $em->flush();
+            return new JsonResponse(['status' => true, 'data' => $cantidad, 'articulo' => $articulo->getNombre(), 'id' => $transferencia->getId()]);
+        }
+        catch (\Exception $e){ return new JsonResponse(['status' => false, 'message' => $e->getMessage()]); }
+    }
+
+    /**
+     * @Route("/deletetrx/{id}", name="delete_transferencia")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function eliminarTransferencia($id)
+    {
+        try
+        {    
+            $em = $this->getDoctrine()->getManager();
+            $transferencia = $em->find(TransferirStock::class, $id);
+
+            $entrada = $transferencia->getMovimientoHijo();
+
+            if ($entrada)
+            {
+                $entrada->setEliminado(true);
+            }
+
+            $destino = $transferencia->getMovimientoDestino();
+            if ($destino)
+            {
+                $destino->setEliminado(true);
+            }
+
+            $origen = $transferencia->getMovimientoOrigen();
+            if ($origen)
+            {
+                $origen->setEliminado(true);
+            }
+            $transferencia->setEliminado(true);
+            $em->flush();
+
+            return new JsonResponse(['status' => true]);
+        }
+        catch(\Exception $e ){ return new JsonResponse(['status' => false, 'message' => $e->getMessage()]);}
+    }
+
     /**
      * @Route("/clasartbse/{proc}/{fd}/{art}", name="clasifiar_articulo_base")
      * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
@@ -892,7 +1048,27 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $faena = $em->find(FaenaDiaria::class, $fd);
         $articulo = $em->find(Articulo::class, $art);
 
+        $sendCongelar = null;
+        $transferencias = [];
+        if ($articulo->getCongelable())
+        {
+             $concepto = $em->find(ConceptoMovimiento::class, 2);
+             $atributo = $em->find(AtributoAbstracto::class, 27);
+
+             $repoValue = $em->getRepository(ValorNumerico::class);
+
+             $transferencias = $repoValue->getAllAtributoParaTipoMovimientoYArticulo($faena, 
+                                                                                     $proceso->getProcesoFaena(), 
+                                                                                     $articulo, 
+                                                                                     $concepto, 
+                                                                                     $atributo, 
+                                                                                     TransferirStock::class);  
+
+             $sendCongelar = $this->getFormSendToCongelar($proceso->getId(), $faena->getId(), $articulo->getId())->createView();
+        }
+
         $repoMov = $em->getRepository(MovimientoStock::class);
+
         if ($proceso->getProcesoFaena()->getId() == 14)
         {
           $procesoAux = $proceso->getProcesoFaena()->getProcesosDestinoDefault();
@@ -987,6 +1163,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                                     'ccat' => $cantCateg,
                                     'csub' => $cantSubcates,
                                     'articulo' => $articulo,
+                                    'transferencias' => $transferencias,
+                                    'sendCongelar' => $sendCongelar,
                                     'stock' => $stock));
     }
 
@@ -3252,6 +3430,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 {
                     $repositoryTM = $em->getRepository(TipoMovimientoConcepto::class);
                     $tipoMovimiento = $repositoryTM->getTipoWithInstance($instanceOfTipoMovimiento);
+
                     if (!$tipoMovimiento){
                       throw new \Exception("No se ha definido el movimiento de Salida de Stock");
                       
@@ -3280,7 +3459,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
 
                 //  $logger->info('ESTO ES UN ERRORETE '.$e->getMessage());
 
-                  throw new \Exception("Instancia: $instanceOfTipoMovimiento - Articulo: ".$articulo->getId()." - Concepto: ".$concepto->getId()."  Proceso: ".$proceso->getId()); }
+                  throw new \Exception("ERROR".$e->getMessage()."   -Instancia: $instanceOfTipoMovimiento - Articulo: ".$articulo->getId()." - Concepto: ".$concepto->getId()."  Proceso: ".$proceso->getId()); }
     }
 
 

@@ -35,6 +35,7 @@ class ArticuloType extends AbstractType
 
         $ventas = [];
         $builder->add('nombre', TextType::class, $faena)
+                ->add('congelable')
                 ->add('nombreResumido', TextType::class, $faena)
                 ->add('codigoInterno', TextType::class, $faena)
                 ->add('presentacionKg', TextType::class, $faena)

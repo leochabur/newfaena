@@ -12,6 +12,55 @@
 		</div>
   	</div>
 	<div class="card-body">
+		{% if articulo.congelable %}
+
+			<div class="row">
+				<div class="col-lg-6">
+						<div class="card">
+							<div class="card-header">
+								Envio a congelar
+							</div>
+							<div class="card-body">
+								{{ form_start(sendCongelar, {'attr': {'novalidate': 'novalidate'}}) }}
+								<div class="row">
+									<div class="col-lg-4">
+										{{ form_widget(sendCongelar.cantidad, {'attr' : {'class' : 'form-control form-control-sm mt-1'}} ) }}
+									</div>
+									<div class="col-lg-8">
+										{{ form_widget(sendCongelar.enviar, { 'attr' : {'class' : 'btn btn-sm btn-primary send-tunel' }}) }}
+									</div>
+								</div>
+								{{ form_end(sendCongelar) }}
+							</div>
+						</div>
+				</div>
+				<div class="col-lg-6">
+						<div class="card">
+							<div class="card-header">
+								Congelando...
+							</div>
+							<div class="card-body">
+									
+									<ul class="list-group">
+										{% for t in transferencias %}
+											  <li id="li{{ t.id }}" class="list-group-item d-flex justify-content-between align-items-center">
+											    {{ loop.index }})  -  Articulo: {{ t.nombre }} - Cantidad: {{ t.stock }}
+											    <a class="delete-send" data-index="{{ loop.index }}" data-trx="{{ t.id }}"><span class="badge bg-danger rounded-pill">Eliminar</span></a>
+											  </li>
+										{% endfor %}
+									</ul>
+
+							</div>
+						</div>
+				</div>
+			</div>
+
+		{% endif %}
+		<div class="card mt-2">
+			<div class="card-header">
+				Romaneo Fresco
+			</div>
+			<div class="card-body">
 		<table class="table table-bordered table-sm table-fit">
 			<tbody>
 				
@@ -89,6 +138,7 @@
 
 			</tbody>
 		</table>
+	</div>
 	<a href="{{ path('bd_adm_proc_fan_day', {proc : proceso.id, fd : faena.id}) }}" class="btn btn-success"><< Volver</a>
 	</div>
 </div>
@@ -196,6 +246,69 @@
 									url = url.replace('id_article', $(this).data('id'));
 									$('.modal-body-article').load(url);
 									$('#viewArticle').modal('show');
+	});
+
+	$('.delete-send').click(function(event){
+											event.preventDefault();
+											const url = "{{ path('delete_transferencia', {'id' : 'ID_TRX'}) }}"; 
+											const a = $(this);
+											a.toggle();
+											bootbox.confirm({
+											    message: "Seguro eliminar el item "+a.data('index')+"?",
+											    buttons: {
+											        confirm: {
+											            label: 'Si',
+											            className: 'btn-success'
+											        },
+											        cancel: {
+											            label: 'No',
+											            className: 'btn-danger'
+											        }
+											    },
+											    callback: function (result) {
+																	        if (result)
+																	        {
+																				$.post(url.replace('ID_TRX', a.data('trx')),
+																					   function(data){
+																					   					if (!data.status) 
+																					   					{
+																					   						bootbox.alert(data.message);
+																					   						a.toggle();
+																					   					}
+																					   					else
+																					   					{
+																					   						location.reload();
+																					   					}
+																					   });
+																	        }
+																	        else
+																	        {
+																	        	a.toggle();
+																	        }
+											    }
+											});
+
+	});
+
+	$('.send-tunel').click(function(event){
+											event.preventDefault();
+											const a = $(this);
+											a.toggle();
+											const form = a.closest('form');
+											$.post(form.attr('action'),
+												   form.serialize(),
+												   function(data){
+												   					if (!data.status) 
+												   					{
+												   						bootbox.alert(data.message);
+												   						a.toggle();
+												   					}
+												   					else
+												   					{
+												   						location.reload();
+												   					}
+												   });
+
 	});
 
 	$('.sender').submit(function (event){

@@ -34,6 +34,40 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
                     ->getOneOrNullResult();
     }
 
+    public function getAllAtributoParaTipoMovimientoYArticulo(\GestionFaenaBundle\Entity\FaenaDiaria $faena, 
+                                                            \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                            \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                            \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
+                                                            \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                            $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT valor.valor as stock, mov.id as id, art.nombre as nombre
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN valor.atributo atributo
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN atributo.atributoAbstracto atributoAbstracto
+                                   INNER JOIN mov.artProcFaena artAtrCon
+                                   INNER JOIN artAtrCon.articulo art
+                                   INNER JOIN artAtrCon.concepto conMov                                    
+                                   WHERE mov.faenaDiaria = :faena AND 
+                                         mov.eliminado = :eliminado AND 
+                                         atributoAbstracto = :atributo AND
+                                         art = :articulo AND
+                                         conMov.concepto = :concepto AND
+                                         (mov INSTANCE OF $typeOfMovimiento) AND
+                                         pfd.procesoFaena = :proceso")
+                    ->setParameter('faena', $faena)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('articulo', $articulo)
+                    ->setParameter('atributo', $atributo)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
+
     public function getAcumuladoAtributoParaTipoMovimientoYArticulo(\GestionFaenaBundle\Entity\FaenaDiaria $faena, 
 					    									\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
 					    									\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,

@@ -121,6 +121,11 @@ class Articulo
     private $descVenta;
 
 
+    /**
+     * @ORM\Column(name="congelable", type="boolean", options={"default":false})
+     */
+    private $congelable = false;
+
     public function getNombrePallet()
     {
         return ($this->nombre.' - '.$this->codigoInterno);
@@ -572,5 +577,29 @@ class Articulo
     public function getDescVenta()
     {
         return $this->descVenta;
+    }
+
+    /**
+     * Set congelable
+     *
+     * @param boolean $congelable
+     *
+     * @return Articulo
+     */
+    public function setCongelable($congelable)
+    {
+        $this->congelable = $congelable;
+
+        return $this;
+    }
+
+    /**
+     * Get congelable
+     *
+     * @return boolean
+     */
+    public function getCongelable()
+    {
+        return $this->congelable;
     }
 }
