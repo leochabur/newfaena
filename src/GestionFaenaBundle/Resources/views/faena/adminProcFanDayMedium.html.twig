@@ -217,8 +217,13 @@
 										</div>
 									{% endif %}
 						{% else %}
+							{% if  proceso.procesoFaena.id == 13 %}
+								<a class="btn btn-sm btn-warning" href="{{ path('bd_adm_get_detalle_movimientos_proceso_agrupado', { proc : proceso.id, fd : faena.id, art : kart }) }}">
+		  									Ver >></a>
+		  				{% else%}
 							<a class="btn btn-sm btn-warning" href="{{ path('bd_adm_get_detalle_movimientos_proceso', { proc : proceso.id, fd : faena.id, art : kart }) }}">
 		  									Ver >></a>
+							{% endif %}
 						{% endif %}
 					</td>
 					</tr>

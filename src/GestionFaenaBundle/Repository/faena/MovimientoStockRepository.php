@@ -94,13 +94,43 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                                FROM GestionFaenaBundle:faena\MovimientoStock p 
                                JOIN p.artProcFaena artAtrCon
                                JOIN artAtrCon.articulo art
-                               WHERE p.procesoFnDay = :proceso AND p.visible = :visible AND p.eliminado = :eliminado AND p.procesado = :procesado
+                               WHERE p.procesoFnDay = :proceso AND p.visible = :visible AND p.eliminado = :eliminado
                                ORDER BY art.nombre, p.id')
             		->setParameter('proceso', $proceso)
                 ->setParameter('visible', true)
-                ->setParameter('procesado', false)
                 ->setParameter('eliminado', false)
             		->getResult();
+    }
+
+    public function findAllMovimientosWithDate(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso)
+    {
+        return $this->getEntityManager()
+                    ->createQuery('SELECT p, ff.fechaFaena as fecha, ff.id as idFaena
+                               FROM GestionFaenaBundle:faena\MovimientoStock p 
+                               JOIN p.faenaDiaria ff
+                               JOIN p.artProcFaena artAtrCon
+                               JOIN artAtrCon.articulo art
+                               WHERE p.procesoFnDay = :proceso AND p.visible = :visible AND p.eliminado = :eliminado AND p.procesado = :procesado
+                               ORDER BY art.nombre, p.id')
+                    ->setParameter('proceso', $proceso)
+                ->setParameter('visible', true)
+                ->setParameter('eliminado', false)
+                ->setParameter('procesado', false)
+                    ->getResult();
+    }
+
+    public function findAllEntradas(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso, \GestionFaenaBundle\Entity\FaenaDiaria $faena)
+    {
+        return $this->getEntityManager()
+                    ->createQuery('SELECT p 
+                                   FROM GestionFaenaBundle:faena\EntradaStock p 
+                                   WHERE p.faenaDiaria = :faena AND p.procesado = :procesado AND p.procesoFnDay = :proceso AND p.visible = :visible AND p.eliminado = :eliminado')
+                    ->setParameter('proceso', $proceso)
+                    ->setParameter('faena', $faena)
+                    ->setParameter('visible', true)
+                    ->setParameter('eliminado', false)
+                    ->setParameter('procesado', false)
+                    ->getResult();
     }
 
     public function getAllEntradasStockProceso(\GestionFaenaBundle\Entity\faena\ProcesoFaenaDiaria $proceso,
