@@ -936,26 +936,29 @@ class InformesController extends Controller
     }
 
 
-    private function getDetalleMovimientos($informe, $movimientos, $espejo, $factor, $aplicar)
+    private function getDetalleMovimientos($informe, $movimientos, $espejo, $factor, $aplicar, $excluir = [])
     {
         $em = $this->getDoctrine()->getManager();
         $flush = false;
         $detalle = array();
         foreach ($movimientos as $mov) 
         {
-            if ($factor)
+            if (!in_array($mov->getId(), $excluir))
             {
-                $mov->setValorConAtributo($informe->getAtributoAjuste()->getAtributoAbstracto(), $factor);
-                $mov->updateValues(0, $em);
-            }
+                if ($factor)
+                {
+                    $mov->setValorConAtributo($informe->getAtributoAjuste()->getAtributoAbstracto(), $factor);
+                    $mov->updateValues(0, $em);
+                }
 
-            $linea = array();
-            foreach ($informe->getAtributos() as $atr) 
-            {
-                $data = $mov->getValorWhitAtribute($atr->getAtributo(), $espejo);
-                $linea[$atr->getAtributo()->getId()] = ($data?$data->getData():'');
+                $linea = array();
+                foreach ($informe->getAtributos() as $atr) 
+                {
+                    $data = $mov->getValorWhitAtribute($atr->getAtributo(), $espejo);
+                    $linea[$atr->getAtributo()->getId()] = [ 0 => ($data?$data->getData():''), 1 => $mov->getId()];
+                }
+                $detalle[] = $linea;
             }
-            $detalle[] = $linea;
         }
 
 
@@ -971,20 +974,20 @@ class InformesController extends Controller
         $totalGeneral = array('total' => true, $informe->getAtributos()->first()->getAtributo()->getId() => 'Totales:');
         $cant = 0; //para indicar la cantidad por la cual debe dividir el totoal para realizar el promedio
         $granja =  $informe->getAtrWhitSort(2)->getAtributo();
-        foreach ($detalle as $det) 
+        foreach ($detalle as $k => $det) 
         {          
-          $gja = $det[$granja->getId()];
-          $carga = $det[$agrupa->getAtributo()->getId()];
+          $gja = $det[$granja->getId()][0];
+          $carga = $det[$agrupa->getAtributo()->getId()][0];
 
           if (!$last)
           {
             $totales = $parciales = array();
-            $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
+            $totales[$det[$agrupa->getAtributo()->getId()][0]] = $this->getInitializeArray($atributosAcumulables);
             $parciales[$carga.'-'.$gja] = $this->getInitializeArray($atributosAcumulables);
           }
           else
           {
-              if ($last != $det[$agrupa->getAtributo()->getId()])
+              if ($last != $det[$agrupa->getAtributo()->getId()][0])
               {             
 
                 $resTotales = array('parcial' => true);
@@ -1028,7 +1031,7 @@ class InformesController extends Controller
                // $result[] = $resTotales;
                 $last = null;
                 $totales = array();
-                $totales[$det[$agrupa->getAtributo()->getId()]] = $this->getInitializeArray($atributosAcumulables);
+                $totales[$det[$agrupa->getAtributo()->getId()][0]] = $this->getInitializeArray($atributosAcumulables);
               }
               else
               {
@@ -1060,15 +1063,15 @@ class InformesController extends Controller
           }
           foreach ($atributosAcumulables as $key => $value)
           {
-              $totales[$det[$agrupa->getAtributo()->getId()]][$key]['sum']+= $det[$key];
-              $totales[$det[$agrupa->getAtributo()->getId()]][$key]['cant']++;
-              $totales[$det[$agrupa->getAtributo()->getId()]][$key]['value'] = $value;
+              $totales[$det[$agrupa->getAtributo()->getId()][0]][$key]['sum']+= $det[$key][0];
+              $totales[$det[$agrupa->getAtributo()->getId()][0]][$key]['cant']++;
+              $totales[$det[$agrupa->getAtributo()->getId()][0]][$key]['value'] = $value;
 
-              $parciales[$carga.'-'.$gja][$key]['sum']+= $det[$key];
+              $parciales[$carga.'-'.$gja][$key]['sum']+= $det[$key][0];
               $parciales[$carga.'-'.$gja][$key]['cant']++;
               $parciales[$carga.'-'.$gja][$key]['value'] = $value;
           }
-          $last = $det[$agrupa->getAtributo()->getId()];
+          $last = $det[$agrupa->getAtributo()->getId()][0];
           $second = $gja;
           $result[] = $det;
         }
@@ -1181,10 +1184,11 @@ class InformesController extends Controller
     }
 
     /**
-     * @Route("/informes/expinone/{proc}/{fd}/{ajs}", name="export_informe_uno")
+     * @Route("/informes/expinone/{proc}/{fd}/{ajs}/{exc}", name="export_informe_uno")
      */
-    public function generatePdfInformeUno($proc, $fd, $ajs = 0)
+    public function generatePdfInformeUno($proc, $fd, $ajs, $exc = '')
     {
+        $excluir = explode("&", $exc);
         $em = $this->getDoctrine()->getManager();
         $faenaDiaria = $em->find(FaenaDiaria::class, $fd);
         $proceso = $em->find(ProcesoFaenaDiaria::class, $proc);
@@ -1200,7 +1204,7 @@ class InformesController extends Controller
         $pdf = $this->get('app.fpdf');
         $pdf->AliasNbPages();
 
-        $detalle = $this->getDetalleMovimientos($informe, $movimientos, $ajs, null, false);
+        $detalle = $this->getDetalleMovimientos($informe, $movimientos, $ajs, null, false, $excluir);
         
         $pdf->SetAutoPageBreak(false,0);  
         $pdf->AddPage('P', 'A4'); 
@@ -1210,11 +1214,13 @@ class InformesController extends Controller
     }
 
     /**
-     * @Route("/informes/toexcel/{proc}/{fd}/{ajs}", name="exportar_a_excel")
+     * @Route("/informes/toexcel/{proc}/{fd}/{ajs}/{exc}", name="exportar_a_excel")
      */
-    public function exportarInformeExcel($proc, $fd, $ajs = 0)
+
+    //default $ajs = 0
+    public function exportarInformeExcel($proc, $fd, $ajs, $exc = '')
     {
-        
+        $excluir = explode("&", $exc);
         $em = $this->getDoctrine()->getManager();
         $faenaDiaria = $em->find(FaenaDiaria::class, $fd);
         $proceso = $em->find(ProcesoFaenaDiaria::class, $proc);
@@ -1224,7 +1230,7 @@ class InformesController extends Controller
 
 
         $excel = $this->get('phpexcel')->createPHPExcelObject();
-        $detalle = $this->getDetalleMovimientos($informe, $movimientos, $ajs, null, false);
+        $detalle = $this->getDetalleMovimientos($informe, $movimientos, $ajs, null, false, $excluir);
         
 
 
@@ -1329,11 +1335,14 @@ class InformesController extends Controller
             {   
                 if ($key == 4)
                 {
-                   $data = number_format(($det[2]/$det[9]), 3, '.', '');
+                    $num = (is_array($det[2])?$det[2][0]:$det[2]);
+                    $den = (is_array($det[9])?$det[9][0]:$det[9]);
+                    $data = number_format(($num/$den), 3, '.', '');
+                  // $data = number_format(($det[2]/$det[9]), 3, '.', '');
                 }
                 else
                 {
-                  $data = $det[$key];
+                  $data = $det[$key][0];
                 }
             }
             else
@@ -1408,11 +1417,14 @@ class InformesController extends Controller
           {   
                 if ($key == 4)
                 {
-                   $data = number_format(($det[2]/$det[9]), 3, '.', '');
+                  $num = (is_array($det[2])?$det[2][0]:$det[2]);
+                  $den = (is_array($det[9])?$det[9][0]:$det[9]);
+                  $data = number_format(($num/$den), 3, '.', '');
+                //  $data = number_format((($det[2][0])/($det[9][0])), 3, '.', '');
                 }
                 else
                 {
-                  $data = $det[$key];
+                  $data = $det[$key][0];
                 }
           }
           else

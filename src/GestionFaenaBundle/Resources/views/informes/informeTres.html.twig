@@ -52,15 +52,27 @@
 							{% if h.visible %}
 								<td class="{% if mov['total'] is defined %}font-weight-bold {% endif %}{% if h.sumariza or h.promedia %}text-right{% endif %}">
 									{% if mov[h.atributo.id] is defined %}
-										{% if mov['total'] is defined %}
-											{% if h.atributo.id == 4 %}
-												{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
-											{% else %}
-												{{ mov[h.atributo.id] }}
+
+											{% if mov[h.atributo.id] is defined %}
+												{% if mov['total'] is defined %}
+													{% if h.atributo.id == 4 %}
+														{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
+													{% else %}
+														{{ mov[h.atributo.id] }}
+													{% endif %}
+												{% else %}
+													{% if mov['parcial'] is defined %}
+														{% if h.atributo.id == 4 %}
+															{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
+														{% else %}
+															{{ mov[h.atributo.id] }}
+														{% endif %}
+													{% else %}
+															{{ mov[h.atributo.id][0] }}
+													{% endif %}
+												{% endif %}
 											{% endif %}
-										{% else %}
-											{{ mov[h.atributo.id] }}
-										{% endif %}
+
 									{% endif %}
 								</td>
 							{% endif %}
@@ -69,6 +81,6 @@
 				{% endfor %}
 			</tbody>
 	</table>
-	<a class="btn btn-success" href="{{ path('export_informe_uno', { proc: proceso.id, fd : faena.id, ajs: 1}) }}" target="_blanck">Imprimir</a>
+	<a class="btn btn-success" href="{{ path('export_informe_uno', { proc: proceso.id, fd : faena.id, ajs: 1}) }}" target="_blank">Imprimir</a>
 {% endif %}
 {% endblock fos_user_content %}

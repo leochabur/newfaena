@@ -13,6 +13,7 @@
 	<table class="table table-striped table-bordered table-hover table-sm ">
 			<thead>
 				<tr>
+					<th rowspan="2"></th>
 					<th rowspan="2">Granja</th>
 					<th rowspan="2">Galpon</th>
 					<th rowspan="2">O/C</th>
@@ -31,8 +32,23 @@
 			<tbody>
 				{% for key, mov in movimientos %}
 					<tr>
-						{% for h in header %}
+						
+						{% set printer = false %}
+						{% for h in header %}					
+
+
 							{% if h.visible %}
+
+								{% if loop.index == 1 %}
+									{% if mov[h.atributo.id][1] is defined %}
+										<td>
+											<input type="checkbox" class="exclude" data-mov="{{ mov[h.atributo.id][1] }}"/>
+										</td>
+									{% else %}
+										<td></td>
+									{% endif %}
+								{% endif %}
+
 								<td class="{% if mov['total'] is defined %}font-weight-bold {% endif %}
 											{% if mov['parcial'] is defined %} font-italic text-monospace{% endif %}
 											{% if h.sumariza or h.promedia %}text-right{% endif %}">
@@ -51,7 +67,7 @@
 													{{ mov[h.atributo.id] }}
 												{% endif %}
 											{% else %}
-													{{ mov[h.atributo.id] }}
+													{{ mov[h.atributo.id][0] }}
 											{% endif %}
 										{% endif %}
 									{% endif %}
@@ -62,7 +78,42 @@
 				{% endfor %}
 			</tbody>
 	</table>
-	<a class="btn btn-success" href="{{ path('export_informe_uno', { proc: proceso.id, fd : faena.id, ajs: 1}) }}" target="_blanck">
+	<a class="btn btn-success printer" data-proc="{{ proceso.id }}" data-fan="{{ faena.id }}" href="#">
 		Imprimir</a>
-	<a class="btn btn-default" href="{{ path('exportar_a_excel', { proc: proceso.id, fd : faena.id, ajs : 1}) }}" target="_blanck">Exportar</a>
+	<a class="btn btn-default excel" data-proc="{{ proceso.id }}" data-fan="{{ faena.id }}" href="{{ path('exportar_a_excel', { proc: proceso.id, fd : faena.id, ajs : 1}) }}">Exportar</a>
 {% endblock fos_user_content %}
+
+{% block javascripts %}
+
+<script type="text/javascript">
+		$('.excel').click(function(event){
+											event.preventDefault();
+											var a = $(this);
+											
+											var url = "{{ path('exportar_a_excel', { proc: 'PROC_ID', fd : 'FAN_ID', ajs: 'AJUSTE', exc :'EXCLUIR'}) }}";
+											var exc = getSelected();
+											var route = url.replace('PROC_ID', a.data('proc')).replace('FAN_ID', a.data('fan')).replace('AJUSTE', '1').replace('EXCLUIR', exc);
+											window.open(route, '_blank').focus();
+		});
+		
+		$('.printer').click(function(event){
+											event.preventDefault();
+											var a = $(this);
+											
+											var url = "{{ path('export_informe_uno', { proc: 'PROC_ID', fd : 'FAN_ID', ajs: 'AJUSTE', exc :'EXCLUIR'}) }}";
+											var exc = getSelected();
+											var route = url.replace('PROC_ID', a.data('proc')).replace('FAN_ID', a.data('fan')).replace('AJUSTE', '1').replace('EXCLUIR', exc);
+											window.open(route, '_blank').focus();
+		});
+
+		function getSelected()
+		{
+			var exc = '';
+			$(".exclude:checkbox:checked").each(function() {
+												             exc+= $(this).data('mov') + '&';
+												        });
+			return exc;
+		}
+</script>
+
+{% endblock %}
