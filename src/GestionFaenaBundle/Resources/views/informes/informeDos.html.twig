@@ -52,25 +52,26 @@
 								<td class="{% if mov['total'] is defined %}font-weight-bold {% endif %}
 											{% if mov['parcial'] is defined %} font-italic text-monospace{% endif %}
 											{% if h.sumariza or h.promedia %}text-right{% endif %}">
-									{% if mov[h.atributo.id] is defined %}
-										{% if mov['total'] is defined %}
-											{% if h.atributo.id == 4 %}
-												{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
-											{% else %}
-												{{ mov[h.atributo.id] }}
-											{% endif %}
-										{% else %}
-											{% if mov['parcial'] is defined %}
-												{% if h.atributo.id == 4 %}
-													{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
+
+											{% if mov[h.atributo.id] is defined %}
+												{% if mov['total'] is defined %}
+													{% if h.atributo.id == 4 %}
+														{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
+													{% else %}
+														{{ mov[h.atributo.id] }}
+													{% endif %}
 												{% else %}
-													{{ mov[h.atributo.id] }}
+													{% if mov['parcial'] is defined %}
+														{% if h.atributo.id == 4 %}
+															{{ (mov[2] / mov[9])|number_format(3, '.', '') }}
+														{% else %}
+															{{ mov[h.atributo.id] }}
+														{% endif %}
+													{% else %}
+															{{ mov[h.atributo.id][0] }}
+													{% endif %}
 												{% endif %}
-											{% else %}
-													{{ mov[h.atributo.id][0] }}
 											{% endif %}
-										{% endif %}
-									{% endif %}
 								</td>
 							{% endif %}
 						{% endfor %}
@@ -95,7 +96,7 @@
 											var route = url.replace('PROC_ID', a.data('proc')).replace('FAN_ID', a.data('fan')).replace('AJUSTE', '1').replace('EXCLUIR', exc);
 											window.open(route, '_blank').focus();
 		});
-		
+
 		$('.printer').click(function(event){
 											event.preventDefault();
 											var a = $(this);
@@ -108,7 +109,7 @@
 
 		function getSelected()
 		{
-			var exc = '';
+			var exc = '&';
 			$(".exclude:checkbox:checked").each(function() {
 												             exc+= $(this).data('mov') + '&';
 												        });
