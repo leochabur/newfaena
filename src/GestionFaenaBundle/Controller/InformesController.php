@@ -1342,7 +1342,7 @@ class InformesController extends Controller
                 }
                 else
                 {
-                  $data = $det[$key][0];
+                  $data = (is_array($det[$key])?$det[$key][0]:$det[$key]);
                 }
             }
             else
@@ -1424,7 +1424,7 @@ class InformesController extends Controller
                 }
                 else
                 {
-                  $data = $det[$key][0];
+                  $data = (is_array($det[$key])?$det[$key][0]:$det[$key]);
                 }
           }
           else
