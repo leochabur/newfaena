@@ -1642,5 +1642,46 @@ class InformesController extends Controller
 
     }
 
+    /**
+     * @Route("/informes/pendtdo", name="bultos_pendientes_de_tapar")
+     */
+    public function pendientesTapar(Request $request)
+    {
+        $form = $this->getFormSelectFechas();
+
+        if ($request->isMethod('POST'))
+        {
+          $form->handleRequest($request);
+          if ($form->isValid())
+          {
+            $data = $form->getData();
+          }
+        }
+
+        return $this->render('@GestionFaena/informes/informeTapado.html.twig', ['form' => $form->createView()]);
+    }
+
+    private function getFormSelectFechas()
+    {
+        return   $this->createFormBuilder()
+                      ->add('desde', 
+                            DateType::class, 
+                            ['widget' => 'single_text',
+                             'required' => true,
+                             'constraints' => [
+                                                      new NotNull(['message' => 'Debe seleccionar una fecha!!!']),
+                                               ]
+                             ])
+                      ->add('hasta', 
+                            DateType::class, 
+                            ['widget' => 'single_text',
+                             'required' => true,
+                             'constraints' => [
+                                                      new NotNull(['message' => 'Debe seleccionar una fecha!!!']),
+                                               ]
+                            ])
+                      ->add('cargar', SubmitType::class, ['label' => 'Cargar Informe'])
+                      ->getForm();
+    }
 
 }

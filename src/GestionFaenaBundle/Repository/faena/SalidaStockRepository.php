@@ -10,4 +10,31 @@ namespace GestionFaenaBundle\Repository\faena;
  */
 class SalidaStockRepository extends \Doctrine\ORM\EntityRepository
 {
+
+    public function getAllAtributoParaTipoMovimientoYArticulo(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                              \DateTime $desde,
+                                                              \DateTime $hasta,
+                                                              $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT valor.valor as stock, mov.id as id, art.nombre as nombre
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN mov.faenaDiaria fd
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN pfd.procesoFaena pf
+                                   INNER JOIN valor.atributo atr
+                                   INNER JOIN atr.atributoAbstracto aa
+                                   INNER JOIN mov.artProcFaena aac
+                                   WHERE fd.fechaFaena BETWEEN :desde AND :hasta AND 
+                                         mov.eliminado = :eliminado AND 
+                                         aa = pf.atributoAbstractoBase AND
+                                         aac.articulo = pf.articuloBase AND
+                                         (mov INSTANCE OF $typeOfMovimiento) AND
+                                         pf = :proceso")
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
 }
