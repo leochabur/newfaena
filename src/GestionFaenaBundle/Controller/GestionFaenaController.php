@@ -632,6 +632,9 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                                                                                     $em);
 
                 $atributoEntrada = $artAtrConEntrada->getAtributoMedibleManualActivo($atributoDestino);
+
+               // throw new \Exception("".$atributoDestino->getId());
+
                 if (!$atributoEntrada)//No existe un Atributo generado
                 {
                     $atributoEntrada = new AtributoMedibleManual();
@@ -657,6 +660,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 $valor->setAcumula($atributoEntrada->getAcumula());
                 $valor->setValor($value);
                 $valor->setFaenaDiaria($faenaOrigen);
+               // throw new \Exception("".$faenaOrigen);
                 if ($pallet) //si existe un pallet lo asigna al mismo
                 {
                    $pallet->addValore($valor);
@@ -670,6 +674,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                                                                                     SalidaStock::getInstance(),
                                                                                     $procesoFaenaOrigen,
                                                                                     $em);
+
                 $atributoSalida = $artAtrConSalida->getAtributoMedibleManualActivo($atributoAbstractoBase);
                 if (!$atributoSalida)//No existe un Atributo generado
                 {
@@ -1879,6 +1884,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
              return $this->redirectToRoute('bd_adm_proc_fan_day', ['proc' => $proc, 'fd' => $fan]);
         }
 
+
+
         //del movimiento actual recupera el ARTATRCONC sino lo crea
         $artAtrConOrigen = $this->getArticuloAtributoConceptoForMovimientoAction($articulo,
                                                                                  $conceptoMovimiento,
@@ -2421,10 +2428,10 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
     /////////////////////////////
 
    /**
-     * @Route("/detacong/{proc}/{fd}", name="bd_adm_get_detalle_movimientos_en_congelamiento")
+     * @Route("/detacong/{proc}/{fd}/{pfd}", name="bd_adm_get_detalle_movimientos_en_congelamiento")
      * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
      */
-    public function viewDetalleIngresoACongelar($proc, $fd)
+    public function viewDetalleIngresoACongelar($proc, $fd, $pfd = 0)
     {   
         $em = $this->getDoctrine()->getManager();
         $proceso = $em->find(ProcesoFaenaDiaria::class, $proc);
@@ -2447,13 +2454,15 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 $procesoOrigen = $origen->getProcesoFnDay();
                 $faena = $origen->getFaenaDiaria();
                 $value = $asoc->getValorWhitAtribute($bulto);
-
-                $body[] = [ 'fecha' => $faena->getFechaFaena()->format('d/m/Y'), 
-                            'origen' => $procesoOrigen->getProcesoFaena()->getNombre(), 
-                            'articulo' => $articulo->getNombre(),
-                            'valor' => $value->getData()
-                            ];
-                $total+= $value->getData();
+                if ($value->getData())
+                {
+                    $body[] = [ 'fecha' => $faena->getFechaFaena()->format('d/m/Y'), 
+                                'origen' => $procesoOrigen->getProcesoFaena()->getNombre(), 
+                                'articulo' => $articulo->getNombre(),
+                                'valor' => $value->getData()
+                                ];
+                    $total+= $value->getData();
+                }
             }
         }
         $body[] = [ 'fecha' => 'TOTAL', 
@@ -2463,6 +2472,43 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             ];
 
         return $this->render('@GestionFaena/faena/ingresosACongelar.html.twig', ['faena' => $faena, 'body' => $body]);
+    }
+
+   /**
+     * @Route("/detatapado/{fd}", name="bd_adm_get_detalle_articulos_tapados")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function viewDetalleArticulosTapados($fd)
+    {   
+        $em = $this->getDoctrine()->getManager();
+        $proceso = $em->find(ProcesoFaena::class, 2);
+        $faena = $em->find(FaenaDiaria::class, $fd);
+        $bulto = $em->find(AtributoAbstracto::class, 9); 
+
+        $repository = $em->getRepository(SalidaStock::class);
+        //throw new \Exception("".$faena);
+
+        $entradas = $repository->getDetalleArticulosTapados($proceso, $bulto, $faena->getFechaFaena(), '');
+        $body = [];
+        $total = 0;
+        foreach ($entradas as $e)
+        {
+
+                    $body[] = [ 'fecha' => $e['fecha']->format('d/m/Y'), 
+                                'origen' => '', 
+                                'articulo' => $e['articulo'],
+                                'valor' => $e['stock']
+                                ];
+                    $total+= $e['stock'];
+        }
+
+        $body[] = [ 'fecha' => 'TOTAL', 
+            'origen' => '', 
+            'articulo' => '',
+            'valor' => $total
+            ];
+
+        return $this->render('@GestionFaena/faena/articulosTapados.html.twig', ['faena' => $faena, 'body' => $body]);
     }
 
    /**

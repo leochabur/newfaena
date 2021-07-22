@@ -23,34 +23,132 @@
 	{{ form_end(form) }}
 </div>
 
-{% if headers is defined %}
-	<table class="table table-striped table-bordered table-hover table-sm ">
+{% if resumen is defined %}
+			<table class="table table-striped table-bordered table-hover table-sm ">
 			<thead>
 				<tr>
-					<th>Concepto</th>
-					<th>Articulo</th>
-					{% for h in headers %}
-						<th> {{ h }}</th>
-					{% endfor %}					
+					<th>Fecha</th>
+					<th>Enviado a Congelar</th>	
+					<th>Retirado del Tunel</th>	
+					<th>Articulos Tapados</th>			
 				</tr>
 			</thead>
 			<tbody>
 				
-				{% for f in table %}
+				{% for key, val in resumen %}
 					<tr>
-						<td>{{ f[0] }}</td>
-						<td>{{ f[1] }}</td>
-						{% for k, v in headers %}
-							{% if f[2][k] is defined %}
-								<td class="text-right">{{ f[2][k] }}</td>
-							{% else %}
-								<td></td>
-							{% endif %}
-							
-						{% endfor %}	
+						<td>{{ key}}</td>
+						<td class="text-right detail" 
+							data-fd="{{ val.idFd }}" 
+							data-proc="{% if val.idpfd is defined %}{{ val.idpfd }}{% else %} 0 {% endif %}" 
+							data-toggle="modal" 
+							data-target="#centralModalSm">{{ val.entrada }}</td>
+						<td class="text-right">{{ val.salida }}</td>
+						<td class="text-right detail-tapado"
+							data-fd="{{ val.idFd }}" 
+							data-toggle="modal" 
+							data-target="#articulosTapados">{{ val.tapados }}</td>
 					</tr>
 				{% endfor %}
-				</tbody>
+			</tbody>
 			</table>
+
+			<div class="modal fade" id="centralModalSm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+			  aria-hidden="true">
+
+			  <!-- Change class .modal-sm to change the size of the modal -->
+			  <div class="modal-dialog modal-lg" role="document">
+
+
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			          <span aria-hidden="true">&times;</span>
+			        </button>
+			      </div>
+			      <div class="modal-body">
+			        <div class="d-flex justify-content-center">
+					  <div  id="spinner" class="spinner-border" role="status">
+					    <span class="sr-only">Loading...</span>
+					  </div>
+					</div>
+					<div id="content">
+					</div>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+			      </div>
+			    </div>
+			  </div>
+			</div>
+
+			<div class="modal fade" id="articulosTapados" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+			  aria-hidden="true">
+
+			  <!-- Change class .modal-sm to change the size of the modal -->
+			  <div class="modal-dialog modal-lg" role="document">
+
+
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			          <span aria-hidden="true">&times;</span>
+			        </button>
+			      </div>
+			      <div class="modal-body">
+			        <div class="d-flex justify-content-center">
+					  <div  id="spinner-tapado" class="spinner-border" role="status">
+					    <span class="sr-only">Loading...</span>
+					  </div>
+					</div>
+					<div id="content-tapado">
+					</div>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+			      </div>
+			    </div>
+			  </div>
+			</div>
 	{% endif %}
 {% endblock fos_user_content %}
+{% block javascripts %}
+
+<script type="text/javascript">
+	
+	$(".detail").click(function(event){
+										$('#spinner').show();
+										$('#content').empty();
+										var a = $(this);
+										const route = "{{ path('bd_adm_get_detalle_movimientos_en_congelamiento', { proc : 'ID_PROC', fd : 'ID_FD' }) }}";
+	
+										
+										$.post(route.replace('ID_PROC', a.data('proc')).replace('ID_FD', a.data('fd')),
+											   function(data){
+
+											   					$('#content').html(data);
+											   					$('#centralModalSm').modal('show');
+											   					$('#spinner').hide();
+											   });
+										
+	});
+
+	$(".detail-tapado").click(function(event){
+										$('#spinner-tapado').show();
+										$('#content-tapado').empty();
+										var a = $(this);
+										const route = "{{ path('bd_adm_get_detalle_articulos_tapados', {fd : 'ID_FD' }) }}";
+
+										
+										$.post(route.replace('ID_FD', a.data('fd')),
+											   function(data){
+
+											   					$('#content-tapado').html(data);
+											   					$('#articulosTapados').modal('show');
+											   					$('#spinner-tapado').hide();
+											   });
+										
+	});
+</script>
+
+{% endblock %}

@@ -11,30 +11,124 @@ namespace GestionFaenaBundle\Repository\faena;
 class SalidaStockRepository extends \Doctrine\ORM\EntityRepository
 {
 
-    public function getAllAtributoParaTipoMovimientoYArticulo(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+    public function articulosQuitadosDelTunel(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
                                                               \DateTime $desde,
                                                               \DateTime $hasta,
                                                               $typeOfMovimiento)
     {
 
         return $this->getEntityManager()
-                    ->createQuery("SELECT valor.valor as stock, mov.id as id, art.nombre as nombre
+                    ->createQuery("SELECT (-1*SUM(valor.valor)) as stock, art.nombre as articulo, fd.fechaFaena as fecha, pfd.id as idPfd, fd.id as idFd
                                    FROM GestionFaenaBundle:faena\ValorNumerico valor
                                    INNER JOIN valor.movimiento mov
                                    INNER JOIN mov.faenaDiaria fd
                                    INNER JOIN mov.procesoFnDay pfd
                                    INNER JOIN pfd.procesoFaena pf
-                                   INNER JOIN valor.atributo atr
-                                   INNER JOIN atr.atributoAbstracto aa
                                    INNER JOIN mov.artProcFaena aac
+                                   INNER JOIN aac.articulo art
                                    WHERE fd.fechaFaena BETWEEN :desde AND :hasta AND 
                                          mov.eliminado = :eliminado AND 
-                                         aa = pf.atributoAbstractoBase AND
-                                         aac.articulo = pf.articuloBase AND
-                                         (mov INSTANCE OF $typeOfMovimiento) AND
-                                         pf = :proceso")
+                                         art = pf.articuloBase AND
+                                         valor.atributoAbstracto = pf.atributoAbstractoBase AND
+                                         (mov INSTANCE OF GestionFaenaBundle:faena\SalidaStock) AND
+                                         pf = :proceso
+                                    GROUP BY fd.fechaFaena")
                     ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
                     ->setParameter('eliminado', false)
                     ->getResult();
+
+    }
+
+    public function articulosEnviadosAlTunel(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                              \DateTime $desde,
+                                                              \DateTime $hasta,
+                                                              $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT SUM(valor.valor) as stock, art.nombre as articulo, fd.fechaFaena as fecha, pfd.id as idPfd, fd.id as idFd
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN mov.faenaDiaria fd
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN pfd.procesoFaena pf
+                                   INNER JOIN mov.artProcFaena aac
+                                   INNER JOIN aac.articulo art
+                                   WHERE fd.fechaFaena BETWEEN :desde AND :hasta AND 
+                                         mov.eliminado = :eliminado AND 
+                                         art = pf.articuloBase AND
+                                         valor.atributoAbstracto = pf.atributoAbstractoBase AND
+                                         (mov INSTANCE OF GestionFaenaBundle:faena\EntradaStock) AND
+                                         pf = :proceso
+                                    GROUP BY fd
+                                    ORDER BY fd.fechaFaena")
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+
+    }
+
+    public function getArticulosTapados(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                          \DateTime $desde,
+                                          \DateTime $hasta,
+                                          $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT (-1*SUM(valor.valor)) as stock, art.nombre as articulo, fd.fechaFaena as fecha, pfd.id as idPfd, fd.id as idFd
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.faenaDiaria fd
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN pfd.procesoFaena pf
+                                   INNER JOIN mov.artProcFaena aac
+                                   INNER JOIN aac.articulo art
+                                   WHERE fd.fechaFaena BETWEEN :desde AND :hasta AND 
+                                         mov.eliminado = :eliminado AND 
+                                         art = pf.articuloBase AND
+                                         valor.atributoAbstracto = pf.atributoAbstractoBase AND
+                                         (mov INSTANCE OF GestionFaenaBundle:faena\SalidaStock) AND
+                                         pf = :proceso
+                                    GROUP BY fd
+                                    ORDER BY fd.fechaFaena")
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+
+    }
+
+    public function getDetalleArticulosTapados(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo, 
+                                                  \DateTime $fecha,
+                                                  $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT valor.valor as stock, art.nombre as articulo, fd.fechaFaena as fecha
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.faenaDiaria fd
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN pfd.procesoFaena pf
+                                   INNER JOIN mov.artProcFaena aac
+                                   INNER JOIN aac.articulo art
+                                   WHERE fd.fechaFaena = :fecha AND 
+                                         mov.eliminado = :eliminado AND 
+                                         valor.atributoAbstracto = :atributo AND
+                                         (mov INSTANCE OF GestionFaenaBundle:faena\EntradaStock) AND
+                                         pf = :proceso
+                                    ORDER BY fd.fechaFaena")
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('atributo', $atributo)
+                    ->setParameter('fecha', $fecha)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+
     }
 }

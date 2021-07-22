@@ -1654,7 +1654,53 @@ class InformesController extends Controller
           $form->handleRequest($request);
           if ($form->isValid())
           {
+            $em = $this->getDoctrine()->getEntityManager();
             $data = $form->getData();
+            $repository = $em->getRepository(SalidaStock::class);
+            $proceso = $em->find(ProcesoFaena::class, 13);
+            $salidas = $repository->articulosQuitadosDelTunel($proceso, $data['desde'], $data['hasta'], SalidaStock::class);
+
+            $proceso = $em->find(ProcesoFaena::class, 13);
+
+            $procesoTapado = $em->find(ProcesoFaena::class, 14);
+
+            $resumen = [];
+
+            foreach ($salidas as $s)
+            {
+                $key = $s['fecha']->format('d/m/Y');
+                if (!array_key_exists($key, $resumen))
+                {
+                    $resumen[$key] = ['idFd' => $s['idFd'], 'fecha' => $s['fecha'], 'art' => $s['articulo'], 'salida' => '', 'entrada' => '', 'tapados' => ''];
+                }
+                $resumen[$key]['salida'] = $s['stock'];
+            }
+
+            $entradas = $repository->articulosEnviadosAlTunel($proceso, $data['desde'], $data['hasta'], SalidaStock::class);
+            foreach ($entradas as $e)
+            {
+                $key = $e['fecha']->format('d/m/Y');
+                if (!array_key_exists($key, $resumen))
+                {
+                    $resumen[$key] = ['idpfd' => $e['idPfd'], 'idFd' => $e['idFd'], 'fecha' => $e['fecha'], 'art' => $e['articulo'], 'salida' => '', 'entrada' => '', 'tapados' => ''];
+                }
+                $resumen[$key]['entrada'] = $e['stock'];
+                $resumen[$key]['idpfd'] = $e['idPfd'];
+            }
+
+            $tapados = $repository->getArticulosTapados($procesoTapado, $data['desde'], $data['hasta'], SalidaStock::class);
+            foreach ($tapados as $t)
+            {
+                $key = $t['fecha']->format('d/m/Y');
+                if (!array_key_exists($key, $resumen))
+                {
+                    $resumen[$key] = ['idFd' => $t['idFd'], 'fecha' => $t['fecha'], 'art' => $t['articulo'], 'salida' => '', 'entrada' => '', 'tapados' => ''];
+                }
+                $resumen[$key]['tapados'] = $t['stock'];
+            }
+
+            ksort($resumen);
+            return $this->render('@GestionFaena/informes/informeTapado.html.twig', ['resumen' => $resumen, 'form' => $form->createView()]);
           }
         }
 
