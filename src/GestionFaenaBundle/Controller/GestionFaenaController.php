@@ -934,6 +934,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                                                                        TransferirStock::getInstance(),
                                                                        $proceso->getProcesoFaena(),
                                                                         $em); 
+    //    throw new \Exception("".$artAtrConc->getVistaEdicion());    
+      //  return new JsonResponse(['status' => false, 'message' => $artAtrConc->getVistaEdicion()]);    
         $destinos = $artAtrConc->getProcesosDestino();
         if (count($destinos) != 1)
         {
@@ -3273,13 +3275,14 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                                                                                         $em);
                 }
                 catch (\Exception $e){throw $e;}
+
                 /*busca en la lista de valores de atributos del movimiento si existe el valor correspondiente al AtributoAbstracto 
                   que maneja el stock del proceso*/
                 $valorAtributo = $movimiento->getValorWhitAtribute($articuloManejaStock->getAtributo());
                 
                 if (!$valorAtributo)
                 {
-                  throw new \Exception("No se encuentra el atributo en la lista de valores del movimiento!! ".$articuloManejaStock);
+                  throw new \Exception("No se encuentra el atributo en la lista de valores del movimiento 1!! ".$articuloManejaStock);
                 }
 
                 $tipoMovimiento = $repository->getTipoWithInstance(EntradaStock::getInstance());
@@ -3370,7 +3373,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 $valorAtributo = $movimiento->getValorWhitAtribute($articuloManejaStock->getAtributo());
                 if (!$valorAtributo)
                 {
-                  throw new \Exception("No se encuentra el atributo en la lista de valores del movimiento!!");
+                  throw new \Exception("No se encuentra el atributo en la lista de valores del movimiento 2!!");
                 }
 
                 $repositoryMovimiento = $em->getRepository(MovimientoStock::class);
