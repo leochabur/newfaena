@@ -104,7 +104,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             $entrada->setProcesoFnDay($destino->getProcesoFnDay());
             $entrada->setFaenaDiaria($destino->getFaenaDiaria());
             $entrada->setArtProcFaena($artAtCon->getListeners()->first());
-            //throw new \Exception("disapro expecpsion".$artAtCon->getListeners()->first());
+            //throw new \Exception("disapro expecpsion".$artAtCon->getListeners()->first()->getVistaEdicion());
             $entrada->setVisible(true);            
 
             foreach ($movimiento->getValores() as $valor) 
@@ -591,6 +591,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
 
         $articuloBase = $em->find(Articulo::class, $base); // articulo origen de la transformacion
 
+     //   return new JsonResponse(['status' => false, 'message' => 'El articulo '.$articuloBase.' no se encuentra configurado para manejar stock']);
+
         if ($val == 0) //no existe aun un valor para el articulo
         {
           try{
@@ -610,7 +612,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 {
                   return new JsonResponse(['status' => false, 'message' => 'El articulo '.$articulo.' no se encuentra configurado para manejar stock']);
                 }
-                $atributoDestino = $atributoDestino->getAtributo();
+                $atributoDestino = $atributoDestino->getAtributo();                
 
                 $atributoAbstractoBase = $procesoFaenaOrigen->existeArticuloDefinidoManejoStock($articuloBase);
                 if (!$atributoAbstractoBase)
@@ -634,6 +636,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                 $atributoEntrada = $artAtrConEntrada->getAtributoMedibleManualActivo($atributoDestino);
 
                // throw new \Exception("".$atributoDestino->getId());
+
+              //  return new JsonResponse(['status' => false, 'message' => 'No se ha configurado un articulo base en el proceso '.$atributoDestino]);
 
                 if (!$atributoEntrada)//No existe un Atributo generado
                 {
@@ -926,6 +930,10 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
 
         $faena = $em->find(FaenaDiaria::class, $fd);
         $articulo = $em->find(Articulo::class, $art);
+
+
+        return new JsonResponse(['status' => false, 'message' => 'El articulo solo debe tener un proceso destino   '.$articulo]);
+
         $concepto = $em->find(ConceptoMovimiento::class, 2);
         $bulto = $em->find(AtributoAbstracto::class, 27);        
 
@@ -1054,6 +1062,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
 
         $faena = $em->find(FaenaDiaria::class, $fd);
         $articulo = $em->find(Articulo::class, $art);
+
+      //  throw new \Exception("no se encuentra el concepto del movimiento  ".$articulo);
 
         $sendCongelar = null;
         $transferencias = [];

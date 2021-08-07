@@ -34,6 +34,110 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
                     ->getOneOrNullResult();
     }
 
+    public function getArticulosCongelandoAgrupadosPorFaena(\DateTime $desde, \DateTime $hasta, 
+                                                            \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                            \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                            \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
+                                                            \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                            $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(sum(valor.valor)) as stock,  faena.fechaFaena as fecha, mov.id as idPfd, faena.id as idFd, '' as articulo
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN mov.faenaDiaria faena
+                                   INNER JOIN valor.atributo atributo
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN atributo.atributoAbstracto atributoAbstracto
+                                   INNER JOIN mov.artProcFaena artAtrCon
+                                   INNER JOIN artAtrCon.articulo art
+                                   INNER JOIN artAtrCon.concepto conMov                                    
+                                   WHERE faena.fechaFaena BETWEEN :desde AND :hasta AND 
+                                         mov.eliminado = :eliminado AND 
+                                         atributoAbstracto = :atributo AND
+                                         art = :articulo AND
+                                         conMov.concepto = :concepto AND
+                                         (mov INSTANCE OF $typeOfMovimiento) AND
+                                         pfd.procesoFaena = :proceso
+                                    GROUP BY faena")
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('articulo', $articulo)
+                    ->setParameter('atributo', $atributo)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
+
+    public function getArticulosEnviadosACongelar(\GestionFaenaBundle\Entity\FaenaDiaria $faena, 
+                                                    \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                    \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(valor.valor) as stock, art.nombre as articulo
+                                   FROM GestionFaenaBundle:faena\MovimientoCompuesto mc
+                                   JOIN mc.movimientoDestino md
+                                   JOIN md.procesoFnDay pfdDest
+
+                                   JOIN mc.movimientoOrigen mo
+                                   JOIN GestionFaenaBundle:faena\ValorNumerico valor WITH valor.movimiento = mo
+                                   INNER JOIN valor.atributoAbstracto atributoAbstracto
+                                   INNER JOIN mo.artProcFaena artAtrCon
+                                   INNER JOIN artAtrCon.articulo art                                   
+                                 
+                                   WHERE mc.faenaDiaria = :faena AND 
+                                         mc.eliminado = :eliminado AND 
+                                         mo.eliminado = :eliminado AND 
+                                         md.eliminado = :eliminado AND 
+                                         atributoAbstracto = :atributo AND
+                                         pfdDest.procesoFaena = :proceso
+                                   ORDER BY art.nombre")
+                    ->setParameter('faena', $faena)
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('atributo', $atributo)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
+
+    public function getArticulosCongelandoAgrupadosPorFaenaWithAtributo(\DateTime $desde, \DateTime $hasta, 
+                                                                        \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                                        \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                                        \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
+                                                                        \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                                        $typeOfMovimiento)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(sum(valor.valor)) as stock,  faena.fechaFaena as fecha, mov.id as idPfd, faena.id as idFd, '' as articulo
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN mov.faenaDiaria faena
+                                   INNER JOIN valor.atributoAbstracto atributoAbstracto
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN mov.artProcFaena artAtrCon
+                                   INNER JOIN artAtrCon.articulo art
+                                   INNER JOIN artAtrCon.concepto conMov                                    
+                                   WHERE faena.fechaFaena BETWEEN :desde AND :hasta AND 
+                                         mov.eliminado = :eliminado AND 
+                                         atributoAbstracto = :atributo AND
+                                         art = :articulo AND
+                                         conMov.concepto = :concepto AND
+                                         (mov INSTANCE OF $typeOfMovimiento) AND
+                                         pfd.procesoFaena = :proceso
+                                    GROUP BY faena")
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('articulo', $articulo)
+                    ->setParameter('atributo', $atributo)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
+
     public function getAllAtributoParaTipoMovimientoYArticulo(\GestionFaenaBundle\Entity\FaenaDiaria $faena, 
                                                             \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
                                                             \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,

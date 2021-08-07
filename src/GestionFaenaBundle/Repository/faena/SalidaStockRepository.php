@@ -10,7 +10,6 @@ namespace GestionFaenaBundle\Repository\faena;
  */
 class SalidaStockRepository extends \Doctrine\ORM\EntityRepository
 {
-
     public function articulosQuitadosDelTunel(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
                                                               \DateTime $desde,
                                                               \DateTime $hasta,

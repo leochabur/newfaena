@@ -549,4 +549,111 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                     ->getResult();
     }
 
+
+    public function getStockArticulosRomaneados (\GestionFaenaBundle\Entity\ProcesoFaena $proceso,
+                                                 \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                 \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                 \DateTime $desde,
+                                                 \DateTime $hasta)
+    {
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(sum(valor.valor)) as stock, faena.fechaFaena as fecha, '' as articulo, procFanDay.id as idPfd, faena.id as idFd
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   JOIN valor.movimiento movimiento 
+                                   JOIN movimiento.movimientoHijo entrada
+                                   JOIN entrada.artProcFaena aacEnt
+                                   JOIN aacEnt.articulo artEnt
+                                   JOIN artEnt.categoria cat
+                                   JOIN artEnt.subcategoria subcat
+                                   JOIN movimiento.faenaDiaria faena
+                                   JOIN movimiento.procesoFnDay procFanDay
+                                   JOIN procFanDay.procesoFaena procesoFaena
+                                   JOIN movimiento.artProcFaena artAtrCon    
+                                   JOIN artAtrCon.articulo art                             
+                                   WHERE  (art = :articulo) AND
+                                         (procesoFaena = :procesoFaena) AND
+                                         (movimiento.visible = :visible) AND
+                                         (movimiento.eliminado = :eliminado) AND
+                                         (movimiento INSTANCE OF GestionFaenaBundle:faena\SalidaStock) AND
+                                         faena.fechaFaena BETWEEN :desde AND :hasta
+                                   GROUP BY faena.id"
+                                )
+                    ->setParameter('procesoFaena', $proceso)
+                    ->setParameter('articulo', $articulo)
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
+                    ->setParameter('visible', true)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
+
+    public function getDetalleArticulosRomaneados (\GestionFaenaBundle\Entity\ProcesoFaena $proceso,
+                                                 \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                 \GestionFaenaBundle\Entity\FaenaDiaria $faena,
+                                                 \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(valor.valor) as stock, artEnt.nombre as articulo
+                                   FROM GestionFaenaBundle:faena\EntradaStock es 
+                                   JOIN es.procesoFnDay procesoFnDay 
+                                   JOIN es.movimientoAsociado ma
+
+                                   JOIN ma.artProcFaena aacSal
+                                   JOIN aacSal.articulo artSalida
+
+                                   JOIN GestionFaenaBundle:faena\ValorNumerico valor WITH valor.movimiento = es                                   
+                                 
+
+                                   JOIN es.artProcFaena aacEnt
+                                   JOIN aacEnt.articulo artEnt
+                           
+
+
+                                   WHERE (procesoFnDay.procesoFaena = :procesoFaena) AND
+                                         (es.visible = :visible) AND
+                                         (es.eliminado = :eliminado) AND
+                                         (es.faenaDiaria = :faena) AND
+                                         (artSalida = :articulo)"
+                                )
+                    ->setParameter('procesoFaena', $proceso)
+                    ->setParameter('faena', $faena)
+                    ->setParameter('visible', true)
+                    ->setParameter('eliminado', false)
+                    ->setParameter('articulo', $articulo)
+                    ->getResult();
+    }
+
+    public function getDetalleArticulosCongelando (\GestionFaenaBundle\Entity\ProcesoFaena $proceso,
+                                                   \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                   \GestionFaenaBundle\Entity\FaenaDiaria $faena,
+                                                   \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                   \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto)
+    {
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(valor.valor) as stock, artSalida.nombre as articulo
+                                   FROM GestionFaenaBundle:faena\SalidaStock ss 
+                                   JOIN ss.procesoFnDay procesoFnDay 
+
+                                   JOIN GestionFaenaBundle:faena\ValorNumerico valor WITH valor.movimiento = ss                                   
+                                 
+                                   JOIN ss.artProcFaena aacSalida
+                                   JOIN aacSalida.concepto concepto
+                                   JOIN aacSalida.articulo artSalida                     
+
+                                   WHERE (procesoFnDay.procesoFaena = :procesoFaena) AND
+                                         (ss.visible = :visible) AND
+                                         (ss.eliminado = :eliminado) AND
+                                         (ss.faenaDiaria = :faena) AND
+                                         (artSalida = :articulo) AND
+                                         (concepto.concepto = :concepto)"
+                                )
+                    ->setParameter('procesoFaena', $proceso)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('faena', $faena)
+                    ->setParameter('visible', true)
+                    ->setParameter('eliminado', false)
+                    ->setParameter('articulo', $articulo)
+                    ->getResult();
+    }
+
 }

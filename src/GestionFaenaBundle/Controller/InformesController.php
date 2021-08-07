@@ -39,6 +39,8 @@ use GestionFaenaBundle\Entity\ProcesoFaena;
 use GestionFaenaBundle\Entity\faena\AtributoConcepto;
 use GestionFaenaBundle\Entity\faena\EntradaStock;
 use GestionFaenaBundle\Entity\faena\TransformarStock;
+use GestionFaenaBundle\Entity\faena\TransferirStock;
+use GestionFaenaBundle\Entity\faena\ValorNumerico;
 use GestionFaenaBundle\Form\faena\AtributoConceptoType;
 use GestionFaenaBundle\Form\faena\ConceptoMovimientoProcesoType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -1655,57 +1657,130 @@ class InformesController extends Controller
           if ($form->isValid())
           {
             $em = $this->getDoctrine()->getEntityManager();
+            
             $data = $form->getData();
             $repository = $em->getRepository(SalidaStock::class);
             $proceso = $em->find(ProcesoFaena::class, 13);
-            $salidas = $repository->articulosQuitadosDelTunel($proceso, $data['desde'], $data['hasta'], SalidaStock::class);
-
-            $proceso = $em->find(ProcesoFaena::class, 13);
-
-            $procesoTapado = $em->find(ProcesoFaena::class, 14);
-
             $resumen = [];
 
-            foreach ($salidas as $s)
-            {
-                $key = $s['fecha']->format('d/m/Y');
-                if (!array_key_exists($key, $resumen))
-                {
-                    $resumen[$key] = ['idFd' => $s['idFd'], 'fecha' => $s['fecha'], 'art' => $s['articulo'], 'salida' => '', 'entrada' => '', 'tapados' => ''];
-                }
-                $resumen[$key]['salida'] = $s['stock'];
-            }
+            ///articulos frescos romaneados
+              /////Levanta el romaneo de fresco de camara - (Para ello se recuperan las Salidas de Stock cuyo articulo es el articulo base del proceso)
+                //Debe recuerar todas las salidas de stock cuyo articulo sea la Unidad de Produccion
+                $atributoCantidad = $em->find(AtributoAbstracto::class, 9);
+                $procesoCamara = $em->find(ProcesoFaena::class, 2);
+                $unidadProduccion = $em->find(Articulo::class, 121);
+                
 
-            $entradas = $repository->articulosEnviadosAlTunel($proceso, $data['desde'], $data['hasta'], SalidaStock::class);
-            foreach ($entradas as $e)
+                $romaneoFresco = $em->getRepository(MovimientoStock::class)->getStockArticulosRomaneados($procesoCamara, $atributoCantidad, $unidadProduccion, $data['desde'], $data['hasta']);
+                foreach ($romaneoFresco as $e)
+                {
+                    $key = $e['fecha']->format('d/m/Y');
+                    if (!array_key_exists($key, $resumen))
+                    {
+                        $resumen[$key] = ['fecha' => $e['fecha'],
+                                          'idpfd' => $e['idPfd'], 
+                                          'idFd' => $e['idFd'], 
+                                          'fecha' => $e['fecha'], 
+                                          'art' => $e['articulo'], 
+                                          'tapados' => '', 
+                                          'produccion' => '', 
+                                          'congelando' => '',
+                                          'romaneoFresco' => ''];
+                    }
+                    $resumen[$key]['romaneoFresco'] = $e['stock'];
+                    $resumen[$key]['idpfd'] = $e['idPfd'];
+                }
+
+            /////////////////////////
+
+            $concepto = $em->find(ConceptoMovimiento::class, 2);
+            $atributo = $em->find(AtributoAbstracto::class, 27);
+            $procesoCamara = $em->find(ProcesoFaena::class, 2);
+            $congelando = $em->getRepository(ValorNumerico::class)->getArticulosCongelandoAgrupadosPorFaena($data['desde'], 
+                                                                                                          $data['hasta'],
+                                                                                                          $procesoCamara, 
+                                                                                                          $unidadProduccion,
+                                                                                                          $concepto, 
+                                                                                                          $atributo, 
+                                                                                                          SalidaStock::class);
+            foreach ($congelando as $e)
             {
                 $key = $e['fecha']->format('d/m/Y');
                 if (!array_key_exists($key, $resumen))
                 {
-                    $resumen[$key] = ['idpfd' => $e['idPfd'], 'idFd' => $e['idFd'], 'fecha' => $e['fecha'], 'art' => $e['articulo'], 'salida' => '', 'entrada' => '', 'tapados' => ''];
+                    $resumen[$key] = ['fecha' => $e['fecha'],
+                                      'idpfd' => $e['idPfd'], 
+                                      'idFd' => $e['idFd'], 
+                                      'fecha' => $e['fecha'], 
+                                      'art' => $e['articulo'], 
+                                      'tapados' => '', 
+                                      'produccion' => '', 
+                                      'congelando' => '',
+                                      'romaneoFresco' => ''];
                 }
-                $resumen[$key]['entrada'] = $e['stock'];
+                $resumen[$key]['congelando'] = $e['stock'];
                 $resumen[$key]['idpfd'] = $e['idPfd'];
             }
 
+            ////////////////Produccion Faena
+            $conceptoIngreso = $em->find(ConceptoMovimiento::class, 19);
+            $produccion = $em->getRepository(ValorNumerico::class)->getArticulosCongelandoAgrupadosPorFaenaWithAtributo($data['desde'], 
+                                                                                                                        $data['hasta'],
+                                                                                                                        $procesoCamara, 
+                                                                                                                        $unidadProduccion,
+                                                                                                                        $conceptoIngreso, 
+                                                                                                                        $atributo, 
+                                                                                                                        EntradaStock::class);
+            foreach ($produccion as $e)
+            {
+                $key = $e['fecha']->format('d/m/Y');
+                if (!array_key_exists($key, $resumen))
+                {
+                    $resumen[$key] = ['fecha' => $e['fecha'],
+                                      'idpfd' => $e['idPfd'], 
+                                      'idFd' => $e['idFd'], 
+                                      'fecha' => $e['fecha'], 
+                                      'art' => $e['articulo'], 
+                                      'tapados' => '', 
+                                      'produccion' => '', 
+                                      'congelando' => '',
+                                      'romaneoFresco' => ''];
+                }
+                $resumen[$key]['produccion'] = $e['stock'];
+                $resumen[$key]['idpfd'] = $e['idPfd'];
+            }
+            /////////////////////////////////////
+            $procesoTapado = $em->find(ProcesoFaena::class, 14);
             $tapados = $repository->getArticulosTapados($procesoTapado, $data['desde'], $data['hasta'], SalidaStock::class);
             foreach ($tapados as $t)
             {
                 $key = $t['fecha']->format('d/m/Y');
                 if (!array_key_exists($key, $resumen))
                 {
-                    $resumen[$key] = ['idFd' => $t['idFd'], 'fecha' => $t['fecha'], 'art' => $t['articulo'], 'salida' => '', 'entrada' => '', 'tapados' => ''];
+                    $resumen[$key] = ['fecha' => $e['fecha'],
+                                      'idFd' => $t['idFd'], 
+                                      'fecha' => $t['fecha'], 
+                                      'art' => $t['articulo'], 
+                                      'tapados' => '', 
+                                      'produccion' => '', 
+                                      'congelando' => '',
+                                      'romaneoFresco' => ''];
                 }
                 $resumen[$key]['tapados'] = $t['stock'];
             }
 
-            ksort($resumen);
+          //  ksort($resumen);
+
+            $columns = array_column($resumen, 'fecha');
+            array_multisort($columns, SORT_ASC, $resumen);
+
             return $this->render('@GestionFaena/informes/informeTapado.html.twig', ['resumen' => $resumen, 'form' => $form->createView()]);
           }
         }
 
         return $this->render('@GestionFaena/informes/informeTapado.html.twig', ['form' => $form->createView()]);
     }
+
 
     private function getFormSelectFechas()
     {
@@ -1729,5 +1804,63 @@ class InformesController extends Controller
                       ->add('cargar', SubmitType::class, ['label' => 'Cargar Informe'])
                       ->getForm();
     }
+
+    /**
+     * @Route("/informes/state/{faena}", name="estado_faena_diaria")
+     */
+    public function estadoFaenaDiaria($faena)
+    {
+        $em = $this->getDoctrine()->getEntityManager();
+        $faena = $em->find(FaenaDiaria::class, $faena);
+        $atributo = $em->find(AtributoAbstracto::class, 27);
+        $procesoCamara = $em->find(ProcesoFaena::class, 2);
+        $unidadProduccion = $em->find(Articulo::class, 121);
+
+        $produccion = $em->getRepository(ValorNumerico::class)->getArticulosEnviadosACongelar($faena, $procesoCamara, $atributo);
+        $dataProduccion = [];
+        $totalProduccion = 0;
+        foreach ($produccion as $p)
+        {
+          $dataProduccion[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+          $totalProduccion += $p['stock'];
+        }
+
+        ///////////////////Romaneo Fresco
+
+            $atributoFresco = $em->find(AtributoAbstracto::class, 9);
+            $romaneoFresco = $em->getRepository(MovimientoStock::class)->getDetalleArticulosRomaneados($procesoCamara, $atributoFresco, $faena, $unidadProduccion);
+            $dataFresco = [];
+            $totalFresco = 0;
+            foreach ($romaneoFresco as $p)
+            {
+              $dataFresco[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+              $totalFresco += $p['stock'];
+            }
+
+        ////////////////congelando////////////////////
+            $concepto = $em->find(ConceptoMovimiento::class, 2);
+            $congelando = $em->getRepository(MovimientoStock::class)->getDetalleArticulosCongelando($procesoCamara, $atributo, $faena, $unidadProduccion, $concepto);
+            $dataCongelando = [];
+            $totalCongelando = 0;
+            foreach ($congelando as $p)
+            {
+              $dataCongelando[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+              $totalCongelando += $p['stock'];
+            }
+        ///////////////congelando
+
+
+        return $this->render('@GestionFaena/informes/estadoTapado.html.twig', 
+                             ['faena' => $faena, 
+                              'produccion' => $dataProduccion, 
+                              'totalProduccion' => $totalProduccion,
+                              'romaneo' => $dataFresco,
+                              'totalRomaneo' => $totalFresco,
+                              'totalCongelando' => $totalCongelando,
+                              'dataCongelando' => $dataCongelando]);
+
+    }
+
+
 
 }
