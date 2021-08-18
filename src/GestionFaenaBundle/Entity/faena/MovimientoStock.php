@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\faena\MovimientoStockRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="integer")
- * @ORM\DiscriminatorMap({1:"MovimientoStock",2: "EntradaStock", 3: "SalidaStock", 4: "TransformarStock", 5: "TransferirStock", 6:"MovimientoCompuesto", 7:"TransformarTransferirStock", 8:"ComprobanteVenta", 9:"OrdenCarga"})
+ * @ORM\DiscriminatorMap({1:"MovimientoStock",2: "EntradaStock", 3: "SalidaStock", 4: "TransformarStock", 5: "TransferirStock", 6:"MovimientoCompuesto", 7:"TransformarTransferirStock", 8:"ComprobanteVenta", 9:"OrdenCarga", 10:"AjusteStock"})
  * @ORM\HasLifecycleCallbacks()
  */
 abstract class MovimientoStock

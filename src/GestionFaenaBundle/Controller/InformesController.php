@@ -77,6 +77,7 @@ use GestionFaenaBundle\Entity\opciones\AtributoInforme;
 use GestionFaenaBundle\Form\opciones\AtributoInformeType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use GestionFaenaBundle\Entity\faena\SalidaStock;
+use GestionFaenaBundle\Entity\faena\AjusteStock;
 
 class InformesController extends Controller
 {
@@ -1670,6 +1671,29 @@ class InformesController extends Controller
                 $procesoCamara = $em->find(ProcesoFaena::class, 2);
                 $unidadProduccion = $em->find(Articulo::class, 121);
                 
+                //////////////ajustes
+                $conceptoAjuste = $em->getRepository(ConceptoMovimiento::class)->getConceptoOfAjuste();
+                $ajustes = $em->getRepository(MovimientoStock::class)->getDetalleAjustesPorFechas($procesoCamara, $data['desde'], $data['hasta'], 
+                                                                                                  $conceptoAjuste, $unidadProduccion);
+                foreach ($ajustes as $e)
+                {
+                    $key = $e['fecha']->format('d/m/Y');
+                    if (!array_key_exists($key, $resumen))
+                    {
+                        $resumen[$key] = ['fecha' => $e['fecha'],
+                                          'idpfd' => '', 
+                                          'idFd' => $e['idFd'], 
+                                          'art' => '', 
+                                          'tapados' => '', 
+                                          'produccion' => '', 
+                                          'congelando' => '',
+                                          'romaneoFresco' => '',
+                                          'ajustes' => 0];
+                    }
+                    $resumen[$key]['ajustes'] = $e['stock'];
+                }
+                ///////////////////
+
 
                 $romaneoFresco = $em->getRepository(MovimientoStock::class)->getStockArticulosRomaneados($procesoCamara, $atributoCantidad, $unidadProduccion, $data['desde'], $data['hasta']);
                 foreach ($romaneoFresco as $e)
@@ -1680,12 +1704,12 @@ class InformesController extends Controller
                         $resumen[$key] = ['fecha' => $e['fecha'],
                                           'idpfd' => $e['idPfd'], 
                                           'idFd' => $e['idFd'], 
-                                          'fecha' => $e['fecha'], 
                                           'art' => $e['articulo'], 
                                           'tapados' => '', 
                                           'produccion' => '', 
                                           'congelando' => '',
-                                          'romaneoFresco' => ''];
+                                          'romaneoFresco' => '',
+                                          'ajustes' => 0];
                     }
                     $resumen[$key]['romaneoFresco'] = $e['stock'];
                     $resumen[$key]['idpfd'] = $e['idPfd'];
@@ -1711,12 +1735,12 @@ class InformesController extends Controller
                     $resumen[$key] = ['fecha' => $e['fecha'],
                                       'idpfd' => $e['idPfd'], 
                                       'idFd' => $e['idFd'], 
-                                      'fecha' => $e['fecha'], 
                                       'art' => $e['articulo'], 
                                       'tapados' => '', 
                                       'produccion' => '', 
                                       'congelando' => '',
-                                      'romaneoFresco' => ''];
+                                      'romaneoFresco' => '',
+                                          'ajustes' => 0];
                 }
                 $resumen[$key]['congelando'] = $e['stock'];
                 $resumen[$key]['idpfd'] = $e['idPfd'];
@@ -1739,12 +1763,12 @@ class InformesController extends Controller
                     $resumen[$key] = ['fecha' => $e['fecha'],
                                       'idpfd' => $e['idPfd'], 
                                       'idFd' => $e['idFd'], 
-                                      'fecha' => $e['fecha'], 
                                       'art' => $e['articulo'], 
                                       'tapados' => '', 
                                       'produccion' => '', 
                                       'congelando' => '',
-                                      'romaneoFresco' => ''];
+                                      'romaneoFresco' => '',
+                                          'ajustes' => 0];
                 }
                 $resumen[$key]['produccion'] = $e['stock'];
                 $resumen[$key]['idpfd'] = $e['idPfd'];
@@ -1759,12 +1783,12 @@ class InformesController extends Controller
                 {
                     $resumen[$key] = ['fecha' => $e['fecha'],
                                       'idFd' => $t['idFd'], 
-                                      'fecha' => $t['fecha'], 
                                       'art' => $t['articulo'], 
                                       'tapados' => '', 
                                       'produccion' => '', 
                                       'congelando' => '',
-                                      'romaneoFresco' => ''];
+                                      'romaneoFresco' => '',
+                                          'ajustes' => 0];
                 }
                 $resumen[$key]['tapados'] = $t['stock'];
             }
@@ -1816,14 +1840,16 @@ class InformesController extends Controller
         $procesoCamara = $em->find(ProcesoFaena::class, 2);
         $unidadProduccion = $em->find(Articulo::class, 121);
 
-        $produccion = $em->getRepository(ValorNumerico::class)->getArticulosEnviadosACongelar($faena, $procesoCamara, $atributo);
-        $dataProduccion = [];
-        $totalProduccion = 0;
-        foreach ($produccion as $p)
-        {
-          $dataProduccion[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
-          $totalProduccion += $p['stock'];
-        }
+
+        ////Produccion
+          $produccion = $em->getRepository(ValorNumerico::class)->getArticulosEnviadosACongelar($faena, $procesoCamara, $atributo);
+          $dataProduccion = [];
+          $totalProduccion = 0;
+          foreach ($produccion as $p)
+          {
+            $dataProduccion[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+            $totalProduccion += $p['stock'];
+          }
 
         ///////////////////Romaneo Fresco
 
@@ -1849,6 +1875,20 @@ class InformesController extends Controller
             }
         ///////////////congelando
 
+        ///////////////ajustes
+            $totalAjuste = 0;
+            $dataAjuste = [];
+            $conceptoAjuste = $em->getRepository(ConceptoMovimiento::class)->getConceptoOfAjuste();
+            $ajustes = $em->getRepository(MovimientoStock::class)->getDetalleAjustes($procesoCamara, $faena, $conceptoAjuste, $unidadProduccion);
+            foreach ($ajustes as $a)
+            {
+              $totalAjuste += $a['stock'];
+              $dataAjuste[] = ['stock' => $a['stock'], 'id' => $a['id'], 'obs' => $a['observacion'], 'user' => $a['usuario']];
+            }
+           // throw new \Exception($conceptoAjuste.'  '.var_dump($dataAjuste));
+
+        /////////////////////
+
 
         return $this->render('@GestionFaena/informes/estadoTapado.html.twig', 
                              ['faena' => $faena, 
@@ -1857,10 +1897,103 @@ class InformesController extends Controller
                               'romaneo' => $dataFresco,
                               'totalRomaneo' => $totalFresco,
                               'totalCongelando' => $totalCongelando,
-                              'dataCongelando' => $dataCongelando]);
+                              'dataCongelando' => $dataCongelando,
+                              'totalAjuste' => $totalAjuste,
+                              'dataAjuste' => $dataAjuste]);
 
     }
 
+    /**
+    * @Route("/informes/adjust/{faena}", name="ajustar_estado_faena_diaria", methods={"POST"})
+    */
+    public function ajustarFaenaDiaria($faena, Request $request)
+    {
+
+        $cantidad = $request->request->get('cantidad');
+        if (!$cantidad) 
+        {
+          return new JsonResponse(['status' => false, 'message' => 'No se ha ingresado una cantidad!']);
+        }
+
+        $observaciones = $request->request->get('observaciones');
+        if (!$observaciones) 
+        {
+          return new JsonResponse(['status' => false, 'message' => 'No se ha ingresado una observacion!']);
+        }
+
+
+        $em = $this->getDoctrine()->getManager();
+
+        $faenaDiaria = $em->find(FaenaDiaria::class, $faena);
+
+        $conceptoAjuste = $em->getRepository(ConceptoMovimiento::class)->getConceptoOfAjuste();
+        if (!$conceptoAjuste) 
+        {
+          return new JsonResponse(['status' => false, 'message' => 'No se ha definido un concepto para el ajuste!']);
+        }
+
+        try
+        {
+            $atributo = $em->find(AtributoAbstracto::class, 27);
+            $procesoCamara = $em->find(ProcesoFaena::class, 2);
+            $unidadProduccion = $em->find(Articulo::class, 121);
+            $unidadMedida = $em->find(UnidadMedida::class, 2);
+
+            $artAtrCon = GestionFaenaController::getArticuloAtributoConceptoForMovimientoAction($unidadProduccion,
+                                                                                                $conceptoAjuste,
+                                                                                                AjusteStock::getInstance(),
+                                                                                                $procesoCamara,
+                                                                                                $em,
+                                                                                                false); 
+            $procesoFD = $faenaDiaria->getProceso($procesoCamara->getId());
+
+            $ajuste = new AjusteStock();
+            $ajuste->setArtProcFaena($artAtrCon);
+            $ajuste->setProcesoFnDay($procesoFD);
+            $ajuste->setObservaciones($observaciones);
+            $ajuste->setFaenaDiaria($faenaDiaria);
+            $ajuste->setUserAlta($this->getUser());
+
+            $valorAtr = new ValorNumerico();
+            $valorAtr->setAtributoAbstracto($atributo);
+            $valorAtr->setValor($cantidad);
+
+            $valorAtr->setUnidadMedida($unidadMedida);
+            $valorAtr->setMostrar(true);
+            $valorAtr->setDecimales(0);
+            $valorAtr->setAcumula(true);
+            $ajuste->addValore($valorAtr);
+            $em->persist($ajuste);
+            $em->flush();
+            return new JsonResponse(['status' => true]);
+        }
+        catch (\Exception $e){
+          return new JsonResponse(['status' => false, 'message' => $e->getMessage()]);
+        }
+
+    }
+
+    /**
+    * @Route("/informes/adjust/delete/{id}", name="eliminar_ajustar_estado_faena_diaria")
+    */
+    public function deleteAjustarFaenaDiaria($id)
+    {
+      try
+      {
+            $em = $this->getDoctrine()->getManager();
+
+            $ajuste = $em->find(AjusteStock::class, $id);
+            $ajuste->setFechaBaja(new \DateTime());
+            $ajuste->setUserBaja($this->getUser());            
+            $ajuste->setEliminado(true);
+            $em->flush();
+            return new JsonResponse(['status' => true]);
+      }
+      catch (\Exception $e)
+      {
+        return new JsonResponse(['status' => false, 'message' => $e->getMessage()]);
+      }
+    }
 
 
 }

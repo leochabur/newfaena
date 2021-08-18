@@ -111,7 +111,16 @@ class ValorNumerico extends ValorAtributo
         $factores = $this->getAtributo()->getFactoresCalculo(); 
         if (!$factores)
         {
-            if (!$this->valor)
+            $atributo = $this->getAtributo();
+            $zero = false;
+
+            if (($atributo) && ($atributo->getAdmiteCero()))
+            {
+                    $zero = true;
+                
+            }
+
+            if ((!$this->valor) && (!$zero))
             {
                 return ['ok' => false, 'message' => 'El campo '.$this->getAtributo().' no puede permanecer en blanco!'];
             }

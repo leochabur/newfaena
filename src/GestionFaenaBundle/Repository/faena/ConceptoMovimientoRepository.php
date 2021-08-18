@@ -18,4 +18,13 @@ class ConceptoMovimientoRepository extends \Doctrine\ORM\EntityRepository
 						->getQuery()
 						->getOneOrNullResult();
 	}
+
+	public function getConceptoOfAjuste()
+	{
+			return $this->createQueryBuilder('cm')
+						->where('cm.ajusta = :ajusta')
+						->setParameter('ajusta', true)
+						->getQuery()
+						->getOneOrNullResult();
+	}
 }

@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\faena\MovimientoStockRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="integer")
- * @ORM\DiscriminatorMap({1:"MovimientoStock",2: "EntradaStock", 3: "SalidaStock", 4: "TransformarStock", 5: "TransferirStock", 6:"MovimientoCompuesto", 7:"TransformarTransferirStock", 8:"ComprobanteVenta", 9:"OrdenCarga"})
+ * @ORM\DiscriminatorMap({1:"MovimientoStock",2: "EntradaStock", 3: "SalidaStock", 4: "TransformarStock", 5: "TransferirStock", 6:"MovimientoCompuesto", 7:"TransformarTransferirStock", 8:"ComprobanteVenta", 9:"OrdenCarga", 10:"AjusteStock"})
  * @ORM\HasLifecycleCallbacks()
  */
 abstract class MovimientoStock
@@ -213,7 +213,7 @@ abstract class MovimientoStock
         return $value;
     }
 
-    public function generateAtributes()
+    public function generateAtributes($default = null)
     {
 
         $atributoConcepto = $this->artProcFaena->getAtributos()->toArray();
@@ -230,7 +230,7 @@ abstract class MovimientoStock
                                               });
         foreach ($atributos as $atributo) {
             if (!$atributo->getEliminado())
-                $this->addValore($atributo->getEntityValorAtributo($atributo));
+                $this->addValore($atributo->getEntityValorAtributo($atributo, $default));
         }        
     }
 
@@ -679,5 +679,29 @@ abstract class MovimientoStock
     public function getProcesado()
     {
         return $this->procesado;
+    }
+
+    /**
+     * Set movimientoHijo
+     *
+     * @param \GestionFaenaBundle\Entity\faena\MovimientoStock $movimientoHijo
+     *
+     * @return MovimientoStock
+     */
+    public function setMovimientoHijo(\GestionFaenaBundle\Entity\faena\MovimientoStock $movimientoHijo = null)
+    {
+        $this->movimientoHijo = $movimientoHijo;
+
+        return $this;
+    }
+
+    /**
+     * Get movimientoHijo
+     *
+     * @return \GestionFaenaBundle\Entity\faena\MovimientoStock
+     */
+    public function getMovimientoHijo()
+    {
+        return $this->movimientoHijo;
     }
 }

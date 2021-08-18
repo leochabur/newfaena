@@ -220,4 +220,28 @@ abstract class ValorAtributo
     {
         return $this->mostrar;
     }
+
+    /**
+     * Set faenaDiaria
+     *
+     * @param \GestionFaenaBundle\Entity\FaenaDiaria $faenaDiaria
+     *
+     * @return ValorAtributo
+     */
+    public function setFaenaDiaria(\GestionFaenaBundle\Entity\FaenaDiaria $faenaDiaria = null)
+    {
+        $this->faenaDiaria = $faenaDiaria;
+
+        return $this;
+    }
+
+    /**
+     * Get faenaDiaria
+     *
+     * @return \GestionFaenaBundle\Entity\FaenaDiaria
+     */
+    public function getFaenaDiaria()
+    {
+        return $this->faenaDiaria;
+    }
 }

@@ -228,4 +228,37 @@ class OrdenCarga extends MovimientoStock
     {
         return $this->entidades;
     }
+
+    /**
+     * Set transportista
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\Transportista $transportista
+     *
+     * @return OrdenCarga
+     */
+    public function setTransportista(\GestionFaenaBundle\Entity\gestionBD\Transportista $transportista = null)
+    {
+        $this->transportista = $transportista;
+
+        return $this;
+    }
+
+    /**
+     * Get transportista
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\Transportista
+     */
+    public function getTransportista()
+    {
+        return $this->transportista;
+    }
+
+    public function getTitularTransporte()
+    {
+        if ($this->transportista)
+        {
+            return $this->transportista->getTitular();
+        }
+        return ;
+    }
 }

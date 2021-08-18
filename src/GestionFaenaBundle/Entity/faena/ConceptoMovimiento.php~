@@ -41,6 +41,11 @@ class ConceptoMovimiento
      */
     private $transforma;
 
+    /**
+     * @ORM\Column(name="ajusta", type="boolean", nullable=true, options={"default" : false})
+     */
+    private $ajusta;
+
     public function getAtributoConcepto(\GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $apf)
     {
         foreach ($this->atributos as $atr) {

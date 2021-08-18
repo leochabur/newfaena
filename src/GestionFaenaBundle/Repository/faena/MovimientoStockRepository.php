@@ -656,4 +656,75 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                     ->getResult();
     }
 
+    public function getDetalleAjustes(\GestionFaenaBundle\Entity\ProcesoFaena $proceso,
+                                      \GestionFaenaBundle\Entity\FaenaDiaria $faena,
+                                      \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
+                                      \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(valor.valor) as stock, es.id as id, es.observaciones as observacion, u.username as usuario
+                                   FROM GestionFaenaBundle:faena\AjusteStock es 
+                                   JOIN es.procesoFnDay procesoFnDay 
+
+                                   JOIN es.userAlta u
+                                   JOIN GestionFaenaBundle:faena\ValorNumerico valor WITH valor.movimiento = es                              
+
+                                   JOIN es.artProcFaena aacEnt
+                                   JOIN aacEnt.concepto concepto
+                                   JOIN aacEnt.articulo artEnt                           
+
+                                   WHERE (procesoFnDay.procesoFaena = :procesoFaena) AND
+                                         (concepto.concepto = :concepto) AND
+                                         (es.visible = :visible) AND
+                                         (es.eliminado = :eliminado) AND
+                                         (es.faenaDiaria = :faena) AND
+                                         (artEnt = :articulo)"
+                                )
+                    ->setParameter('procesoFaena', $proceso)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('faena', $faena)
+                    ->setParameter('visible', true)
+                    ->setParameter('eliminado', false)
+                    ->setParameter('articulo', $articulo)
+                    ->getResult();
+    }
+
+    public function getDetalleAjustesPorFechas(\GestionFaenaBundle\Entity\ProcesoFaena $proceso,
+                                              \DateTime $desde,
+                                              \DateTime $hasta,
+                                              \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
+                                              \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        return $this->getEntityManager()
+                    ->createQuery("SELECT ABS(valor.valor) as stock, faena.fechaFaena as fecha, faena.id as idFd
+                                   FROM GestionFaenaBundle:faena\AjusteStock es 
+                                   JOIN es.procesoFnDay procesoFnDay 
+
+                                   JOIN es.faenaDiaria faena
+
+                                   JOIN es.userAlta u
+                                   JOIN GestionFaenaBundle:faena\ValorNumerico valor WITH valor.movimiento = es                              
+
+                                   JOIN es.artProcFaena aacEnt
+                                   JOIN aacEnt.concepto concepto
+                                   JOIN aacEnt.articulo artEnt                           
+
+                                   WHERE (procesoFnDay.procesoFaena = :procesoFaena) AND
+                                         (concepto.concepto = :concepto) AND
+                                         (es.visible = :visible) AND
+                                         (es.eliminado = :eliminado) AND
+                                         (faena.fechaFaena BETWEEN :desde AND :hasta) AND
+                                         (artEnt = :articulo)
+                                   GROUP BY faena"
+                                )
+                    ->setParameter('procesoFaena', $proceso)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('desde', $desde)
+                    ->setParameter('hasta', $hasta)
+                    ->setParameter('visible', true)
+                    ->setParameter('eliminado', false)
+                    ->setParameter('articulo', $articulo)
+                    ->getResult();
+    }
+
 }
