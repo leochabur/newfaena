@@ -932,7 +932,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $articulo = $em->find(Articulo::class, $art);
 
 
-        return new JsonResponse(['status' => false, 'message' => 'El articulo solo debe tener un proceso destino   '.$articulo]);
+       // return new JsonResponse(['status' => false, 'message' => 'El articulo solo debe tener un proceso destino   '.$articulo]);
 
         $concepto = $em->find(ConceptoMovimiento::class, 2);
         $bulto = $em->find(AtributoAbstracto::class, 27);        

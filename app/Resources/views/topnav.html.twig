@@ -105,7 +105,9 @@
                 <ul class="dropdown-menu">
                       <li><a class="dropdown-item" href="{{ path('informes_rendimientos_faena') }}">Rendimientos</a></li>
                       <li><a class="dropdown-item" href="{{ path('informes_pollo_vivo') }}">Pollo Vivo</a></li>
-                      <li><a class="dropdown-item" href="{{ path('bultos_pendientes_de_tapar') }}">Pendientes Tapar</a></li>
+                       {% if is_granted('ROLE_SUPER_ADMIN') %}
+                          <li><a class="dropdown-item" href="{{ path('bultos_pendientes_de_tapar') }}"> Cierre Faena</a></li>
+                        {% endif %}
                 </ul>
               </li>
               <li><a class="dropdown-item" href="{{ path('vtas_incorporar_ventas_a_faena') }}">Incorporar Ventas</a></li>
