@@ -1558,8 +1558,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             $totalVentas = [];
             foreach ($movimientosVenta as $vta)
             {
-                $art = $arrayArticulos[$vta['idArt']];
-                $stock = $procesoFaena->existeArticuloDefinidoManejoStock($art);
+              /*  $art = $arrayArticulos[$vta['idArt']];
+                $stock = $procesoFaena->existeArticuloDefinidoManejoStock(null, $art['id']);
                 if ($stock)
                 {
                   $mov = $vta[0];
@@ -1578,7 +1578,7 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                     $ventasTotales[$vta['idConc']][$vta['idArt']] = 0;
                   }
                   $ventasTotales[$vta['idConc']][$vta['idArt']]+= $value->getDataValue();
-                }
+                }*/
             }
          
             $formMovimientos = $this->getFormBeginMovStockAction($proceso, $faena->getId(), false);
