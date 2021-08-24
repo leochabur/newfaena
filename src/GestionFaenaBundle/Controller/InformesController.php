@@ -1670,7 +1670,8 @@ class InformesController extends Controller
                 $atributoCantidad = $em->find(AtributoAbstracto::class, 9);
                 $procesoCamara = $em->find(ProcesoFaena::class, 2);
                 $unidadProduccion = $em->find(Articulo::class, 121);
-                
+                $cajonPollo = $em->find(Articulo::class, 90);
+
                 //////////////ajustes
                 $conceptoAjuste = $em->getRepository(ConceptoMovimiento::class)->getConceptoOfAjuste();
                 $ajustes = $em->getRepository(MovimientoStock::class)->getDetalleAjustesPorFechas($procesoCamara, $data['desde'], $data['hasta'], 
@@ -1723,7 +1724,7 @@ class InformesController extends Controller
             $congelando = $em->getRepository(ValorNumerico::class)->getArticulosCongelandoAgrupadosPorFaena($data['desde'], 
                                                                                                           $data['hasta'],
                                                                                                           $procesoCamara, 
-                                                                                                          $unidadProduccion,
+                                                                                                          [$unidadProduccion, $cajonPollo],
                                                                                                           $concepto, 
                                                                                                           $atributo, 
                                                                                                           SalidaStock::class);
@@ -1839,6 +1840,7 @@ class InformesController extends Controller
         $atributo = $em->find(AtributoAbstracto::class, 27);
         $procesoCamara = $em->find(ProcesoFaena::class, 2);
         $unidadProduccion = $em->find(Articulo::class, 121);
+        $cajonPollo = $em->find(Articulo::class, 90);
 
 
         ////Produccion
@@ -1865,7 +1867,7 @@ class InformesController extends Controller
 
         ////////////////congelando////////////////////
             $concepto = $em->find(ConceptoMovimiento::class, 2);
-            $congelando = $em->getRepository(MovimientoStock::class)->getDetalleArticulosCongelando($procesoCamara, $atributo, $faena, $unidadProduccion, $concepto);
+            $congelando = $em->getRepository(MovimientoStock::class)->getDetalleArticulosCongelando($procesoCamara, $atributo, $faena, [$cajonPollo, $unidadProduccion], $concepto);
             $dataCongelando = [];
             $totalCongelando = 0;
             foreach ($congelando as $p)

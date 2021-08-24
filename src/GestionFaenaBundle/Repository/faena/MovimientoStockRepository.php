@@ -626,7 +626,7 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
     public function getDetalleArticulosCongelando (\GestionFaenaBundle\Entity\ProcesoFaena $proceso,
                                                    \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
                                                    \GestionFaenaBundle\Entity\FaenaDiaria $faena,
-                                                   \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                   array $articulo,
                                                    \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto)
     {
         return $this->getEntityManager()
@@ -644,7 +644,7 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                                          (ss.visible = :visible) AND
                                          (ss.eliminado = :eliminado) AND
                                          (ss.faenaDiaria = :faena) AND
-                                         (artSalida = :articulo) AND
+                                         (artSalida in (:articulo)) AND
                                          (concepto.concepto = :concepto)"
                                 )
                     ->setParameter('procesoFaena', $proceso)

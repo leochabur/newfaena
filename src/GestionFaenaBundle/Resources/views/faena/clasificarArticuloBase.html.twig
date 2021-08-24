@@ -22,11 +22,14 @@
 							</div>
 							<div class="card-body">
 								{{ form_start(sendCongelar, {'attr': {'novalidate': 'novalidate'}}) }}
-								<div class="row">
-									<div class="col-lg-4">
+								<div class="form-row">
+									<div class="col-lg-3">
 										{{ form_widget(sendCongelar.cantidad, {'attr' : {'class' : 'form-control form-control-sm mt-1'}} ) }}
 									</div>
-									<div class="col-lg-8">
+									<div class="col-lg-4">
+										{{ form_widget(sendCongelar.articulo, {'attr' : {'class' : 'form-control form-control-sm mt-1'}} ) }}
+									</div>
+									<div class="col-lg-5">
 										{{ form_widget(sendCongelar.enviar, { 'attr' : {'class' : 'btn btn-sm btn-primary send-tunel' }}) }}
 									</div>
 								</div>
@@ -34,7 +37,7 @@
 
 									<div class="col-lg-12 text-muted">
 										<small id="defaultRegisterFormPasswordHelpBlock" class="form-text text-muted mb-4">
-									        Se debera indicar la totalidad de bultos ingresados a congelar (Pollo + Trozado + Subproductos)
+									        Se debera indicar la totalidad de bultos ingresados a congelar segun el articulo correspondiente
 									    </small>
 									</div>
 								</div>

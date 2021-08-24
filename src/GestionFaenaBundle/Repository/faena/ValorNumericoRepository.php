@@ -36,7 +36,7 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
 
     public function getArticulosCongelandoAgrupadosPorFaena(\DateTime $desde, \DateTime $hasta, 
                                                             \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
-                                                            \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                            array $articulo,
                                                             \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
                                                             \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
                                                             $typeOfMovimiento)
@@ -56,7 +56,7 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
                                    WHERE faena.fechaFaena BETWEEN :desde AND :hasta AND 
                                          mov.eliminado = :eliminado AND 
                                          atributoAbstracto = :atributo AND
-                                         art = :articulo AND
+                                         art in (:articulo) AND
                                          conMov.concepto = :concepto AND
                                          (mov INSTANCE OF $typeOfMovimiento) AND
                                          pfd.procesoFaena = :proceso
@@ -167,6 +167,42 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
                     ->setParameter('concepto', $concepto)
                     ->setParameter('proceso', $procesoFaena)
                     ->setParameter('articulo', $articulo)
+                    ->setParameter('atributo', $atributo)
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    }
+
+    public function getAllAtributoParaTipoMovimientoYManyArticulo(\GestionFaenaBundle\Entity\FaenaDiaria $faena, 
+                                                            \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena,
+                                                            \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo,
+                                                            \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto,
+                                                            \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo,
+                                                            $typeOfMovimiento,
+                                                            \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo2)
+    {
+
+        return $this->getEntityManager()
+                    ->createQuery("SELECT valor.valor as stock, mov.id as id, art.nombre as nombre
+                                   FROM GestionFaenaBundle:faena\ValorNumerico valor
+                                   INNER JOIN valor.movimiento mov
+                                   INNER JOIN valor.atributo atributo
+                                   INNER JOIN mov.procesoFnDay pfd
+                                   INNER JOIN atributo.atributoAbstracto atributoAbstracto
+                                   INNER JOIN mov.artProcFaena artAtrCon
+                                   INNER JOIN artAtrCon.articulo art
+                                   INNER JOIN artAtrCon.concepto conMov                                    
+                                   WHERE mov.faenaDiaria = :faena AND 
+                                         mov.eliminado = :eliminado AND 
+                                         atributoAbstracto = :atributo AND
+                                         (art = :articulo OR art = :articulo2) AND
+                                         conMov.concepto = :concepto AND
+                                         (mov INSTANCE OF $typeOfMovimiento) AND
+                                         pfd.procesoFaena = :proceso")
+                    ->setParameter('faena', $faena)
+                    ->setParameter('concepto', $concepto)
+                    ->setParameter('proceso', $procesoFaena)
+                    ->setParameter('articulo', $articulo)
+                    ->setParameter('articulo2', $articulo2)
                     ->setParameter('atributo', $atributo)
                     ->setParameter('eliminado', false)
                     ->getResult();

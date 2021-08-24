@@ -900,7 +900,17 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
                               [
                                 'attr' => ['placeholder' => 'Cantidad']
                                 ]
-                            )   
+                            )
+                        ->add('articulo',
+                              EntityType::class,
+                              [
+                                'class' => Articulo::class,
+                                'required' => false,
+                                'query_builder' => function (EntityRepository $er){
+                                                                                  return $er->createQueryBuilder('f')
+                                                                                            ->where('f.id in (121, 90)');
+                                                                                          },
+                              ])   
                         ->add('enviar', SubmitType::class, ['label' => 'Enviar a congelar...'])
                         ->setMethod('POST')
                         ->setAction($this->generateUrl('enviar_a_congelar', ['proc' => $proc, 'fd' => $fd, 'art' => $art]))
@@ -925,11 +935,17 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
             return new JsonResponse(['status' => false, 'message' => 'Cantidad invalida!']);
         }
 
+        $articulo = $data['articulo'];
+        if (!$articulo)
+        {
+            return new JsonResponse(['status' => false, 'message' => 'Debe seleccionar un articulo!']);
+        }
+
         $em = $this->getDoctrine()->getManager();
         $proceso = $em->find(ProcesoFaenaDiaria::class, $proc);
 
         $faena = $em->find(FaenaDiaria::class, $fd);
-        $articulo = $em->find(Articulo::class, $art);
+       // $articulo = $em->find(Articulo::class, $art);
 
 
        // return new JsonResponse(['status' => false, 'message' => 'El articulo solo debe tener un proceso destino   '.$articulo]);
@@ -1063,6 +1079,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
         $faena = $em->find(FaenaDiaria::class, $fd);
         $articulo = $em->find(Articulo::class, $art);
 
+        $articulo2 = $em->find(Articulo::class, 90);
+
       //  throw new \Exception("no se encuentra el concepto del movimiento  ".$articulo);
 
         $sendCongelar = null;
@@ -1074,12 +1092,13 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
 
              $repoValue = $em->getRepository(ValorNumerico::class);
 
-             $transferencias = $repoValue->getAllAtributoParaTipoMovimientoYArticulo($faena, 
-                                                                                     $proceso->getProcesoFaena(), 
-                                                                                     $articulo, 
-                                                                                     $concepto, 
-                                                                                     $atributo, 
-                                                                                     TransferirStock::class);  
+             $transferencias = $repoValue->getAllAtributoParaTipoMovimientoYManyArticulo($faena, 
+                                                                                         $proceso->getProcesoFaena(), 
+                                                                                         $articulo, 
+                                                                                         $concepto, 
+                                                                                         $atributo, 
+                                                                                         TransferirStock::class,
+                                                                                         $articulo2);  
 
              $sendCongelar = $this->getFormSendToCongelar($proceso->getId(), $faena->getId(), $articulo->getId())->createView();
         }
