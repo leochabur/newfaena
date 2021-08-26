@@ -126,6 +126,13 @@ class Articulo
      */
     private $congelable = false;
 
+
+    /**
+    * @ORM\ManyToOne(targetEntity="CategoriaArticulo") 
+    * @ORM\JoinColumn(name="id_categ_gral", referencedColumnName="id", nullable=true)
+    */      
+    private $categoriaGeneral; // Utilizado para englobar todos los articulos similares (Al controlar la faena levanta todos los tipos de pollos)
+
     public function getNombrePallet()
     {
         return ($this->nombre.' - '.$this->codigoInterno);
@@ -577,5 +584,29 @@ class Articulo
     public function getDescVenta()
     {
         return $this->descVenta;
+    }
+
+    /**
+     * Set congelable
+     *
+     * @param boolean $congelable
+     *
+     * @return Articulo
+     */
+    public function setCongelable($congelable)
+    {
+        $this->congelable = $congelable;
+
+        return $this;
+    }
+
+    /**
+     * Get congelable
+     *
+     * @return boolean
+     */
+    public function getCongelable()
+    {
+        return $this->congelable;
     }
 }

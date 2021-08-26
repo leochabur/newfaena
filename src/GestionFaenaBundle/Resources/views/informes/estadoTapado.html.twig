@@ -29,17 +29,38 @@
 				    	<table class="table table-striped table-bordered table-hover table-sm myTable">
 				    		<thead>
 				    			<tr>
-				    				<th>Articulo</th>
-				    				<th>Proceso</th>
-				    				<th>Cantidad</th>
+				    				<th rowspan="2">Articulo</th>
+				    				<th rowspan="2">De Produccion</th>
+				    				<th colspan="2">En Camara</th>
+				    			</tr>
+				    			<tr>
+				    					<th>Ref.</th>
+				    					<th>Cong.</th>
 				    			</tr>
 				    		</thead>
 				    		<tbody>
 						    	{% for p in produccion %}
 						    		<tr>
-						    			<td>{{ p.articulo }}</td>
-						    			<td></td>
-						    			<td class="text-right">{{ p.stock }}</td>
+						    			<td>{{ p.articulo }}</td>						    			
+						    			<td class="text-right rgba-green-strong">
+						    					{% if p.catGral is defined  %}  					
+						    						
+						    								{{  porCategorias['pr'][p.catGral] }}
+						    					{% else %}
+						    						{{ p.stock }}
+						    					{% endif %}
+
+						    			</td>
+						    			<td class="text-right teal accent-3">
+						    					{% if p.catGral is defined  %}						    											    						
+						    								{{  porCategorias['fr'][p.catGral] == 0 ? '' :  porCategorias['fr'][p.catGral] }}
+						    					{% endif %}
+						    			</td>
+						    			<td class="text-right teal accent-3">
+						    					{% if p.catGral is defined  %}						    											    						
+						    								{{  porCategorias['cong'][p.catGral] == 0 ? '' :  porCategorias['cong'][p.catGral] }}
+						    					{% endif %}
+						    			</td>
 						    		</tr> 
 						    	{% endfor %}
 						    </tbody>

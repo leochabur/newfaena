@@ -126,6 +126,13 @@ class Articulo
      */
     private $congelable = false;
 
+
+    /**
+    * @ORM\ManyToOne(targetEntity="CategoriaArticulo") 
+    * @ORM\JoinColumn(name="id_categ_gral", referencedColumnName="id", nullable=true)
+    */      
+    private $categoriaGeneral; // Utilizado para englobar todos los articulos similares (Al controlar la faena levanta todos los tipos de pollos)
+
     public function getNombrePallet()
     {
         return ($this->nombre.' - '.$this->codigoInterno);
@@ -601,5 +608,29 @@ class Articulo
     public function getCongelable()
     {
         return $this->congelable;
+    }
+
+    /**
+     * Set categoriaGeneral
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo $categoriaGeneral
+     *
+     * @return Articulo
+     */
+    public function setCategoriaGeneral(\GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo $categoriaGeneral = null)
+    {
+        $this->categoriaGeneral = $categoriaGeneral;
+
+        return $this;
+    }
+
+    /**
+     * Get categoriaGeneral
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo
+     */
+    public function getCategoriaGeneral()
+    {
+        return $this->categoriaGeneral;
     }
 }

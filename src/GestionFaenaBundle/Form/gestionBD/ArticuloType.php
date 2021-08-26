@@ -65,7 +65,13 @@ class ArticuloType extends AbstractType
 
         if (true)
         {
-            $form->add('categoria', 
+            $form->add('categoriaGeneral', 
+                       EntityType::class, 
+                       [
+                        'class' => 'GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo',
+                        'required' => false
+                       ])
+                ->add('categoria', 
                        EntityType::class, 
                        [
                         'class' => 'GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo',

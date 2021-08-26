@@ -77,7 +77,7 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
     {
 
         return $this->getEntityManager()
-                    ->createQuery("SELECT ABS(valor.valor) as stock, art.nombre as articulo
+                    ->createQuery("SELECT ABS(valor.valor) as stock, art.nombre as articulo, cg.id as idCG
                                    FROM GestionFaenaBundle:faena\MovimientoCompuesto mc
                                    JOIN mc.movimientoDestino md
                                    JOIN md.procesoFnDay pfdDest
@@ -87,7 +87,9 @@ class ValorNumericoRepository extends \Doctrine\ORM\EntityRepository
                                    INNER JOIN valor.atributoAbstracto atributoAbstracto
                                    INNER JOIN mo.artProcFaena artAtrCon
                                    INNER JOIN artAtrCon.articulo art                                   
-                                 
+                                    
+                                   LEFT JOIN art.categoriaGeneral cg
+
                                    WHERE mc.faenaDiaria = :faena AND 
                                          mc.eliminado = :eliminado AND 
                                          mo.eliminado = :eliminado AND 

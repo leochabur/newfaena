@@ -593,7 +593,7 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                                                  \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
     {
         return $this->getEntityManager()
-                    ->createQuery("SELECT ABS(valor.valor) as stock, artEnt.nombre as articulo
+                    ->createQuery("SELECT ABS(valor.valor) as stock, artEnt.nombre as articulo, cg.id as idCG
                                    FROM GestionFaenaBundle:faena\EntradaStock es 
                                    JOIN es.procesoFnDay procesoFnDay 
                                    JOIN es.movimientoAsociado ma
@@ -606,7 +606,9 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
 
                                    JOIN es.artProcFaena aacEnt
                                    JOIN aacEnt.articulo artEnt
-                           
+                                    
+                                   LEFT JOIN artEnt.categoriaGeneral cg
+
 
 
                                    WHERE (procesoFnDay.procesoFaena = :procesoFaena) AND
@@ -630,7 +632,7 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                                                    \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto)
     {
         return $this->getEntityManager()
-                    ->createQuery("SELECT ABS(valor.valor) as stock, artSalida.nombre as articulo
+                    ->createQuery("SELECT ABS(valor.valor) as stock, artSalida.nombre as articulo, cg.id as idCG
                                    FROM GestionFaenaBundle:faena\SalidaStock ss 
                                    JOIN ss.procesoFnDay procesoFnDay 
 
@@ -639,6 +641,8 @@ class MovimientoStockRepository extends \Doctrine\ORM\EntityRepository
                                    JOIN ss.artProcFaena aacSalida
                                    JOIN aacSalida.concepto concepto
                                    JOIN aacSalida.articulo artSalida                     
+
+                                    LEFT JOIN artSalida.categoriaGeneral cg
 
                                    WHERE (procesoFnDay.procesoFaena = :procesoFaena) AND
                                          (ss.visible = :visible) AND

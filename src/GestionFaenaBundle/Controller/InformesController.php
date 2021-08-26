@@ -1842,6 +1842,7 @@ class InformesController extends Controller
         $unidadProduccion = $em->find(Articulo::class, 121);
         $cajonPollo = $em->find(Articulo::class, 90);
 
+        $porCategorias = ['pr' => [], 'fr' => [], 'cong' => []];
 
         ////Produccion
           $produccion = $em->getRepository(ValorNumerico::class)->getArticulosEnviadosACongelar($faena, $procesoCamara, $atributo);
@@ -1849,21 +1850,51 @@ class InformesController extends Controller
           $totalProduccion = 0;
           foreach ($produccion as $p)
           {
-            $dataProduccion[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+            $aux = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+            if ($p['idCG'])
+            {
+              $aux['catGral'] = $p['idCG'];
+              if (!array_key_exists($p['idCG'], $porCategorias['pr']))
+              {
+                  $porCategorias['fr'][$p['idCG']] = 0;
+                  $porCategorias['pr'][$p['idCG']] = 0;
+                  $porCategorias['cong'][$p['idCG']] = 0;
+              }
+              $porCategorias['pr'][$p['idCG']]+= $p['stock'];
+            }
+
+            $dataProduccion[] = $aux;
             $totalProduccion += $p['stock'];
+
           }
+
 
         ///////////////////Romaneo Fresco
 
-            $atributoFresco = $em->find(AtributoAbstracto::class, 9);
-            $romaneoFresco = $em->getRepository(MovimientoStock::class)->getDetalleArticulosRomaneados($procesoCamara, $atributoFresco, $faena, $unidadProduccion);
-            $dataFresco = [];
-            $totalFresco = 0;
-            foreach ($romaneoFresco as $p)
+
+          $atributoFresco = $em->find(AtributoAbstracto::class, 9);
+          $romaneoFresco = $em->getRepository(MovimientoStock::class)->getDetalleArticulosRomaneados($procesoCamara, $atributoFresco, $faena, $unidadProduccion);
+          $dataFresco = [];
+          $totalFresco = 0;
+          foreach ($romaneoFresco as $p)
+          {
+            $aux = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+            if ($p['idCG'])
             {
-              $dataFresco[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
-              $totalFresco += $p['stock'];
+              $aux['catGral'] = $p['idCG'];
+              if (!array_key_exists($p['idCG'], $porCategorias['fr']))
+              {
+                  $porCategorias['fr'][$p['idCG']] = 0;
+                  $porCategorias['pr'][$p['idCG']] = 0;
+                  $porCategorias['cong'][$p['idCG']] = 0;
+              }
+              $porCategorias['fr'][$p['idCG']]+= $p['stock'];
             }
+
+            $dataFresco[] = $aux;
+            $totalFresco += $p['stock'];
+          }
+       //   throw new \Exception("".var_dump($porCategorias));
 
         ////////////////congelando////////////////////
             $concepto = $em->find(ConceptoMovimiento::class, 2);
@@ -1872,8 +1903,21 @@ class InformesController extends Controller
             $totalCongelando = 0;
             foreach ($congelando as $p)
             {
-              $dataCongelando[] = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
-              $totalCongelando += $p['stock'];
+                $aux = ['articulo' => $p['articulo'], 'stock' => $p['stock']];
+                if ($p['idCG'])
+                {
+                  $aux['catGral'] = $p['idCG'];
+                  if (!array_key_exists($p['idCG'], $porCategorias['cong']))
+                  {
+                    $porCategorias['fr'][$p['idCG']] = 0;
+                    $porCategorias['pr'][$p['idCG']] = 0;
+                    $porCategorias['cong'][$p['idCG']] = 0;
+                  }
+                  $porCategorias['cong'][$p['idCG']]+= $p['stock'];
+                }
+
+                $dataCongelando[] = $aux;
+                $totalCongelando += $p['stock'];
             }
         ///////////////congelando
 
@@ -1896,6 +1940,7 @@ class InformesController extends Controller
                              ['faena' => $faena, 
                               'produccion' => $dataProduccion, 
                               'totalProduccion' => $totalProduccion,
+                              'porCategorias' => $porCategorias,
                               'romaneo' => $dataFresco,
                               'totalRomaneo' => $totalFresco,
                               'totalCongelando' => $totalCongelando,

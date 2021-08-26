@@ -37,14 +37,18 @@
               {{ form_label(form.orden, 'Orden Aparicion') }}
               {{ form_widget(form.orden) }}
             </div>
-          	<div class="col col-lg-4">
+          	<div class="col col-lg-3">
           		{{ form_label(form.categoria, 'Categoria') }}
           		{{ form_widget(form.categoria) }}
           	</div>
-          	<div class="col col-lg-4">
+          	<div class="col col-lg-3">
           		{{ form_label(form.subcategoria, 'Subcategoria') }}
           		{{ form_widget(form.subcategoria) }}
           	</div>
+            <div class="col col-lg-4">
+              {{ form_label(form.categoriaGeneral, 'Cat. General') }}
+              {{ form_widget(form.categoriaGeneral) }}
+            </div>
           </div>
       {% endif %}
       <div class="form-row">
@@ -90,6 +94,7 @@
             <th>Nom. Red.</th>
             <th>Categoria</th>
             <th>Subategoria</th>
+            <th>Cat. General</th>
             <th>Pres. Kg.</th>
             <th>Pres. Uda.</th>
             <th></th>
@@ -107,6 +112,7 @@
               <td>{{ f.nombreResumido }}</td> 
               <td>{{ f.categoria }}</td> 
               <td>{{ f.subcategoria }}</td> 
+              <td>{{ f.categoriaGeneral }}</td> 
               <td>{{ f.presentacionKg }}</td> 
               <td>{{ f.presentacionUnidad }}</td> 
               <td><a href="{{ path('bd_editar_articulo_basico', { 'art' : f.id }) }}" class="btn btn-warning btn-sm">Editar</a></td>
