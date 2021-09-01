@@ -36,6 +36,8 @@ use GestionFaenaBundle\Entity\faena\ConceptoMovimiento;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Validator\Constraints\File;
+use GestionVentasBundle\Entity\NumeracionRemito;
+use GestionVentasBundle\Form\NumeracionRemitoType;
 
 /**
  * @Route("/ventas")
@@ -144,7 +146,7 @@ class VentasController extends Controller
     	$parameters = [];
     	$data = $request->request->get('form');
     	$fecha = null;
-    	if ($data['fecha'])
+    	if (($data) && ($data['fecha']))
     	{
     		$fecha = \DateTime::createFromFormat('Ymd', $data['fecha']);
     		$parameters['fecha'] = $fecha;
@@ -160,23 +162,28 @@ class VentasController extends Controller
         $dataCom = ($comprobante?$comprobante->getComentario(): '');
         $cliente = ($comprobante?$comprobante->getEntidad(): null);
         $horario = ($comprobante?$comprobante->getHorarioCarga(): null);
-    	$form =$this->createFormBuilder()
+    	$form = $this->createFormBuilder()
     				->add('fechaComprobante', 
     					  DateType::class, 
-    					  ['widget' => 'single_text',
-    					   'required' => true,
-    					   'data' => $fecha,
-                           'constraints' => [
-                                                    new NotNull(['message' => 'Debe seleccionar una fecha!!!']),
-                                             ]
-                           ])
-    				->add('comentario', TextareaType::class, ['data' => $dataCom])
-                    ->add('horarioCarga',
-                           EntityType::class, [
-                                                'class' => 'GestionFaenaBundle\Entity\faena\HorarioCarga',
-                                                'data' => $horario
-                            ])
-                    ->add('cliente', 
+                          array_merge(
+                					   [
+                                            'widget' => 'single_text',
+                    					   'required' => true,
+                    					   'data' => $fecha,
+                                           'constraints' => [
+                                                                    new NotNull(['message' => 'Debe seleccionar una fecha!!!']),
+                                                             ]
+                                       ],
+                                       ((!$comprobante) || (!$comprobante->getConfirmado())) ? [] : ['disabled' => true] )
+                        )
+    				->add('comentario', 
+                          TextareaType::class, 
+                          array_merge(['data' => $dataCom], ((!$comprobante) || (!$comprobante->getConfirmado())) ? [] : ['disabled' => true] )
+                        );
+
+        if ((!$comprobante) || (!$comprobante->getConfirmado()))
+        {
+                $form->add('cliente', 
                           EntityType::class, [
                           'data' => $cliente,
                           'class' => EntidadExterna::class,                          
@@ -189,12 +196,29 @@ class VentasController extends Controller
 																						  ->orderBy('e.valor');
 																		     },
                     ])
-                    ->add('fecha', HiddenType::class, ['data' => ($fecha?$fecha->format('Ymd'):null)])
-                    ->add('siguiente', SubmitType::class, ['label' => ($comprobante?'Modificar' : 'Siguiente >>')])    
+                    ->add('siguiente', SubmitType::class, ['label' => ($comprobante?'Modificar' : 'Siguiente >>')]);
+        }
+        else
+        {
+
+                
+                $form->add('cliente', 
+                          EntityType::class, 
+                          array_merge(
+                                        [
+                                          'data' => $cliente,
+                                          'class' => EntidadExterna::class,
+                                          'choices' => [$cliente]
+                                        ],
+                                        ((!$comprobante) || (!$comprobante->getConfirmado())) ? [] : ['disabled' => true] )
+                        );
+        }
+
+       return $form->add('fecha', HiddenType::class, ['data' => ($fecha?$fecha->format('Ymd'):null)])                    
                     ->setAction($url)  
                     ->setMethod('POST')               
                     ->getForm();
-        return $form;
+        
     }
 
     /**
@@ -228,7 +252,7 @@ class VentasController extends Controller
     		$compVenta = new ComprobanteVenta();
     		$compVenta->setUserAlta($this->getUser());
     		$compVenta->setComentario($data['comentario']);
-            $compVenta->setHorarioCarga($data['horarioCarga']);
+           // $compVenta->setHorarioCarga($data['horarioCarga']);
     		$compVenta->setFecha($data['fechaComprobante']);
     		$compVenta->setEntidad($data['cliente']);
             $compVenta->setNumero($proxNumero);
@@ -268,14 +292,15 @@ class VentasController extends Controller
             $comprobante->setComentario($data['comentario']);
             $comprobante->setFecha($data['fechaComprobante']);
             $comprobante->setEntidad($data['cliente']);
-            $comprobante->setHorarioCarga($data['horarioCarga']);
+           // $comprobante->setHorarioCarga($data['horarioCarga']);
             $em->flush();
             return $this->redirectToRoute('vtas_generate', ['request' => $request], 307);
         }
+
         $this->addFlash(
-                  'error',
-                  'Todos los campos son obligatorios!'
-              );
+                              'error',
+                              'Todos los campos son obligatorios!'
+                          );
         return $this->redirectToRoute('vtas_agregar_articulos', ['id' => $id]);
     }
 
@@ -313,11 +338,11 @@ class VentasController extends Controller
     			$item = $comprobante->getItemConTipoYArticulo($tpo, $art);
 
     			$formVentas[$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comprobante, $art, $tpo, $item)->createView();
-    		}    		
+    		}
     	}
 
     	$form = $this->createFormBuilder()
-    				 ->add('back', SubmitType::class, ['label' => 'Guardar y Volver'])    
+    				 ->add('back', SubmitType::class, array_merge([], $comprobante->getConfirmado()?['label' => 'Volver']:['label' => 'Guardar y Volver']))    
                      ->setAction($this->generateUrl('vtas_volver_add_items'))  
                      ->add('fecha', HiddenType::class, ['data' => $comprobante->getFecha()->format('Ymd')])
                      ->setMethod('POST')               
@@ -1219,7 +1244,9 @@ class VentasController extends Controller
 
                         $articulos[$result[5]] = $result[5];
 
-                        $data[$key]['items'][$result[5]]+=$result[6];
+                        //throw new \Exception(''.$result[6]);
+
+                        $data[$key]['items'][$result[5]]+=trim($result[6]);
                         $data[$key]['cant']++;
                     }                   
                 }
@@ -1268,4 +1295,37 @@ class VentasController extends Controller
         return $form;
     }
 
+    /**
+     * @Route("/impresion", name="vtas_configruacion_impresion", methods={"POST", "GET"})
+     */
+    public function impresionComprobantes(Request $request)
+    {
+        $numeracion = new NumeracionRemito();
+
+        $form = $this->getFormAltaNumeracion($numeracion);
+
+        $em = $this->getDoctrine()->getManager();
+
+        $numeraciones = $em->getRepository(NumeracionRemito::class)->findAll();
+
+        if ($request->isMethod('POST'))
+        {
+            $form->handleRequest($request);
+            if ($form->isValid())
+            {
+
+                $em->persist($numeracion);
+                $em->flush();
+
+                return $this->redirectToRoute('vtas_configruacion_impresion');
+            }
+        }
+
+        return $this->render('@GestionVentas/ventas/numeracionRemito.html.twig', ['form' => $form->createView(), 'numeraciones' => $numeraciones]); 
+    }
+
+    private function getFormAltaNumeracion($numeracion)
+    {
+        return $this->createForm(NumeracionRemitoType::class, $numeracion, ['method' => 'POST']);
+    }
 }

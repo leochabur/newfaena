@@ -1,0 +1,64 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+  <script type="text/javascript" src="{{ asset('resources/js/tables/jquery.tablehover.js') }}"></script>
+<br>
+<hr>
+<span class="h5 card-title">Numeracion Formularios</span>
+<hr>
+
+{% include '@GestionFaena/messages.html.twig'  %}
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class' : 'updvta'}}) }}
+          <div class="form-row">
+            <div class="col-lg-3 col-sm-12">
+              {{ form_label(form.tipo) }}
+              {{ form_widget(form.tipo) }}
+            </div>
+            <div class="col-lg-3 col-sm-12">
+              {{ form_label(form.cai, 'CAI') }}
+              {{ form_widget(form.cai) }}
+            </div>
+            <div class="col-lg-3 col-sm-12">
+              {{ form_label(form.vencimiento) }}
+              {{ form_widget(form.vencimiento) }}
+            </div>
+            <div class="col-lg-3 col-sm-12">
+              {{ form_label(form.ultimoUtilizado) }}
+              {{ form_widget(form.ultimoUtilizado) }}
+            </div>
+          </div>
+          <div class="form-row mt-4">
+            <div class="col-lg-12 col-sm-12">
+              {{ form_widget(form.guardar) }}
+            </div>
+          </div>
+{{ form_end(form) }}
+
+<hr>
+  <table class="table table-bordered table-sm main-table">
+    <thead>
+      <tr>
+          <th>Tipo</th>
+          <th>CAI</th>
+          <th>Vencimiento</th>
+          <th>Ultimo Utilizado</th>                 
+      </tr>
+    </thead>
+    <tbody>
+        {% for n in numeraciones %}
+            <tr>
+                <td>{{ n.tipo }}</td>
+                <td>{{ n.cai }}</td>
+                <td>{{ n.vencimiento|date('d/m/Y') }}</td>
+                <td>{{ n.ultimoUtilizado }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+
+
+{% endblock  %}

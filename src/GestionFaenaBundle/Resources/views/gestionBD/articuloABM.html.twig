@@ -1,5 +1,17 @@
 {% extends "FOSUserBundle::layout.html.twig" %}
-        
+{% block stylesheets %}
+<style type="text/css">
+
+
+    thead tr th { 
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #ffffff;
+    }
+
+</style>
+{% endblock %}
 
 {% block fos_user_content %}
 <div class="container">
@@ -91,10 +103,12 @@
             {% if app.user.isPerfilVenta %}
                 <th>Nombre Venta</th>
             {% endif %}
-            <th>Nom. Red.</th>
-            <th>Categoria</th>
-            <th>Subategoria</th>
-            <th>Cat. General</th>
+            {% if not app.user.isPerfilVenta %}
+                <th>Nom. Red.</th>
+                <th>Categoria</th>
+                <th>Subategoria</th>
+                <th>Cat. General</th>
+            {% endif %}
             <th>Pres. Kg.</th>
             <th>Pres. Uda.</th>
             <th></th>
@@ -109,12 +123,14 @@
               {% if app.user.isPerfilVenta %}
                   <td>{{ f.descVenta }}</td>  
               {% endif %}
-              <td>{{ f.nombreResumido }}</td> 
-              <td>{{ f.categoria }}</td> 
-              <td>{{ f.subcategoria }}</td> 
-              <td>{{ f.categoriaGeneral }}</td> 
-              <td>{{ f.presentacionKg }}</td> 
-              <td>{{ f.presentacionUnidad }}</td> 
+              {% if not app.user.isPerfilVenta %}
+                  <td>{{ f.nombreResumido }}</td> 
+                  <td>{{ f.categoria }}</td> 
+                  <td>{{ f.subcategoria }}</td> 
+                  <td>{{ f.categoriaGeneral }}</td> 
+              {% endif %}
+                  <td>{{ f.presentacionKg }}</td> 
+                  <td>{{ f.presentacionUnidad }}</td> 
               <td><a href="{{ path('bd_editar_articulo_basico', { 'art' : f.id }) }}" class="btn btn-warning btn-sm">Editar</a></td>
             </tr>
           {% endfor %}

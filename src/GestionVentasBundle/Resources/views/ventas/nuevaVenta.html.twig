@@ -1,5 +1,7 @@
 {% extends "FOSUserBundle::layout.html.twig" %}
+
 {% block fos_user_content %}
+  <script type="text/javascript" src="{{ asset('resources/js/tables/jquery.tablehover.js') }}"></script>
 <br>
 <hr>
 <span class="h5 card-title">Nuevo Comprobante de Venta</span>
@@ -17,10 +19,6 @@
               {{ form_label(form.cliente) }}
               {{ form_widget(form.cliente) }}
             </div>
-            <div class="col-lg-3 col-sm-12">
-              {{ form_label(form.horarioCarga) }}
-              {{ form_widget(form.horarioCarga) }}
-            </div>
           </div>
           <div class="form-row mt-4">
             <div class="col-lg-12 col-sm-12">
@@ -28,11 +26,13 @@
               {{ form_widget(form.comentario) }}
             </div>
           </div>
-          <div class="form-row mt-4">
-            <div class="col-lg-12 col-sm-12">
-              {{ form_widget(form.siguiente) }}
-            </div>
-          </div>
+          {% if form.siguiente is defined%}
+              <div class="form-row mt-4">
+                <div class="col-lg-12 col-sm-12">
+                  {{ form_widget(form.siguiente) }}
+                </div>
+              </div>
+            {% endif %}
 {{ form_end(form) }}
 <div class="text-center loading">
   <div class="spinner-border" role="status">
@@ -47,7 +47,12 @@
 {% endblock out_container %}
 {% block javascripts %}
  {{ parent() }}
+
 <script type="text/javascript">
+    
+    $(document).ready(function(){
+
+
 
           $('.loading').hide();
           $('.date').change(function(event){
@@ -58,11 +63,13 @@
                                                    function(data){
                                                                   $('.loading').hide();
                                                                   $('#detalle').html(data);
+
                                                    });
           });
           {% if fecha is defined %}
             $('.date').trigger('change');
           {% endif %}
+    });
 </script>
 
 {% endblock  %}

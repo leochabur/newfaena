@@ -70,10 +70,6 @@
               {{ form_label(form.cliente) }}
               {{ form_widget(form.cliente) }}
             </div>
-            <div class="col-lg-3 col-sm-12">
-              {{ form_label(form.horarioCarga) }}
-              {{ form_widget(form.horarioCarga) }}
-            </div>
           </div>
           <div class="form-row mt-4">
             <div class="col-lg-12 col-sm-12">
@@ -82,11 +78,13 @@
             </div>
           </div>
           {% include '@GestionFaena/messages.html.twig'  %}
-          <div class="form-row mt-4">
-            <div class="col-lg-12 col-sm-12">
-              {{ form_widget(form.siguiente) }}
-            </div>
-          </div>
+          {% if form.siguiente is defined%}
+              <div class="form-row mt-4">
+                <div class="col-lg-12 col-sm-12">
+                  {{ form_widget(form.siguiente) }}
+                </div>
+              </div>
+            {% endif %}
 {{ form_end(form) }}
 
 
@@ -115,34 +113,105 @@
           <th rowspan="2" class="fixed-side grey lighten-2 border border-primary">Destinatario</th>
           {% for art in articulos %}
 
-              <th colspan="{{ tipos|length }}" scope="col" class="px-md-5 grey lighten-2 border border-primary">{{  art.nombreVenta }}</th>
+              <th colspan="{{ tipos|length }}" scope="col" class="px-md-5 grey lighten-2 border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{  art.nombreVenta }}</th>
 
           {% endfor %}
       </tr>
       <tr>
+            {% set i = 1 %}
             {% for art in articulos %}
+                  {% set pi = 'i' %}
+
+                  {% if (i % 2) == 0 %}
+
+                      {% set pi = 'p' %}
+
+                  {% endif %}
+
+                  {% set color = '' %}
+
+                  {% set j = 0 %}  
               {% for t in tipos %}
-                  <th scope="col px-md-5" class=" text-center grey lighten-2 border border-primary">{{ t.codigo }}</th>
+
+                          {% if pi == 'i' %}
+
+                              {% set color = 'teal accent-3 font-weight-light' %}
+
+                              {% if (j % 2) == 0 %} 
+                                
+                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
+
+                              {% endif %}
+
+                          {% else %}
+
+                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
+
+                                {% if (j % 2) == 0 %} 
+                                  
+                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
+
+                                {% endif %}
+
+                          {% endif %}
+
+                          <th scope="col px-md-5" class=" text-center border border-primary {{ color }}">{{ t.codigo }}</th>
+                          {% set j = j + 1 %}
               {% endfor %}
+              {% set i = i + 1 %}
             {% endfor %}
       </tr>
       </thead>
       <tbody>
-        {% set i = 1 %}
+        {% set k = 1 %}
         <tr>
             <td class="fixed-side border border-primary">{{ comprobante.entidad }}</td>
+            {% set i = 1 %}
             {% for kvta, vvta in ventas %}
+                  {% set pi = 'i' %}
+
+                  {% if (i % 2) == 0 %}
+
+                      {% set pi = 'p' %}
+
+                  {% endif %}
+
+                  {% set color = '' %}
+
+                  {% set j = 0 %} 
 
                   {% for t in tipos %}
-                      {% set class =  "update form-control-sm " ~ i %}
-                      <td class="border border-primary">
+                          {% if pi == 'i' %}
+
+                              {% set color = 'teal accent-3 font-weight-light' %}
+
+                              {% if (j % 2) == 0 %} 
+                                
+                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
+
+                              {% endif %}
+
+                          {% else %}
+
+                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
+
+                                {% if (j % 2) == 0 %} 
+                                  
+                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
+
+                                {% endif %}
+
+                          {% endif %}
+                      {% set class =  "update form-control-sm " ~ k %}
+                      <td class="border border-primary {{ color }}">
 
                         {{ form_start(vvta[t.id], {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
-                        {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : i, 'class' : class }}) }}
+                        {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : k, 'class' : class }}) }}
                         {{ form_end(vvta[t.id]) }}
                       </td>
-                      {% set i = i + 1 %}
-                  {% endfor %}              
+                      {% set k = k + 1 %}
+                  {% endfor %}    
+                  {% set i = i + 1 %}          
             {% endfor %}
           </tr>
       </tbody>

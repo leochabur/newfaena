@@ -444,8 +444,17 @@ class GestionBDController extends Controller
      */
     public function addArticuloAction()
     {
-        $articulos = $this->getDoctrine()->getManager()->getRepository(Articulo::class)->getListaArticulos();
+        
         $articulo = new Articulo();
+        if ($this->getUser()->isPerfilVenta())
+        {
+            $articulos = $this->getDoctrine()->getManager()->getRepository(Articulo::class)->getListaArticulosConCategoriaYSubcategoria();
+        }
+        else
+        {
+            $articulos = $this->getDoctrine()->getManager()->getRepository(Articulo::class)->getListaArticulos();
+        }
+
         $form = $this->getFormABMArticulo($articulo, 'bd_add_articulo_procesar');
         return $this->render('@GestionFaena/gestionBD/articuloABM.html.twig', array('articulos' => $articulos, 'form' => $form->createView()));
     }

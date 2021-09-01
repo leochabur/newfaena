@@ -24,6 +24,19 @@ class ArticuloRepository extends \Doctrine\ORM\EntityRepository
             		->getResult();
 	} 
 
+    public function getListaArticulosConCategoriaYSubcategoria() 
+    { 
+        return $this->getEntityManager()
+                    ->createQuery('SELECT a
+                                   FROM GestionFaenaBundle:gestionBD\Articulo a 
+                                   JOIN a.categoria c
+                                   JOIN a.subcategoria s
+                                   WHERE a.eliminado = :eliminado
+                                   ORDER BY c.orden, s.orden, a.orden, a.id')
+                    ->setParameter('eliminado', false)
+                    ->getResult();
+    } 
+
     public function getListaArticulosConCategoriaSingle() 
     { 
         return $this->getEntityManager()

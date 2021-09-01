@@ -16,6 +16,9 @@
   {% if fontawesome is not defined%}
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
   {% endif %}
+
+
+
   <!-- Bootstrap core CSS -->
   <link rel="stylesheet" href="{{ asset('resources/css/bootstrap.min.css') }}" rel="stylesheet">
   <!-- Material Design Bootstrap -->
@@ -85,6 +88,11 @@
 {% if mask is not defined %}
   <script type='text/javascript' src="https://rawgit.com/RobinHerbots/jquery.inputmask/3.x/dist/jquery.inputmask.bundle.js"></script>
 {% endif %}
+
+  {% if hover is defined%}
+    
+  {% endif %}
+
 <script type="text/javascript">
 
   $(document).ready(function()

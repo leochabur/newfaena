@@ -4,6 +4,13 @@
 <style type="text/css">
 
 
+    thead tr th { 
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #ffffff;
+    }
+
 </style>
 {% endblock %}
 {% block fos_user_content %}
@@ -34,7 +41,7 @@
     {% if articulos is defined%}
     <span class="h5 card-title">Listado de Ventas a Ingresar</span>
     <hr>
-        <table class="table table-striped table-hover table-sm main-table">
+        <table id="dt-vertical-scroll" class="table table-striped table-hover table-bordered table-sm main-table">
           <thead>
             <tr>
                 <th>Fecha</th>
@@ -43,10 +50,10 @@
                 <th>Destinatario</th>
                 <th>Codigo Art.</th>
                 <th>Articulo</th>    
-                <th>Cantidad</th>      
-                <th>#</th>      
+                <th>Cantidad</th>       
             </tr>
           </thead>
+          <tbody>
                 {% set index = 1 %}
                 {% set l = 0 %}
                 {% for k, it in data %}
@@ -65,8 +72,7 @@
                             {% else %}
                               <td></td>
                             {% endif %}
-                            <td>{{ vta }}</td>
-                            <td class="text-muted">{{ index }}</td>
+                            <td class="text-right">{{ vta }}</td>
                           </tr>
 
                         {% else %}
@@ -78,8 +84,7 @@
                             {% else %}
                               <td></td>
                             {% endif %}
-                            <td>{{ vta }}</td>
-                            <td class="text-muted">{{ index }}</td>
+                            <td class="text-right">{{ vta }}</td>
                           </tr>
 
                         {% endif %}
@@ -90,8 +95,6 @@
                     {% endfor %}                
                     {% set l = l + 1 %}
                 {% endfor %}
-          <tbody>
-
 
           </tbody>
         </table>
