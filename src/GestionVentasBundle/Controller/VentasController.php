@@ -484,7 +484,7 @@ class VentasController extends Controller
     	}
 
     	return $this->render('@GestionVentas/ventas/listaVentasDiarias.html.twig', 
-    						 ['fecha' => $data['fecha'],
+    						 ['fecha' => $data['fechaComprobante'],
     						  'comprobantes' => $comprobantes,
     						  'articulos' => $articulos,
     						  'tipos' => $tiposVenta,
