@@ -31,5 +31,18 @@ class EntidadExternaRepository extends \Doctrine\ORM\EntityRepository
 						->orderBy('e.valor')
 						->getQuery()
 						->getResult();
-	} 
+	}
+
+    public function getClientesConInstancia ($instance)
+    {
+    	
+        return $this->getEntityManager()
+                    ->createQuery("SELECT e
+                                   FROM $instance e                           
+                                   WHERE  (e.activa = :activa)
+                                   GROUP BY e.valor"
+                                )
+                    ->setParameter('activa', true)
+                    ->getResult();
+    } 
 }

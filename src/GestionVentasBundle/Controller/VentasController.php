@@ -39,12 +39,118 @@ use Symfony\Component\Validator\Constraints\File;
 use GestionVentasBundle\Entity\NumeracionRemito;
 use GestionVentasBundle\Form\NumeracionRemitoType;
 
+use GestionFaenaBundle\Entity\gestionBD\Reparto;
+use GestionFaenaBundle\Form\gestionBD\RepartoType;
+
+use GestionFaenaBundle\Entity\gestionBD\Sucursal;
+use GestionFaenaBundle\Form\gestionBD\SucursalType;
+
+use GestionFaenaBundle\Entity\gestionBD\Consignatario;
+use GestionFaenaBundle\Form\gestionBD\ConsignatarioType;
+
+use GestionFaenaBundle\Entity\gestionBD\Remito;
+use GestionFaenaBundle\Form\gestionBD\RemitoType;
 /**
  * @Route("/ventas")
  */
 
 class VentasController extends Controller
 {
+
+    /**
+     * @Route("/config/desactivar/{id}", name="bd_baja_entidad_venta")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function desactivarEntidad($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $ente = $em->getRepository(EntidadExterna::class)->find($id);
+        if ($ente) 
+        {
+            try
+            {
+                $ente->setActiva(false);
+                $em->flush();
+                return new JsonResponse(['ok' => true]);
+
+            }
+            catch(\Exception $e){
+                return new JsonResponse(['ok' => false, 'message' => $e->getMessage()]);
+            }
+        }
+        else
+        {
+            return new JsonResponse(['ok' => false, 'message' => 'No se puede encontrar el destinatario']);
+        }
+    }
+
+
+    /**
+     * @Route("/config/altacliente/{id}", name="bd_alta_entidad", methods={"GET", "POST"})
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function altaDestinatarioVenta($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $repository = $em->getRepository(EntidadExterna::class);
+        $code = 0;
+        $entes = [];
+        $label = '';
+        $ente = null;
+        if ($id == 9) //alta de un cliente de reparto
+        {
+            $label = 'Nuevo Cliente Reparto';
+            $ente = new Reparto();
+            $form = $this->getFormAltaEntidad($ente, RepartoType::class);
+            $entes = $repository->getClientesConInstancia(Reparto::class);
+            $code = 9;
+        }
+        elseif ($id == 5) //alta de un cliente de reparto
+        {
+            $label = 'Nueva Sucursal';
+            $ente = new Sucursal();
+            $form = $this->getFormAltaEntidad($ente, SucursalType::class);
+            $entes = $repository->getClientesConInstancia(Sucursal::class);
+            $code = 5;
+        }
+        elseif ($id == 6) //alta de un cliente de reparto
+        {
+            $label = 'Nuevo Consignatario';
+            $ente = new Consignatario();
+            $form = $this->getFormAltaEntidad($ente, ConsignatarioType::class);
+            $entes = $repository->getClientesConInstancia(Consignatario::class);
+            $code = 6;
+        }
+        elseif ($id == 7) //alta de un cliente de reparto
+        {
+            $label = 'Nuevo Cliente';
+            $ente = new Remito();
+            $form = $this->getFormAltaEntidad($ente, RemitoType::class);
+            $entes = $repository->getClientesConInstancia(Remito::class);
+            $code = 7;
+        }
+
+        if ($request->isMethod('POST'))
+        {
+            $form->handleRequest($request);
+            if ($form->isValid())
+            {
+                $em->persist($ente);
+                $em->flush();
+                return $this->redirectToRoute('bd_alta_entidad', [ 'id' => $id ]);
+            }
+        }
+
+        return $this->render('@GestionVentas/bd/nuevoDestinatario.html.twig', 
+                             ['code' => $code, 'label' => $label, 'form' => $form->createView(), 'entes' => $entes]);
+    }
+
+
+    private function getFormAltaEntidad($entidad, $class)
+    {
+        return $this->createForm($class, $entidad, ['method' => 'POST']);
+    }
+
 
     ////////////////////////ALTA ARTICULO ATRIBUTO CONCEPTO
     /**

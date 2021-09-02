@@ -168,6 +168,19 @@
                     <li><a class="dropdown-item" href="{{ path('vtas_configruacion_impresion') }}">Impresiones</a></li>
               </ul>
             </li>
+
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle btn" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Clientes
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+
+                <li><a class="dropdown-item" href="{{ path('bd_alta_entidad', { id : 9 }) }}">Reparto</a></li>
+                <li><a class="dropdown-item" href="{{ path('bd_alta_entidad', { id : 5 }) }}">Sucursal</a></li>
+                <li><a class="dropdown-item" href="{{path('bd_alta_entidad', { id : 6 })}}">Consignatario</a></li>
+                <li><a class="dropdown-item" href="{{path('bd_alta_entidad', { id : 7 })}}">Clientes Varios</a></li>
+              </ul>
+            </li>
       {% endif %}
       {% if perfilFaena %}
           <li class="nav-item dropdown">
