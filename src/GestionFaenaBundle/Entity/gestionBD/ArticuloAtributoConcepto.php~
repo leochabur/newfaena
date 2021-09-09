@@ -469,4 +469,28 @@ class ArticuloAtributoConcepto
     {
         return $this->artAtrConAsociado;
     }
+
+    /**
+     * Set atrAbsAsociado
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atrAbsAsociado
+     *
+     * @return ArticuloAtributoConcepto
+     */
+    public function setAtrAbsAsociado(\GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atrAbsAsociado = null)
+    {
+        $this->atrAbsAsociado = $atrAbsAsociado;
+
+        return $this;
+    }
+
+    /**
+     * Get atrAbsAsociado
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto
+     */
+    public function getAtrAbsAsociado()
+    {
+        return $this->atrAbsAsociado;
+    }
 }

@@ -92,6 +92,25 @@ class ComprobanteVenta extends MovimientoStock
     */      
     private $horarioCarga;
 
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="asociado", type="boolean", options={"default": false})
+     */
+    private $asociado = false;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="ComprobanteVenta", inversedBy="asociados")
+     * @ORM\JoinColumn(name="id_comp_asoc", referencedColumnName="id", nullable=true)
+     */
+    private $original;
+
+    /**
+     * @ORM\OneToMany(targetEntity="ComprobanteVenta", mappedBy="original")
+     */
+    private $asociados;
+
+
 
     /**
      * Constructor
@@ -484,5 +503,29 @@ class ComprobanteVenta extends MovimientoStock
     public function getHorarioCarga()
     {
         return $this->horarioCarga;
+    }
+
+    /**
+     * Set asociado
+     *
+     * @param boolean $asociado
+     *
+     * @return ComprobanteVenta
+     */
+    public function setAsociado($asociado)
+    {
+        $this->asociado = $asociado;
+
+        return $this;
+    }
+
+    /**
+     * Get asociado
+     *
+     * @return boolean
+     */
+    public function getAsociado()
+    {
+        return $this->asociado;
     }
 }

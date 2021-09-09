@@ -7,18 +7,19 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
-class ConsignatarioType extends AbstractType
+class DestinatarioType extends AbstractType
 {
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add('comercial', 
-                      EntidadComercialType::class, 
-                      array(
-                                'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Consignatario',
-                            ))
+                      EntidadComercialType::class, array(
+                                                        'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Destinatario',
+                                                        'original' => $options['original']
+                                ))
                 ->add('guardar', SubmitType::class);
     }
+
 
     /**
      * {@inheritdoc}
@@ -26,8 +27,10 @@ class ConsignatarioType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Consignatario'
-        ));
+                    'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Destinatario',
+                    'original' => null,
+                ))
+                ->setRequired('original');
     }
 
     /**
@@ -35,7 +38,7 @@ class ConsignatarioType extends AbstractType
      */
     public function getBlockPrefix()
     {
-        return 'gestionfaenabundle_gestionbd_consignatario';
+        return 'gestionfaenabundle_gestionbd_destinatario';
     }
 
 

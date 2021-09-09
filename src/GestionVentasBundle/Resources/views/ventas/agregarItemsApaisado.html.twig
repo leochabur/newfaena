@@ -163,57 +163,59 @@
       </tr>
       </thead>
       <tbody>
-        {% set k = 1 %}
-        <tr>
-            <td class="fixed-side border border-primary">{{ comprobante.entidad }}</td>
-            {% set i = 1 %}
-            {% for kvta, vvta in ventas %}
-                  {% set pi = 'i' %}
+        {% for kc, vc in comprobantes %}
+            {% set k = 1 %}
+            <tr>
+                <td class="fixed-side border border-primary">{{ vc.entidad.nombreVenta }}</td>
+                {% set i = 1 %}
+                {% for kvta, vvta in ventas[kc] %}
+                      {% set pi = 'i' %}
 
-                  {% if (i % 2) == 0 %}
+                      {% if (i % 2) == 0 %}
 
-                      {% set pi = 'p' %}
+                          {% set pi = 'p' %}
 
-                  {% endif %}
+                      {% endif %}
 
-                  {% set color = '' %}
+                      {% set color = '' %}
 
-                  {% set j = 0 %} 
+                      {% set j = 0 %} 
 
-                  {% for t in tipos %}
-                          {% if pi == 'i' %}
+                      {% for t in tipos %}
+                              {% if pi == 'i' %}
 
-                              {% set color = 'teal accent-3 font-weight-light' %}
+                                  {% set color = 'teal accent-3 font-weight-light' %}
 
-                              {% if (j % 2) == 0 %} 
-                                
-                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
+                                  {% if (j % 2) == 0 %} 
+                                    
+                                      {% set color = 'cyan lighten-2 font-weight-bold' %} 
+
+                                  {% endif %}
+
+                              {% else %}
+
+                                    {% set color = 'deep-orange lighten-2 font-weight-light' %}
+
+                                    {% if (j % 2) == 0 %} 
+                                      
+                                        {% set color = 'orange lighten-2 font-weight-bold' %} 
+
+                                    {% endif %}
 
                               {% endif %}
+                          {% set class =  "update form-control-sm " ~ k %}
+                          <td class="border border-primary {{ color }}">
 
-                          {% else %}
-
-                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
-
-                                {% if (j % 2) == 0 %} 
-                                  
-                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
-
-                                {% endif %}
-
-                          {% endif %}
-                      {% set class =  "update form-control-sm " ~ k %}
-                      <td class="border border-primary {{ color }}">
-
-                        {{ form_start(vvta[t.id], {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
-                        {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : k, 'class' : class }}) }}
-                        {{ form_end(vvta[t.id]) }}
-                      </td>
-                      {% set k = k + 1 %}
-                  {% endfor %}    
-                  {% set i = i + 1 %}          
+                            {{ form_start(vvta[t.id], {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
+                            {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : k, 'class' : class }}) }}
+                            {{ form_end(vvta[t.id]) }}
+                          </td>
+                          {% set k = k + 1 %}
+                      {% endfor %}    
+                      {% set i = i + 1 %}          
+                {% endfor %}
+              </tr>
             {% endfor %}
-          </tr>
       </tbody>
   </table>  
 </div>

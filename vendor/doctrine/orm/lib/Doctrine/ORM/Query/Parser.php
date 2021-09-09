@@ -528,7 +528,7 @@ class Parser
      */
     private function isMathOperator($token)
     {
-        return in_array($token['type'], array(Lexer::T_PLUS, Lexer::T_MINUS, Lexer::T_DIVIDE, Lexer::T_MULTIPLY));
+        return $token !== null && in_array($token['type'], array(Lexer::T_PLUS, Lexer::T_MINUS, Lexer::T_DIVIDE, Lexer::T_MULTIPLY));
     }
 
     /**
@@ -1437,7 +1437,7 @@ class Parser
         // We need to check if we are in a IdentificationVariable or SingleValuedPathExpression
         $glimpse = $this->lexer->glimpse();
 
-        if ($glimpse['type'] === Lexer::T_DOT) {
+        if ((isset($glimpse['type'])) && $glimpse['type'] === Lexer::T_DOT) {
             return $this->SingleValuedPathExpression();
         }
 
@@ -2452,8 +2452,8 @@ class Parser
         // Peek beyond the matching closing parenthesis ')'
         $peek = $this->peekBeyondClosingParenthesis();
 
-        if (in_array($peek['value'], array("=",  "<", "<=", "<>", ">", ">=", "!=")) ||
-            in_array($peek['type'], array(Lexer::T_NOT, Lexer::T_BETWEEN, Lexer::T_LIKE, Lexer::T_IN, Lexer::T_IS, Lexer::T_EXISTS)) ||
+        if (((isset($peek['value'])) && in_array($peek['value'], array("=",  "<", "<=", "<>", ">", ">=", "!="))) ||
+            ((isset($peek['type'])) && in_array($peek['type'], array(Lexer::T_NOT, Lexer::T_BETWEEN, Lexer::T_LIKE, Lexer::T_IN, Lexer::T_IS, Lexer::T_EXISTS))) ||
             $this->isMathOperator($peek)) {
             $condPrimary->simpleConditionalExpression = $this->SimpleConditionalExpression();
 

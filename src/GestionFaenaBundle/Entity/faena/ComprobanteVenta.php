@@ -92,6 +92,35 @@ class ComprobanteVenta extends MovimientoStock
     */      
     private $horarioCarga;
 
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="asociado", type="boolean", options={"default": false})
+     */
+    private $asociado = false;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="ComprobanteVenta", inversedBy="asociados")
+     * @ORM\JoinColumn(name="id_comp_asoc", referencedColumnName="id", nullable=true)
+     */
+    private $original;
+
+    /**
+     * @ORM\OneToMany(targetEntity="ComprobanteVenta", mappedBy="original")
+     */
+    private $asociados;
+
+
+    public function getTotalItems()
+    {
+        $count = 0;
+        foreach ($this->asociados as $asoc)
+        {
+            $count+= $asoc->getItems()->count();
+        }
+        return $count;
+    }
+
 
     /**
      * Constructor
@@ -99,6 +128,7 @@ class ComprobanteVenta extends MovimientoStock
     public function __construct()
     {
         $this->items = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->asociados = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -484,5 +514,87 @@ class ComprobanteVenta extends MovimientoStock
     public function getHorarioCarga()
     {
         return $this->horarioCarga;
+    }
+
+    /**
+     * Set asociado
+     *
+     * @param boolean $asociado
+     *
+     * @return ComprobanteVenta
+     */
+    public function setAsociado($asociado)
+    {
+        $this->asociado = $asociado;
+
+        return $this;
+    }
+
+    /**
+     * Get asociado
+     *
+     * @return boolean
+     */
+    public function getAsociado()
+    {
+        return $this->asociado;
+    }
+
+    /**
+     * Set original
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $original
+     *
+     * @return ComprobanteVenta
+     */
+    public function setOriginal(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $original = null)
+    {
+        $this->original = $original;
+
+        return $this;
+    }
+
+    /**
+     * Get original
+     *
+     * @return \GestionFaenaBundle\Entity\faena\ComprobanteVenta
+     */
+    public function getOriginal()
+    {
+        return $this->original;
+    }
+
+    /**
+     * Add asociado
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado
+     *
+     * @return ComprobanteVenta
+     */
+    public function addAsociado(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado)
+    {
+        $this->asociados[] = $asociado;
+
+        return $this;
+    }
+
+    /**
+     * Remove asociado
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado
+     */
+    public function removeAsociado(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado)
+    {
+        $this->asociados->removeElement($asociado);
+    }
+
+    /**
+     * Get asociados
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAsociados()
+    {
+        return $this->asociados;
     }
 }

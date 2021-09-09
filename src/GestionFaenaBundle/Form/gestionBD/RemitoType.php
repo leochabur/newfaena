@@ -12,8 +12,10 @@ class RemitoType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('entidad', 
-                      EntidadExternaType::class, 
+        $original = $options['original'];
+
+        $builder->add('comercial', 
+                      EntidadComercialType::class, 
                       array(
                                 'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Remito',
                             ))
@@ -26,8 +28,10 @@ class RemitoType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Remito'
-        ));
+                                        'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Remito',
+                                        'original' => null
+                ))
+                ->setRequired('original');
     }
 
     /**

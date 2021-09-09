@@ -10,42 +10,18 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="sp_gst_ent_ext_suc")
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\SucursalRepository")
  */
-class Sucursal extends EntidadExterna
+class Sucursal extends EntidadComercial
 {
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="direccion", type="string", length=255, nullable=true)
-     */
-    private $direccion;
 
     protected function getIsCliente()
     {
         return true;
     }
 
-    /**
-     * Set direccion
-     *
-     * @param string $direccion
-     *
-     * @return Sucursal
-     */
-    public function setDireccion($direccion)
+    public function getInstance()
     {
-        $this->direccion = $direccion;
-
-        return $this;
+        return 5;
     }
 
-    /**
-     * Get direccion
-     *
-     * @return string
-     */
-    public function getDireccion()
-    {
-        return $this->direccion;
-    }
 }

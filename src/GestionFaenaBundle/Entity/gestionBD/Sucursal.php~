@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="sp_gst_ent_ext_suc")
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\SucursalRepository")
  */
-class Sucursal extends EntidadExterna
+class Sucursal extends EntidadComercial
 {
 
     /**

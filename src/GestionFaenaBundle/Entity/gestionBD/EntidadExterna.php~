@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\EntidadExternaRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="integer")
- * @ORM\DiscriminatorMap({1:"EntidadExterna",2: "Granja", 3: "Transportista", 4: "Cargador", 5: "Sucursal", 6: "Consignatario", 7: "Remito", 8: "Anexo", 9: "Reparto", 10: "Exportacion"})
+ * @ORM\DiscriminatorMap({1:"EntidadExterna",2: "Granja", 3: "Transportista", 4: "Cargador", 5: "Sucursal", 6: "Consignatario", 7: "Remito", 8: "Anexo", 9: "Reparto", 10: "Exportacion", 11:"EntidadComercial"})
  * @ORM\HasLifecycleCallbacks()
  */
 
@@ -53,6 +53,24 @@ abstract class EntidadExterna
      * @ORM\Column(name="cliente", type="boolean", options={"default":true})
      */
     private $cliente;
+
+    /**
+     * @ORM\OneToMany(targetEntity="EntidadExterna", mappedBy="original")
+     */
+    private $asociados;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="EntidadExterna", inversedBy="asociados")
+     * @ORM\JoinColumn(name="id_ent", referencedColumnName="id")
+     */
+    private $original;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="asociado", type="boolean", options={"default":false})
+     */
+    private $asociado = false; //indica si una entidad es subentidad de otra //para el caso que el cliente tenga subclientes
 
     /**
      * @ORM\PrePersist
@@ -178,5 +196,70 @@ abstract class EntidadExterna
     public function getCliente()
     {
         return $this->cliente;
+    }
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->asociados = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * Add asociado
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\EntidadExterna $asociado
+     *
+     * @return EntidadExterna
+     */
+    public function addAsociado(\GestionFaenaBundle\Entity\gestionBD\EntidadExterna $asociado)
+    {
+        $this->asociados[] = $asociado;
+
+        return $this;
+    }
+
+    /**
+     * Remove asociado
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\EntidadExterna $asociado
+     */
+    public function removeAsociado(\GestionFaenaBundle\Entity\gestionBD\EntidadExterna $asociado)
+    {
+        $this->asociados->removeElement($asociado);
+    }
+
+    /**
+     * Get asociados
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAsociados()
+    {
+        return $this->asociados;
+    }
+
+    /**
+     * Set original
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\EntidadExterna $original
+     *
+     * @return EntidadExterna
+     */
+    public function setOriginal(\GestionFaenaBundle\Entity\gestionBD\EntidadExterna $original = null)
+    {
+        $this->original = $original;
+
+        return $this;
+    }
+
+    /**
+     * Get original
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\EntidadExterna
+     */
+    public function getOriginal()
+    {
+        return $this->original;
     }
 }

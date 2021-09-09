@@ -1,0 +1,124 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Modificar</span>
+<hr>
+{% include '@GestionFaena/messages.html.twig'  %}
+
+<div class="">
+
+    <div class="form-row h5">
+      <div class="col-4">
+         Razon Social:  {{ ente }}
+      </div>
+      <div class="col-4">
+        CUIT:  {{ ente.cuit }}
+      </div>
+      <div class="col-4">
+        Direccion:  {{ ente.direccion }}
+      </div>
+    </div>
+    <hr>
+
+        {{ form_start(asociar, {'attr': {'novalidate': 'novalidate'}}) }}
+          <div class="form-row">
+            <div class="col-4">
+              {{ form_label(asociar.consignatario) }}
+              {{ form_widget(asociar.consignatario) }}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="col">
+              {{ form_widget(asociar.asociar, { 'attr' : { 'class' : 'btn btn-success asociar' }}) }}
+            </div>
+          </div>
+        {{ form_end(asociar) }}
+    <hr>
+
+    <span class="h5">Destinatarios asociados</span>
+    <hr>
+    <span class="h5">Nuevo</span>
+    <br>
+  {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-row">
+      <div class="col-4">
+        {{ form_label(form.comercial.entidad.valor, 'Nombre/Razon Social') }}
+        {{ form_widget(form.comercial.entidad.valor) }}
+      </div>
+      <div class="col-2">
+        {{ form_label(form.comercial.cuit) }}
+        {{ form_widget(form.comercial.cuit) }}
+        {{ form_errors(form.comercial.cuit) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.comercial.direccion) }}
+        {{ form_widget(form.comercial.direccion) }}
+        {{ form_errors(form.comercial.direccion) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.comercial.original) }}
+        {{ form_widget(form.comercial.original) }}
+        {{ form_errors(form.comercial.original) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar) }}
+      </div>
+    </div>
+  {{ form_end(form) }}
+    <hr>
+    <span class="h5">Existentes</span>
+    <br>
+    <table class="table table-striped table-bordered table-hover table-sm ">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Detalle</th>
+   
+              <th>Direccion</th>
+
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for f in ente.asociados %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ f|upper }}</td>   
+              <td>{{ f.direccion|upper }}</td>
+              <td></td>
+  
+              <td class="text-center"><a data-index="{{ loop.index }}" class="btn btn-sm btn-warning btn-delete" href="{{ path('bd_baja_entidad_venta', { id : f.id })}}">Desactivar</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock fos_user_content %}
+{% block javascripts %}
+
+<script type="text/javascript">
+
+    $('.asociar').click(function (event){
+                                          event.preventDefault();
+                                          let form = $(this).closest('form');
+                                          $.post(form.attr('action'),
+                                                 form.serialize(),
+                                                 function (data) {
+                                                                    if (data.ok)
+                                                                    {
+                                                                      location.reload();
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                      alert(data.message);
+                                                                    }
+                                                 });
+    });
+
+</script>
+
+{% endblock %}

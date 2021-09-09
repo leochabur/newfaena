@@ -5,13 +5,14 @@ namespace GestionFaenaBundle\Entity\gestionBD;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Cargador
+ * Destinatario
  *
- * @ORM\Table(name="sp_gst_ent_ext_crg")
- * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\CargadorRepository")
+ * @ORM\Table(name="sp_gst_ent_ext_dest")
+ * @ORM\Entity
  */
-class Cargador extends EntidadExterna
+class Destinatario extends EntidadComercial
 {
+
     protected function getIsCliente()
     {
         return false;
@@ -19,6 +20,6 @@ class Cargador extends EntidadExterna
 
     public function getInstance()
     {
-        return 4;
+        return 12;
     }
 }

@@ -17,8 +17,10 @@ class ComprobanteVentaRepository extends \Doctrine\ORM\EntityRepository
 						->join('c.entidad', 'e')
 						->where('c.fecha = :fecha')
 						->andWhere('c.eliminado = :eliminado')
+						->andWhere('c.asociado = :asociado')
 						->setParameter('fecha', $fecha)
 						->setParameter('eliminado', false)
+						->setParameter('asociado', false)
 						->orderBy('e.valor')
 						->getQuery()
 						->getResult();
@@ -117,9 +119,11 @@ class ComprobanteVentaRepository extends \Doctrine\ORM\EntityRepository
 						->where('c.finalizado = :finalizado')
 						->andWhere('c.eliminado = :eliminado')
 						->andWhere('c.confirmado = :confirmado')
+						->andWhere('c.asociado = :asociado')
 						->setParameter('finalizado', true)
 						->setParameter('eliminado', false)
 						->setParameter('confirmado', false)
+						->setParameter('asociado', false)
 						->getQuery()
 						->getResult();
 	} 

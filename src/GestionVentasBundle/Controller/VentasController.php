@@ -50,12 +50,26 @@ use GestionFaenaBundle\Form\gestionBD\ConsignatarioType;
 
 use GestionFaenaBundle\Entity\gestionBD\Remito;
 use GestionFaenaBundle\Form\gestionBD\RemitoType;
+
+use GestionFaenaBundle\Entity\gestionBD\Destinatario;
+use GestionFaenaBundle\Form\gestionBD\DestinatarioType;
+
+use GestionFaenaBundle\Entity\gestionBD\EntidadComercial;
+
 /**
  * @Route("/ventas")
  */
 
 class VentasController extends Controller
 {
+
+    private $typesEntities = [
+                                9 => RepartoType::class,
+                                5 => SucursalType::class,
+                                6 => ConsignatarioType::class,
+                                7 => RemitoType::class,
+                                12 => DestinatarioType::class
+                            ];
 
     /**
      * @Route("/config/desactivar/{id}", name="bd_baja_entidad_venta")
@@ -146,9 +160,90 @@ class VentasController extends Controller
     }
 
 
-    private function getFormAltaEntidad($entidad, $class)
+    private function getFormAltaEntidad($entidad, $class, $depends = [])
     {
-        return $this->createForm($class, $entidad, ['method' => 'POST']);
+        return $this->createForm($class, $entidad, array_merge(['method' => 'POST'], $depends));
+    }
+
+
+    private function getFormAsociarConsignatario($id)
+    {
+        $form =$this->createFormBuilder()
+                    ->add('consignatario', 
+                          EntityType::class, [
+                          'class' => 'GestionFaenaBundle:gestionBD\Consignatario',                    
+                          'query_builder' => function (EntityRepository $er) {
+                                                                                return $er->createQueryBuilder('t')
+                                                                                          ->where('t.activa = :activa')
+                                                                                          ->setParameter('activa', true)
+                                                                                          ->orderBy('t.valor');
+                                                                             },
+                    ]) 
+                    ->add('asociar', SubmitType::class)
+                    ->setAction($this->generateUrl('vtas_agregar_como_consignatario', [ 'id' => $id ]))
+                    ->setMethod('POST')               
+                    ->getForm();
+        return $form;
+    }
+
+
+    /**
+     * @Route("/addconsig/{id}", name="vtas_agregar_como_consignatario")
+     */
+    public function agregarComoConsignatario($id, Request $request) //agrega a un cliente un destinatario como consignatario
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $entidad = $em->find(EntidadComercial::class, $id);
+
+        $formAsoc = $this->getFormAsociarConsignatario($id);
+
+        $formAsoc->handleRequest($request);
+
+        $data = $formAsoc->getData();
+
+        $consignatario = $data['consignatario'];
+
+        if ($consignatario)
+        {
+            $consignatario->setOriginal($entidad);
+            $em->flush();
+            return new JsonResponse(['ok' => true]);
+        }
+
+        return new JsonResponse(['ok' => false, 'message' => 'No se encuentra el consignatario!']);
+    }
+
+
+    /**
+     * @Route("/editdest/{id}", name="vtas_editar_destinatario")
+     */
+    public function editarEntidadComercial($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $entidad = $em->find(EntidadComercial::class, $id);
+
+        $destinatario = new Destinatario();
+
+        $form = $this->getFormAltaEntidad($destinatario, DestinatarioType::class, ['original' => $entidad]);
+
+        $formAsoc = $this->getFormAsociarConsignatario($id);
+
+        if ($request->isMethod('POST'))
+        {
+            $form->handleRequest($request);
+
+            if ($form->isValid())
+            {
+                $em->persist($destinatario);
+                $em->flush();
+                return $this->redirectToRoute('vtas_editar_destinatario', [ 'id' => $id ]);
+            }
+        }
+
+        return $this->render('@GestionVentas/bd/editarDestinatario.html.twig', 
+                             ['asociar' => $formAsoc->createView(), 'form' => $form->createView(), 'ente' => $entidad]);
     }
 
 
@@ -287,12 +382,13 @@ class VentasController extends Controller
                           array_merge(['data' => $dataCom], ((!$comprobante) || (!$comprobante->getConfirmado())) ? [] : ['disabled' => true] )
                         );
 
-        if ((!$comprobante) || (!$comprobante->getConfirmado()))
+        //if ((!$comprobante) || (!$comprobante->getConfirmado()))
+        if (!$comprobante)
         {
                 $form->add('cliente', 
                           EntityType::class, [
                           'data' => $cliente,
-                          'class' => EntidadExterna::class,                          
+                          'class' => EntidadComercial::class,                          
                           'query_builder' => function (EntityRepository $er) {
 																		        return $er->createQueryBuilder('e')
 																		            	  ->where('e.activa = :activa')
@@ -355,17 +451,36 @@ class VentasController extends Controller
 
             $proxNumero = $repository->getProximoNumero();
 
-    		$compVenta = new ComprobanteVenta();
-    		$compVenta->setUserAlta($this->getUser());
-    		$compVenta->setComentario($data['comentario']);
-           // $compVenta->setHorarioCarga($data['horarioCarga']);
-    		$compVenta->setFecha($data['fechaComprobante']);
-    		$compVenta->setEntidad($data['cliente']);
-            $compVenta->setNumero($proxNumero);
+            $cliente = $data['cliente'];
+
+    		$compOriginal = new ComprobanteVenta();
+    		$compOriginal->setUserAlta($this->getUser());
+    		$compOriginal->setComentario($data['comentario']);
+
+    		$compOriginal->setFecha($data['fechaComprobante']);
+    		$compOriginal->setEntidad($cliente);
+            $compOriginal->setNumero($proxNumero);
+            $em->persist($compOriginal);
+
+            foreach ($cliente->getAsociados() as $asoc)
+            {
+                $proxNumero++;
+                $compVenta = new ComprobanteVenta();
+                $compVenta->setUserAlta($this->getUser());
+                $compVenta->setComentario($data['comentario']);
+
+                $compVenta->setFecha($data['fechaComprobante']);
+                $compVenta->setEntidad($asoc);
+                $compVenta->setNumero($proxNumero);
+                $compVenta->setOriginal($compOriginal);
+                $compVenta->setAsociado(true);
+
+                $em->persist($compVenta);
+            }
     		
-    		$em->persist($compVenta);
+    		
     		$em->flush();
-    		return $this->redirectToRoute('vtas_agregar_articulos',['id' => $compVenta->getId(), 'request' => $request]);
+    		return $this->redirectToRoute('vtas_agregar_articulos',['id' => $compOriginal->getId(), 'request' => $request]);
     	}
         return $this->render('@GestionVentas/ventas/nuevaVenta.html.twig', ['form' => $form->createView()]);
     }
@@ -437,15 +552,36 @@ class VentasController extends Controller
     	{
     		$listaArticulos[$art->getId()] = $art;
 
-    		$formVentas[$art->getId()] = [];
+    		$formVentas[$comprobante->getId()][$art->getId()] = [];
 
     		foreach ($tiposItem as $tpo)
     		{
     			$item = $comprobante->getItemConTipoYArticulo($tpo, $art);
 
-    			$formVentas[$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comprobante, $art, $tpo, $item)->createView();
+    			$formVentas[$comprobante->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comprobante, $art, $tpo, $item)->createView();
     		}
     	}
+
+        $listaComprobantes = [$comprobante->getId() => $comprobante];
+
+        foreach ($comprobante->getAsociados() as $comp)
+        {
+                $listaComprobantes[$comp->getId()] = $comp;
+
+                foreach ($articulos as $art)
+                {
+                    $listaArticulos[$art->getId()] = $art;
+
+                    $formVentas[$comp->getId()][$art->getId()] = [];
+
+                    foreach ($tiposItem as $tpo)
+                    {
+                        $item = $comp->getItemConTipoYArticulo($tpo, $art);
+
+                        $formVentas[$comp->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comp, $art, $tpo, $item)->createView();
+                    }
+                }
+        }
 
     	$form = $this->createFormBuilder()
     				 ->add('back', SubmitType::class, array_merge([], $comprobante->getConfirmado()?['label' => 'Volver']:['label' => 'Guardar y Volver']))    
@@ -454,12 +590,13 @@ class VentasController extends Controller
                      ->setMethod('POST')               
                      ->getForm();
 
-        return $this->render('@GestionVentas/ventas/agregarItemsApaisado.html.twig', ['comprobante' => $comprobante,
-    																		  'ventas' => $formVentas,
-    																		  'articulos' => $listaArticulos,
-    																		  'tipos' => $tiposItem,
-                                                                              'form' => $formUpd->createView(),
-    																		  'back' => $form->createView()]);
+        return $this->render('@GestionVentas/ventas/agregarItemsApaisado.html.twig', ['comprobantes' => $listaComprobantes,
+                                                                                      'comprobante' => $comprobante,
+            																		  'ventas' => $formVentas,
+            																		  'articulos' => $listaArticulos,
+            																		  'tipos' => $tiposItem,
+                                                                                      'form' => $formUpd->createView(),
+            																		  'back' => $form->createView()]);
     }
 
     /**
@@ -587,6 +724,25 @@ class VentasController extends Controller
     		{
     			$body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()] = $it->getCantidad();
     		}
+
+
+            foreach ($comp->getAsociados() as $asoc)
+            {
+                  /*  foreach ($articulos as $art)
+                    {
+                        $body[$comp->getId()][$art->getId()] = [];
+
+                        foreach ($tiposVenta as $tpo)
+                        {
+                            $body[$comp->getId()][$art->getId()][$tpo->getId()] = null;
+                        }
+                    }*/
+
+                    foreach ($asoc->getItems() as $it)
+                    {
+                        $body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()]+= $it->getCantidad();
+                    }
+            }
     	}
 
     	return $this->render('@GestionVentas/ventas/listaVentasDiarias.html.twig', 
@@ -619,6 +775,13 @@ class VentasController extends Controller
     	{
 	    	$comprobante->setEliminado(true);
 	    	$comprobante->setUserBaja($this->getUser());
+
+            foreach ($comprobante->getAsociados() as $asoc)
+            {
+                $asoc->setEliminado(true);
+                $asoc->setUserBaja($this->getUser());
+            }
+
 	    	$em->flush();
 	    	return new JsonResponse(['error' => false]);
     	}
@@ -644,14 +807,24 @@ class VentasController extends Controller
     	}
 
     	try
-    	{
-    		if (!$comprobante->getItems()->count())
+    	{  
+
+    		if (!$comprobante->getTotalItems())
     		{
     			return new JsonResponse(['error' => true, 'message' => 'El comprobante no tiene cargado ningun articulo!']);
     		}
+
 	    	$comprobante->setFinalizado(true);
             $comprobante->setFechaFinalizacion(new \DateTime());
 	    	$comprobante->setUserFinalizacion($this->getUser());
+
+            foreach ($comprobante->getAsociados() as $asoc)
+            {
+                $asoc->setFinalizado(true);
+                $asoc->setFechaFinalizacion(new \DateTime());
+                $asoc->setUserFinalizacion($this->getUser());
+            }
+
 	    	$em->flush();
 	    	return new JsonResponse(['error' => false]);
     	}
@@ -1208,6 +1381,7 @@ class VentasController extends Controller
 
     /**
      * @Route("/vtapend", name="vtas_comprobantes_pendientes")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
      */
     public function verComprobantesPendientes(Request $request)
     {        

@@ -14,10 +14,10 @@ class SucursalType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('entidad', EntidadExternaType::class, array(
+        $builder->add('comercial', 
+                      EntidadComercialType::class, array(
                                     'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Sucursal',
                                 ))
-                ->add('direccion')
                 ->add('guardar', SubmitType::class);
     }
 

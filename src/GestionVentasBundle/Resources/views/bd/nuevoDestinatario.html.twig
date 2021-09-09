@@ -10,17 +10,20 @@
 	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
     <div class="form-row">
       <div class="col-4">
-        {{ form_label(form.entidad.valor, 'Nombre/Razon Social') }}
-        {{ form_widget(form.entidad.valor) }}
-        {{ form_errors(form.entidad.valor) }}
+        {{ form_label(form.comercial.entidad.valor, 'Nombre/Razon Social') }}
+        {{ form_widget(form.comercial.entidad.valor) }}
+        {{ form_errors(form.comercial.entidad.valor) }}
       </div>
-      {% if code == 5 %}
-        <div class="col-4">
-          {{ form_label(form.direccion) }}
-          {{ form_widget(form.direccion) }}
-          {{ form_errors(form.direccion) }}
-        </div>
-      {% endif %}
+      <div class="col-4">
+        {{ form_label(form.comercial.cuit) }}
+        {{ form_widget(form.comercial.cuit) }}
+        {{ form_errors(form.comercial.cuit) }}
+      </div>
+      <div class="col-4">
+        {{ form_label(form.comercial.direccion) }}
+        {{ form_widget(form.comercial.direccion) }}
+        {{ form_errors(form.comercial.direccion) }}
+      </div>
     </div>
     <div class="form-row">
       <div class="col">
@@ -36,9 +39,10 @@
           <tr>
             <th>#</th>
             <th>Detalle</th>
-            {% if code == 5 %}
+   
               <th>Direccion</th>
-            {% endif %}
+
+            <th></th>
             <th></th>
           </tr>
         </thead>
@@ -47,9 +51,12 @@
             <tr>
               <td>{{ loop.index }}</td>
               <td>{{ f|upper }}</td>   
-              {% if code == 5 %}
-                <th>{{ f.direccion|upper }}</th>
-              {% endif %}      
+              <td>{{ f.direccion|upper }}</td>
+              <td>
+<a class="btn btn-sm btn-warning" href="{{ path('vtas_editar_destinatario', { id : f.id })}}">Editar</a>
+
+              </td>
+  
               <td class="text-center"><a data-index="{{ loop.index }}" class="btn btn-sm btn-warning btn-delete" href="{{ path('bd_baja_entidad_venta', { id : f.id })}}">Desactivar</a></td>
             </tr>
           {% endfor %}

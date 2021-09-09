@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\EntidadExternaRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="integer")
- * @ORM\DiscriminatorMap({1:"EntidadExterna",2: "Granja", 3: "Transportista", 4: "Cargador", 5: "Sucursal", 6: "Consignatario", 7: "Remito", 8: "Anexo", 9: "Reparto", 10: "Exportacion"})
+ * @ORM\DiscriminatorMap({1:"EntidadExterna",2: "Granja", 3: "Transportista", 4: "Cargador", 5: "Sucursal", 6: "Consignatario", 7: "Remito", 8: "Anexo", 9: "Reparto", 10: "Exportacion", 11:"EntidadComercial", 12: "Destinatario"})
  * @ORM\HasLifecycleCallbacks()
  */
 
@@ -53,6 +53,10 @@ abstract class EntidadExterna
      * @ORM\Column(name="cliente", type="boolean", options={"default":true})
      */
     private $cliente;
+
+
+    public abstract function getInstance();
+
 
     /**
      * @ORM\PrePersist
@@ -104,6 +108,11 @@ abstract class EntidadExterna
     }
 
     public function __toString()
+    {
+        return strtoupper($this->valor);
+    }
+
+    public function getNombreVenta()
     {
         return strtoupper($this->valor);
     }

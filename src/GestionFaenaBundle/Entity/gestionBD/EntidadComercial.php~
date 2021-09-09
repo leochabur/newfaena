@@ -1,0 +1,89 @@
+<?php
+
+namespace GestionFaenaBundle\Entity\gestionBD;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * EntidadComercial
+ *
+ * @ORM\Table(name="sp_gst_ent_com")
+ * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\EntidadComercialRepository")
+ */
+abstract class EntidadComercial extends EntidadExterna
+{
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="cuit", type="string", length=13)
+     */
+    private $cuit;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="direccion", type="string", length=255)
+     */
+    private $direccion;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="EntidadComercial", inversedBy="asociados")
+     * @ORM\JoinColumn(name="id_ent", referencedColumnName="id")
+     */
+    private $original;
+
+    /**
+     * @ORM\OneToMany(targetEntity="EntidadComercial", mappedBy="original")
+     */
+    private $asociados;
+
+    
+    /**
+     * Set cuit
+     *
+     * @param string $cuit
+     *
+     * @return EntidadComercial
+     */
+    public function setCuit($cuit)
+    {
+        $this->cuit = $cuit;
+
+        return $this;
+    }
+
+    /**
+     * Get cuit
+     *
+     * @return string
+     */
+    public function getCuit()
+    {
+        return $this->cuit;
+    }
+
+    /**
+     * Set direccion
+     *
+     * @param string $direccion
+     *
+     * @return EntidadComercial
+     */
+    public function setDireccion($direccion)
+    {
+        $this->direccion = $direccion;
+
+        return $this;
+    }
+
+    /**
+     * Get direccion
+     *
+     * @return string
+     */
+    public function getDireccion()
+    {
+        return $this->direccion;
+    }
+}

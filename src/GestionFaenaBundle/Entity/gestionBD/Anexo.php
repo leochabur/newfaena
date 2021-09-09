@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="sp_gst_ent_ext_anexos")
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\AnexoRepository")
  */
-class Anexo extends EntidadExterna
+class Anexo extends EntidadComercial
 {
 
     protected function getIsCliente()
@@ -18,4 +18,9 @@ class Anexo extends EntidadExterna
         return true;
     }
 
+
+    public function getInstance()
+    {
+        return 8;
+    }
 }
