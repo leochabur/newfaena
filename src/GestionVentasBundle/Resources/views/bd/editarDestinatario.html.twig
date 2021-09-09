@@ -10,13 +10,13 @@
 
     <div class="form-row h5">
       <div class="col-4">
-         Razon Social:  {{ ente }}
+         Razon Social:  {{ ente|upper }}
       </div>
       <div class="col-4">
         CUIT:  {{ ente.cuit }}
       </div>
       <div class="col-4">
-        Direccion:  {{ ente.direccion }}
+        Direccion:  {{ ente.direccion|upper }}
       </div>
     </div>
     <hr>
@@ -25,7 +25,7 @@
           <div class="form-row">
             <div class="col-4">
               {{ form_label(asociar.consignatario) }}
-              {{ form_widget(asociar.consignatario) }}
+              {{ form_widget(asociar.consignatario, {'attr' : {'class' : 'text-uppercase'}}) }}
             </div>
           </div>
           <div class="form-row">
@@ -91,7 +91,7 @@
               <td>{{ f.direccion|upper }}</td>
               <td></td>
   
-              <td class="text-center"><a data-index="{{ loop.index }}" class="btn btn-sm btn-warning btn-delete" href="{{ path('bd_baja_entidad_venta', { id : f.id })}}">Desactivar</a></td>
+              <td class="text-center"><a data-index="{{ loop.index }}" class="btn btn-sm btn-warning delete-asoc" href="{{ path('vtas_quitar_destinatario', { id : f.id })}}">Quitar</a></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -101,6 +101,44 @@
 {% block javascripts %}
 
 <script type="text/javascript">
+
+    $('.delete-asoc').click(function (event){
+                                              event.preventDefault();
+                                              let a = $(this);
+                                              bootbox.confirm({                                        
+                                                                message: 'Seguro quitar el destinatario?',
+                                                                size: "large",
+                                                                buttons: {
+                                                                          confirm: {
+                                                                              label: 'Si',
+                                                                              className: 'btn-success'
+                                                                          },
+                                                                          cancel: {
+                                                                              label: 'No',
+                                                                              className: 'btn-danger'
+                                                                          }
+                                                                      },
+                                                                      callback: function (result) {
+                                                                          if (result)
+                                                                          {
+                                                                              $.post(a.attr('href'),
+                                                                                     function (data)
+                                                                                     {
+                                                                                        console.log(data);
+                                                                                        if (data.ok)
+                                                                                        {
+                                                                                           location.reload();
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                          alert(data.message);
+                                                                                        }
+                                                                                     });
+                                                                          }
+                                                                      }
+                                                            });
+
+                                            });
 
     $('.asociar').click(function (event){
                                           event.preventDefault();

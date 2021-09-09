@@ -247,6 +247,33 @@ class VentasController extends Controller
     }
 
 
+    /**
+     * @Route("/delasoc/{id}", name="vtas_quitar_destinatario")
+     */
+    public function quitarAsociacionCliente($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $entidad = $em->find(EntidadComercial::class, $id);
+
+        if ($entidad)
+        {
+            $original = $entidad->getOriginal();
+            if ($original)
+            {
+                $original->removeAsociado($entidad);
+                $entidad->setOriginal(null);
+                $entidad->setActiva(false);
+                $em->flush();
+                return new JsonResponse(['ok' => true]);
+            }
+            return new JsonResponse(['ok' => false, 'message' => 'Error inesperado!']);
+        }
+
+        return new JsonResponse(['ok' => false, 'message' => 'No se encuentra el consignatario!']);
+    }
+
+
     ////////////////////////ALTA ARTICULO ATRIBUTO CONCEPTO
     /**
      * @Route("/config/setgpo", name="bd_set_grupo_entidad")

@@ -12,8 +12,8 @@ class RepartoType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('entidad', 
-                      EntidadExternaType::class, 
+        $builder->add('comercial', 
+                      EntidadComercialType::class, 
                       array(
                                 'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Reparto',
                             ))

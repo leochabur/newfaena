@@ -40,7 +40,7 @@ class ArticuloRepository extends \Doctrine\ORM\EntityRepository
     public function getListaArticulosConCategoriaSingle() 
     { 
         return $this->getEntityManager()
-                    ->createQuery('SELECT a, a.id as id, c.id as idCate, s.id as idSubcate, c.categoria as cate, s.subcategoria as subcate, a.nombreResumido as nombreResumido
+                    ->createQuery('SELECT a as art, a.id as id, c.id as idCate, s.id as idSubcate, c.categoria as cate, s.subcategoria as subcate, a.nombreResumido as nombreResumido
                                    FROM GestionFaenaBundle:gestionBD\Articulo a 
                                    JOIN a.categoria c
                                    JOIN a.subcategoria s
