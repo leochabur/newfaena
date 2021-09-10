@@ -1503,7 +1503,8 @@ class GestionFaenaController extends Controller implements EventSubscriberInterf
 
             foreach ($articulos as $art)
             {
-
+     //           throw new \Exception("".$art[0]);
+//
                 $arrayArticulos[$art['id']] = $art[0];
                 $procesoFaena = $proceso->getProcesoFaena();
 
