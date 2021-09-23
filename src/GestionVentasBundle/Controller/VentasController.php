@@ -529,18 +529,21 @@ class VentasController extends Controller
 
             foreach ($cliente->getAsociados() as $asoc)
             {
-                $proxNumero++;
-                $compVenta = new ComprobanteVenta();
-                $compVenta->setUserAlta($this->getUser());
-                $compVenta->setComentario($data['comentario']);
+                if ($asoc->getActiva())
+                {
+                        $proxNumero++;
+                        $compVenta = new ComprobanteVenta();
+                        $compVenta->setUserAlta($this->getUser());
+                        $compVenta->setComentario($data['comentario']);
 
-                $compVenta->setFecha($data['fechaComprobante']);
-                $compVenta->setEntidad($asoc);
-                $compVenta->setNumero($proxNumero);
-                $compVenta->setOriginal($compOriginal);
-                $compVenta->setAsociado(true);
+                        $compVenta->setFecha($data['fechaComprobante']);
+                        $compVenta->setEntidad($asoc);
+                        $compVenta->setNumero($proxNumero);
+                        $compVenta->setOriginal($compOriginal);
+                        $compVenta->setAsociado(true);
 
-                $em->persist($compVenta);
+                        $em->persist($compVenta);
+                }
             }
     		
     		
