@@ -1,4 +1,5 @@
 {% extends "FOSUserBundle::layout.html.twig" %}
+{% set mutipleselect = true %}
 {% block fos_user_content %}
 <br>
 <hr>
@@ -42,7 +43,7 @@
     <br>
   {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
     <div class="form-row">
-      <div class="col-4">
+      <div class="col-3">
         {{ form_label(form.comercial.entidad.valor, 'Nombre/Razon Social') }}
         {{ form_widget(form.comercial.entidad.valor) }}
       </div>
@@ -56,7 +57,12 @@
         {{ form_widget(form.comercial.direccion) }}
         {{ form_errors(form.comercial.direccion) }}
       </div>
-      <div class="col-3">
+      <div class="col-2">
+        {{ form_label(form.comercial.tiposVenta) }}
+        {{ form_widget(form.comercial.tiposVenta, {'attr' : {'class' : 'multiple-select'}}) }}
+        {{ form_errors(form.comercial.tiposVenta) }}
+      </div>
+      <div class="col-2">
         {{ form_label(form.comercial.original) }}
         {{ form_widget(form.comercial.original) }}
         {{ form_errors(form.comercial.original) }}
@@ -76,10 +82,10 @@
           <tr>
             <th>#</th>
             <th>Detalle</th>
-   
-              <th>Direccion</th>
-
-            <th></th>
+            <th>Tipos Venta</th>
+            <th>Direccion</th>
+            <th>CUIT</th>
+            <th>Activo</th>
             <th></th>
           </tr>
         </thead>
@@ -88,19 +94,63 @@
             <tr>
               <td>{{ loop.index }}</td>
               <td>{{ f|upper }}</td>   
+              <td>{{ f.typesVenta }} </td>
               <td>{{ f.direccion|upper }}</td>
-              <td></td>
-  
-              <td class="text-center"><a data-index="{{ loop.index }}" class="btn btn-sm btn-warning delete-asoc" href="{{ path('vtas_quitar_destinatario', { id : f.id })}}">Quitar</a></td>
+              <td>{{ f.cuit|upper }}</td>
+              <td>
+                  {% if f.activa %}
+                    SI
+                  {% else %}
+                    NO
+                  {% endif %}
+              </td>
+              <td class="text-center"><a class="btn btn-default btn-rounded btn-sm edit_dest" href="{{ path('vtas_editar_destinatario_venta', { id : f.id })}}">Editar</a></td>
             </tr>
           {% endfor %}
         </tbody>
     </table>
 </div>
+
+
+<div class="modal fade" id="modalLoginForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Editar destinatario de venta</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3 body-edit">
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 {% endblock fos_user_content %}
 {% block javascripts %}
 
 <script type="text/javascript">
+
+    $('#modalLoginForm').on('show.bs.modal', function (e) {
+
+    });
+
+    $('.edit_dest').click(function (event){
+                                            var a = $(this);
+                                            event.preventDefault();
+                                            $('.body-edit').html('Cargando...');
+                                            $('#modalLoginForm').modal('show');
+                                            $('.body-edit').load(a.attr('href'));
+    });
+
+    $('.multiple-select').multiselect({
+            buttonWidth: '150px'
+        });
 
     $('.delete-asoc').click(function (event){
                                               event.preventDefault();

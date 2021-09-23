@@ -6,6 +6,8 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 
 class DestinatarioType extends AbstractType
 {
@@ -18,6 +20,15 @@ class DestinatarioType extends AbstractType
                                                         'original' => $options['original']
                                 ))
                 ->add('guardar', SubmitType::class);
+
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event){
+                                                                                                $entidad = $event->getData();
+                                                                                                $form = $event->getForm();
+
+                                                                                                if ($entidad->getId()) {
+                                                                                                    $form->add('activa');
+                                                                                                }
+                                                                                            });
     }
 
 

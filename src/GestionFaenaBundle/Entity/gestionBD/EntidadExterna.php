@@ -57,6 +57,11 @@ abstract class EntidadExterna
 
     public abstract function getInstance();
 
+    public function aceptaTipoVenta($tipoVenta)
+    {
+        return true;
+    }
+
 
     /**
      * @ORM\PrePersist

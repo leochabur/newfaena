@@ -9,6 +9,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Doctrine\ORM\EntityRepository;
 
+
 class EntidadComercialType extends AbstractType
 {
     /**
@@ -23,6 +24,7 @@ class EntidadComercialType extends AbstractType
                       array(
                                 'data_class' => 'GestionFaenaBundle\Entity\gestionBD\EntidadComercial',
                             ))
+                ->add('tiposVenta')
                 ->add('cuit')
                 ->add('direccion');
         if ($original)

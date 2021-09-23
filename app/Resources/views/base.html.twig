@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
   {% endif %}
 
+  {% if mutipleselect is defined %}
+    <link href="{{ asset('resources/css/bootstrap-multiselect.css') }}" rel="stylesheet">
+  {% endif %}
 
 
   <!-- Bootstrap core CSS -->
@@ -87,6 +90,9 @@
 {% endif %}
 {% if mask is not defined %}
   <script type='text/javascript' src="https://rawgit.com/RobinHerbots/jquery.inputmask/3.x/dist/jquery.inputmask.bundle.js"></script>
+{% endif %}
+{% if mutipleselect is defined %}
+  <script src="{{ asset('resources/js/bootstrap-multiselect.js') }}"></script>
 {% endif %}
 
   {% if hover is defined%}

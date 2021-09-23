@@ -205,10 +205,11 @@
                               {% endif %}
                           {% set class =  "update form-control-sm " ~ k %}
                           <td class="border border-primary {{ color }}">
-
-                            {{ form_start(vvta[t.id], {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
-                            {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : k, 'class' : class }}) }}
-                            {{ form_end(vvta[t.id]) }}
+                            {% if vvta[t.id] is defined %}
+                                {{ form_start(vvta[t.id], {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
+                                {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : k, 'class' : class }}) }}
+                                {{ form_end(vvta[t.id]) }}
+                            {% endif %}
                           </td>
                           {% set k = k + 1 %}
                       {% endfor %}    

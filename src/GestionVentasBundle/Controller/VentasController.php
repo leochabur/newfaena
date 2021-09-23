@@ -246,6 +246,44 @@ class VentasController extends Controller
                              ['asociar' => $formAsoc->createView(), 'form' => $form->createView(), 'ente' => $entidad]);
     }
 
+    /**
+     * @Route("/editdestvta/{id}", name="vtas_editar_destinatario_venta")
+     */
+    public function editarDestinatarioVenta($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $destinatario = $em->find(Destinatario::class, $id);
+
+        $form = $this->createForm(DestinatarioType::class, $destinatario, ['method' => 'POST', 'action' => $this->generateUrl('vtas_editar_destinatario_venta_procesar', ['id' => $id])]);
+
+        return $this->render('@GestionVentas/bd/formEditDestinatario.html.twig', 
+                             ['form' => $form->createView()]);
+    }
+
+
+    /**
+     * @Route("/editdestvtaproc/{id}", name="vtas_editar_destinatario_venta_procesar", methods={"POST"})
+     */
+
+    public function editarDestinatarioVentaProcesar($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $destinatario = $em->find(Destinatario::class, $id);
+
+        $form = $this->createForm(DestinatarioType::class, $destinatario, ['method' => 'POST', 'action' => $this->generateUrl('vtas_editar_destinatario_venta_procesar', ['id' => $id])]);
+
+        $form->handleRequest($request);
+
+        if ($form->isValid())
+        {
+            $em->flush();
+            return new JsonResponse(['ok' => true]);
+        }
+        return new JsonResponse(['ok' => false]);
+    }
+
 
     /**
      * @Route("/delasoc/{id}", name="vtas_quitar_destinatario")
@@ -593,6 +631,8 @@ class VentasController extends Controller
 
         foreach ($comprobante->getAsociados() as $comp)
         {
+                $entidad = $comp->getEntidad();
+
                 $listaComprobantes[$comp->getId()] = $comp;
 
                 foreach ($articulos as $art)
@@ -603,9 +643,12 @@ class VentasController extends Controller
 
                     foreach ($tiposItem as $tpo)
                     {
-                        $item = $comp->getItemConTipoYArticulo($tpo, $art);
+                        if ($entidad->aceptaTipoVenta($tpo))
+                        {
+                            $item = $comp->getItemConTipoYArticulo($tpo, $art);
 
-                        $formVentas[$comp->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comp, $art, $tpo, $item)->createView();
+                            $formVentas[$comp->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comp, $art, $tpo, $item)->createView();
+                        }
                     }
                 }
         }

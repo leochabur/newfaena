@@ -37,4 +37,10 @@ class Consignatario extends EntidadComercial
     {
         return false;
     }
+
+    public function aceptaTipoVenta($tipoVenta)
+    {
+        return $tipoVenta->getOficial();
+
+    }
 }

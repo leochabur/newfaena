@@ -38,6 +38,51 @@ abstract class EntidadComercial extends EntidadExterna
      */
     private $asociados;
 
+
+    /**
+     * @ORM\ManyToMany(targetEntity="GestionFaenaBundle\Entity\faena\TipoVenta")
+     * @ORM\JoinTable(name="sp_gst_tpo_vtas_for_ent_com",
+     *      joinColumns={@ORM\JoinColumn(name="id_ent_com", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="id_tpo_vta", referencedColumnName="id")}
+     *      )
+     */
+    private $tiposVenta;
+
+
+    public function aceptaTipoVenta($tipoVenta)
+    {
+        if ($this->tiposVenta->isEmpty()) 
+        {
+            return true;
+        }
+
+        foreach ($this->tiposVenta as $t)
+        {
+            if ($t === $tipoVenta)
+            {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+
+    public function getTypesVenta()
+    {
+        $types = "";
+        foreach ($this->tiposVenta as $t)
+        {
+            if ($types)
+            {
+                $types.=' - ';
+            }
+            $types.=$t;
+        }
+        return $types;
+    }
+
     public function getAdmiteRayado()
     {
         return true;
@@ -96,6 +141,7 @@ abstract class EntidadComercial extends EntidadExterna
     public function __construct()
     {
         $this->asociados = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->tiposVenta = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -154,5 +200,39 @@ abstract class EntidadComercial extends EntidadExterna
     public function getAsociados()
     {
         return $this->asociados;
+    }
+
+    /**
+     * Add tiposVentum
+     *
+     * @param \GestionFaenaBundle\Entity\faena\TipoVenta $tiposVentum
+     *
+     * @return EntidadComercial
+     */
+    public function addTiposVentum(\GestionFaenaBundle\Entity\faena\TipoVenta $tiposVentum)
+    {
+        $this->tiposVenta[] = $tiposVentum;
+
+        return $this;
+    }
+
+    /**
+     * Remove tiposVentum
+     *
+     * @param \GestionFaenaBundle\Entity\faena\TipoVenta $tiposVentum
+     */
+    public function removeTiposVentum(\GestionFaenaBundle\Entity\faena\TipoVenta $tiposVentum)
+    {
+        $this->tiposVenta->removeElement($tiposVentum);
+    }
+
+    /**
+     * Get tiposVenta
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getTiposVenta()
+    {
+        return $this->tiposVenta;
     }
 }

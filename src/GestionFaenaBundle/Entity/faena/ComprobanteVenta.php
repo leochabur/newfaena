@@ -113,7 +113,7 @@ class ComprobanteVenta extends MovimientoStock
 
     public function getTotalItems()
     {
-        $count = 0;
+        $count = $this->items->count();
         foreach ($this->asociados as $asoc)
         {
             $count+= $asoc->getItems()->count();
