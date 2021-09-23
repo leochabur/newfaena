@@ -102,6 +102,7 @@
             <th>Nombre Faena</th>
             {% if app.user.isPerfilVenta %}
                 <th>Nombre Venta</th>
+                <th>Categoria</th>
             {% endif %}
             {% if not app.user.isPerfilVenta %}
                 <th>Nom. Red.</th>
@@ -122,6 +123,7 @@
               <td>{{ f.nombre }}</td>  
               {% if app.user.isPerfilVenta %}
                   <td>{{ f.descVenta }}</td>  
+                  <td>{{ f.categoriaVenta }}</td>
               {% endif %}
               {% if not app.user.isPerfilVenta %}
                   <td>{{ f.nombreResumido }}</td> 
