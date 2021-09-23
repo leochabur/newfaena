@@ -82,12 +82,22 @@
           <th rowspan="2">Numero</th>
           <th rowspan="2"></th>          
           {% set i = 1 %}
+          {% set last = null %}
           {% for a in articulos %}
-              <th colspan="{{ tipos|length  }}" class="text-center {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{ a.nombreVenta }}</th>
-              
-          {% endfor %}        
+
+                  {% if last and last != a.categoriaVenta %}
+                      <th class='grey darken-1 text-white'>Total</th>
+                  {% endif %}
+
+                  <th colspan="{{ tipos|length  }}" class="text-center {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">
+                            {{ a.nombreVenta }}
+                  </th>
+                  {% set last = a.categoriaVenta %}
+          {% endfor %}    
+          <th class='grey darken-1 text-white'>Total</th>    
       </tr>
       <tr>
+          {% set last = null %}
           {% for a in articulos %}
                   {% set artIndex = loop.index %}
 
@@ -102,6 +112,13 @@
                   {% set color = '' %}
 
                   {% set j = 0 %}  
+
+                  {% if last and last != a.categoriaVenta %}
+
+                      <th class='grey darken-1 text-white'> {{ last }}</th>
+
+                  {% endif %}
+                  {% set last = a.categoriaVenta %}
             {% for t in tipos %}
                           {% set tipoIndex = loop.index %}
 
@@ -135,6 +152,7 @@
               {% set i = i + 1 %}
 
           {% endfor %}
+          <th class='grey darken-1 text-white'> {{ last }}</th>
       </tr>
       </thead>
       <tbody>        
@@ -156,8 +174,16 @@
               </td>           
               {% set i = 1 %}  
 
+              {% set last = null %}
+
               {% for art in articulos %}
 
+                  {% if last and last != art.categoriaVenta %}
+
+                      <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id] }}</td>
+
+                  {% endif %}
+                  {% set last = art.categoriaVenta %}
                   {% set artIndex = loop.index %}
 
                   {% set pi = 'i' %}
@@ -209,6 +235,7 @@
                   {% set i = i + 1 %}
 
               {% endfor %}
+              <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id] }}</td>
             </tr>
         {% endfor %}
       </tbody>

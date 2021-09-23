@@ -604,7 +604,7 @@ class VentasController extends Controller
 
     	$repoArticulos = $em->getRepository(Articulo::class);
 
-    	$articulos = $repoArticulos->getListaArticulosConCategoria(); //Recupera todos los articulos que se pueden comercializar
+    	$articulos = $repoArticulos->getListaArticulosConCategoriaVenta();//getListaArticulosConCategoria(); //Recupera todos los articulos que se pueden comercializar
 
     	$repoTipos = $em->getRepository(TipoVenta::class);
     	$tiposItem = $repoTipos->findAll(); //Recupera todos los tipos de Item Rayado o No
@@ -771,16 +771,21 @@ class VentasController extends Controller
     	
     	$tiposVenta = $em->getRepository(TipoVenta::class)->findAll();
 
-    	$articulos = $em->getRepository(Articulo::class)->getListaArticulosConCategoria();
+    	$articulos = $em->getRepository(Articulo::class)->getListaArticulosConCategoriaVenta();//getListaArticulosConCategoria();
 
     	$comprobantes = $repository->getComprobantesVenta($data['fechaComprobante']);
 
     	$body = [];
 
+        $totalesXCategoria = [];
+
     	foreach ($comprobantes as $comp)
     	{
     		$body[$comp->getId()] = [];
-    		foreach ($articulos as $art)
+
+            $totalesXCategoria[$comp->getId()] = [];
+    		
+            foreach ($articulos as $art)
     		{
     			$body[$comp->getId()][$art->getId()] = [];
 
@@ -788,38 +793,56 @@ class VentasController extends Controller
     			{
     				$body[$comp->getId()][$art->getId()][$tpo->getId()] = null;
     			}
+
+                if (!array_key_exists($art->getCategoriaVenta()->getId(), $totalesXCategoria[$comp->getId()]))
+                {
+                    $totalesXCategoria[$comp->getId()][$art->getCategoriaVenta()->getId()] = 0;
+                }
     		}
 
     		foreach ($comp->getItems() as $it)
     		{
     			$body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()] = $it->getCantidad();
+
+                $categoria = $it->getArticulo()->getCategoriaVenta();
+
+                if ($categoria)
+                {
+                    if (array_key_exists($categoria->getId(), $totalesXCategoria[$comp->getId()]))
+                    {
+                        $totalesXCategoria[$comp->getId()][$categoria->getId()]+= $it->getCantidad();
+                    }
+                }
     		}
 
 
             foreach ($comp->getAsociados() as $asoc)
             {
-                  /*  foreach ($articulos as $art)
-                    {
-                        $body[$comp->getId()][$art->getId()] = [];
-
-                        foreach ($tiposVenta as $tpo)
-                        {
-                            $body[$comp->getId()][$art->getId()][$tpo->getId()] = null;
-                        }
-                    }*/
 
                     foreach ($asoc->getItems() as $it)
                     {
                         $body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()]+= $it->getCantidad();
+
+                        $categoria = $it->getArticulo()->getCategoriaVenta();
+
+                        if ($categoria)
+                        {
+                            if (array_key_exists($categoria->getId(), $totalesXCategoria[$comp->getId()]))
+                            {
+                                $totalesXCategoria[$comp->getId()][$categoria->getId()]+= $it->getCantidad();
+                            }
+                        }
                     }
             }
     	}
+     //   return new Response(var_dump($totalesXCategoria));
 
     	return $this->render('@GestionVentas/ventas/listaVentasDiarias.html.twig', 
     						 ['fecha' => $data['fechaComprobante'],
     						  'comprobantes' => $comprobantes,
     						  'articulos' => $articulos,
     						  'tipos' => $tiposVenta,
+                              'totales' => $totalesXCategoria,
     						  'data' => $body]);
     }
 

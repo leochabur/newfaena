@@ -133,6 +133,13 @@ class Articulo
     */      
     private $categoriaGeneral; // Utilizado para englobar todos los articulos similares (Al controlar la faena levanta todos los tipos de pollos)
 
+    /**
+    * @ORM\ManyToOne(targetEntity="CategoriaArticulo") 
+    * @ORM\JoinColumn(name="id_categ_venta", referencedColumnName="id", nullable=true)
+    */      
+    private $categoriaVenta;
+
+
     public function getNombrePallet()
     {
         return ($this->nombre.' - '.$this->codigoInterno);
@@ -632,5 +639,29 @@ class Articulo
     public function getCategoriaGeneral()
     {
         return $this->categoriaGeneral;
+    }
+
+    /**
+     * Set categoriaVenta
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo $categoriaVenta
+     *
+     * @return Articulo
+     */
+    public function setCategoriaVenta(\GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo $categoriaVenta = null)
+    {
+        $this->categoriaVenta = $categoriaVenta;
+
+        return $this;
+    }
+
+    /**
+     * Get categoriaVenta
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo
+     */
+    public function getCategoriaVenta()
+    {
+        return $this->categoriaVenta;
     }
 }

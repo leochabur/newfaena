@@ -71,6 +71,12 @@ class ArticuloType extends AbstractType
                         'class' => 'GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo',
                         'required' => false
                        ])
+               ->add('categoriaVenta', 
+                       EntityType::class, 
+                       [
+                        'class' => 'GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo',
+                        'required' => false
+                       ])
                 ->add('categoria', 
                        EntityType::class, 
                        [
