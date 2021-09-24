@@ -13,11 +13,19 @@
       <div class="col-4">
          Razon Social:  {{ ente|upper }}
       </div>
-      <div class="col-4">
+      <div class="col-3">
         CUIT:  {{ ente.cuit }}
       </div>
-      <div class="col-4">
+      <div class="col-3">
         Direccion:  {{ ente.direccion|upper }}
+      </div>
+      <div class="col-2">
+        Tipo Ventas:  {{ ente.typesVenta|upper }}
+      </div>
+    </div>
+    <div class="form-row h5">
+      <div class="col-2">
+        <a href="{{ path('vtas_editar_cliente_vario', { id : ente.id })}}"class="btn btn-sm btn-primary edit-vario">Editar</a>
       </div>
     </div>
     <hr>
@@ -139,6 +147,15 @@
     $('#modalLoginForm').on('show.bs.modal', function (e) {
 
     });
+
+    $('.edit-vario').click(function (event){
+                                            var a = $(this);
+                                            event.preventDefault();
+                                            $('.body-edit').html('Cargando...');
+                                            $('#modalLoginForm').modal('show');
+                                            $('.body-edit').load(a.attr('href'));
+    });
+
 
     $('.edit_dest').click(function (event){
                                             var a = $(this);

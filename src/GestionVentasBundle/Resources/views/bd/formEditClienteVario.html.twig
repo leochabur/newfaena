@@ -1,0 +1,66 @@
+
+
+
+	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+  <div>
+    <div class="form-row">
+      <div class="col-3">
+            {{ form_label(form.comercial.entidad.valor, 'Nombre/Razon Social') }}
+            {{ form_widget(form.comercial.entidad.valor, { 'attr' : { 'class' : 'text-uppercase' }}) }}
+            {{ form_errors(form.comercial.entidad.valor) }}
+      </div>
+      <div class="col-3">
+            {{ form_label(form.comercial.cuit) }}
+            {{ form_widget(form.comercial.cuit) }}
+            {{ form_errors(form.comercial.cuit) }}
+      </div>
+      <div class="col-3">
+            {{ form_label(form.comercial.direccion) }}
+            {{ form_widget(form.comercial.direccion) }}
+            {{ form_errors(form.comercial.direccion) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.comercial.tiposVenta) }}
+        {{ form_widget(form.comercial.tiposVenta, {'attr' : {'class' : 'multiple-select'}}) }}
+        {{ form_errors(form.comercial.tiposVenta) }}
+      </div>
+    </div>
+    {% if form.activa is defined %}
+    <div class="form-row">
+      <div class="col-3">
+            {{ form_label(form.activa) }}
+            {{ form_widget(form.activa) }}
+      </div>
+    </div>
+    {% endif %}
+    <div class="form-row">
+      <div class="col">
+        {{ form_widget(form.guardar, {'attr' : {'class' : 'btn btn-primary btn_send'}}) }}
+      </div>
+    </div>
+  </div>
+	{{ form_end(form) }}
+
+  <script type="text/javascript">
+    $('.multiple-select').multiselect({
+            buttonWidth: '150px'
+    });
+
+    $('.btn_send').click(function (event) {
+                                            event.preventDefault();
+                                            var form = $(this).closest('form');
+                                            $.post(form.attr('action'),
+                                                   form.serialize(),
+                                                   function (data) {
+                                                                     if (data.ok)
+                                                                     {
+                                                                      window.location.reload();
+                                                                     }
+                                                                     else
+                                                                     {
+                                                                      alert('se han producido errores!!');
+                                                                     }
+                                                   });
+
+    });
+  </script>

@@ -55,6 +55,8 @@ use GestionFaenaBundle\Entity\gestionBD\Destinatario;
 use GestionFaenaBundle\Form\gestionBD\DestinatarioType;
 
 use GestionFaenaBundle\Entity\gestionBD\EntidadComercial;
+use GestionFaenaBundle\Form\gestionBD\EntidadComercialType;
+
 
 /**
  * @Route("/ventas")
@@ -245,6 +247,52 @@ class VentasController extends Controller
         return $this->render('@GestionVentas/bd/editarDestinatario.html.twig', 
                              ['asociar' => $formAsoc->createView(), 'form' => $form->createView(), 'ente' => $entidad]);
     }
+
+
+    /**
+     * @Route("/editclvrs/{id}", name="vtas_editar_cliente_vario")
+     */
+    public function editarClienteVario($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $cliente = $em->find(Remito::class, $id);
+
+        $form = $this->createForm(RemitoType::class, 
+                                 $cliente, 
+                                 [
+                                    'method' => 'POST', 
+                                    'action' => $this->generateUrl('vtas_editar_cliente_vario_procesar', ['id' => $id])
+                                 ]);
+
+        return $this->render('@GestionVentas/bd/formEditClienteVario.html.twig', 
+                             ['form' => $form->createView()]);
+    }
+
+    /**
+     * @Route("/editclvrsproc/{id}", name="vtas_editar_cliente_vario_procesar", methods={"POST"})
+     */
+
+    public function editarClienteVarioProcesar($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $cliente = $em->find(Remito::class, $id);
+
+        $form = $this->createForm(RemitoType::class, 
+                                 $cliente, 
+                                 ['method' => 'POST', 'action' => $this->generateUrl('vtas_editar_cliente_vario_procesar', ['id' => $id])]);
+
+        $form->handleRequest($request);
+
+        if ($form->isValid())
+        {
+            $em->flush();
+            return new JsonResponse(['ok' => true]);
+        }
+        return new JsonResponse(['ok' => false]);
+    }
+
 
     /**
      * @Route("/editdestvta/{id}", name="vtas_editar_destinatario_venta")
