@@ -179,6 +179,37 @@ class ComprobanteVenta extends MovimientoStock
         return null;
     }
 
+    public function getItemTotalConArticuloYAsociados(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        $totales = [];
+
+        foreach ($this->getItems() as $it)
+        {            
+            if ($it->getArticulo() == $articulo)
+            {
+                $totales[$it->getTipoVenta()->getId()] = $it->getCantidad();
+            }
+        }
+
+        foreach ($this->getAsociados() as $asoc)
+        {
+            foreach ($asoc->getItems() as $it)
+            {            
+                if ($it->getArticulo() == $articulo)
+                {
+                    if (!array_key_exists($it->getTipoVenta()->getId(), $totales))
+                    {
+                        $totales[$it->getTipoVenta()->getId()] = 0;
+                    }
+
+                    $totales[$it->getTipoVenta()->getId()]+= $it->getCantidad();
+                }
+            }
+        }
+
+        return $totales;
+    }
+
     protected function updateVisible()
     {
         $this->setVisible(false);

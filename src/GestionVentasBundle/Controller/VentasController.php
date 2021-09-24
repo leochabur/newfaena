@@ -664,17 +664,33 @@ class VentasController extends Controller
 
     	$listaArticulos = [];
 
+        $entidad = $comprobante->getEntidad();
+
+        $totales = [];
+
     	foreach ($articulos as $art)
     	{
     		$listaArticulos[$art->getId()] = $art;
 
     		$formVentas[$comprobante->getId()][$art->getId()] = [];
 
+            $totales[$art->getId()] = [];
+
     		foreach ($tiposItem as $tpo)
     		{
-    			$item = $comprobante->getItemConTipoYArticulo($tpo, $art);
+                $totales[$art->getId()][$tpo->getId()] = 0;
 
-    			$formVentas[$comprobante->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comprobante, $art, $tpo, $item)->createView();
+                if ($entidad->aceptaTipoVenta($tpo))
+                {
+    			     $item = $comprobante->getItemConTipoYArticulo($tpo, $art);
+
+                     if ($item)
+                     {
+                        $totales[$art->getId()][$tpo->getId()]+= $item->getCantidad();
+                     }
+
+    			     $formVentas[$comprobante->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comprobante, $art, $tpo, $item)->createView();
+                }
     		}
     	}
 
@@ -696,9 +712,14 @@ class VentasController extends Controller
                     {
                         if ($entidad->aceptaTipoVenta($tpo))
                         {
-                            $item = $comp->getItemConTipoYArticulo($tpo, $art);
+                             $item = $comp->getItemConTipoYArticulo($tpo, $art);
 
-                            $formVentas[$comp->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comp, $art, $tpo, $item)->createView();
+                             if ($item)
+                             {
+                                $totales[$art->getId()][$tpo->getId()]+= $item->getCantidad();
+                             }
+
+                             $formVentas[$comp->getId()][$art->getId()][$tpo->getId()] = $this->getFormAltaItem($comp, $art, $tpo, $item)->createView();
                         }
                     }
                 }
@@ -716,6 +737,7 @@ class VentasController extends Controller
             																		  'ventas' => $formVentas,
             																		  'articulos' => $listaArticulos,
             																		  'tipos' => $tiposItem,
+                                                                                      'totales' => $totales,
                                                                                       'form' => $formUpd->createView(),
             																		  'back' => $form->createView()]);
     }
@@ -795,14 +817,31 @@ class VentasController extends Controller
 
 	    	if ($persistir)
 	    	{
-		    	$itemCarga->setComprobante($cmp);
+		    	$itemCarga->setComprobante($cmp);                
 		    	$itemCarga->setArticulo($art);
 		    	$itemCarga->setTipoVenta($tpo);
+                $cmp->addItem($itemCarga);
 		    	$em->persist($itemCarga);
 	    	}
 	    	
 	    	$em->flush();
-	    	return new JsonResponse(['error' => false]);
+
+            $total = 0;
+
+            $original = ($cmp->getOriginal()?$cmp->getOriginal():$cmp);
+
+         //   $total = $em->getRepository(ComprobanteVenta::class)->getTotalVentasPorArticuloPorFecha($original, $cmp->getFecha(), $art, $tpo);
+
+            $totales = $original->getItemTotalConArticuloYAsociados($art);
+            $unitario = $totales[$tpo->getId()];
+            $total = 0;
+
+            foreach ($totales as $t)
+            {
+                $total+= $t;
+            }
+
+	    	return new JsonResponse(['error' => false, 'a' => $art->getId(), 't' => $tpo->getId(), 'u' => $unitario, 'tot' => $total]);
 	    }
 	    catch (\Exception $e){ return new JsonResponse(['error' => true, 'message' => $e->getMessage()]); }
 

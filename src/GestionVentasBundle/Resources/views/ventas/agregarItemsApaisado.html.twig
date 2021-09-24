@@ -113,7 +113,8 @@
           <th rowspan="2" class="fixed-side grey lighten-2 border border-primary">Destinatario</th>
           {% for art in articulos %}
 
-              <th colspan="{{ tipos|length }}" scope="col" class="px-md-5 grey lighten-2 border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{  art.nombreVenta }}</th>
+              <th colspan="{{ tipos|length }}" scope="col" 
+              class="px-md-5 grey lighten-2 border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{  art.nombreVenta }}</th>
 
           {% endfor %}
       </tr>
@@ -212,11 +213,77 @@
                             {% endif %}
                           </td>
                           {% set k = k + 1 %}
+                          {% set j = j + 1 %}
                       {% endfor %}    
                       {% set i = i + 1 %}          
                 {% endfor %}
               </tr>
             {% endfor %}
+
+      <tr>
+            <td class="fixed-side border border-primary">Subtotal</td>
+            {% set i = 1 %}
+            {% for art in articulos %}
+                  {% set pi = 'i' %}
+
+                  {% if (i % 2) == 0 %}
+
+                      {% set pi = 'p' %}
+
+                  {% endif %}
+
+                  {% set color = '' %}
+
+                  {% set j = 0 %}  
+              {% for t in tipos %}
+
+                          {% if pi == 'i' %}
+
+                              {% set color = 'teal accent-3 font-weight-light' %}
+
+                              {% if (j % 2) == 0 %} 
+                                
+                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
+
+                              {% endif %}
+
+                          {% else %}
+
+                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
+
+                                {% if (j % 2) == 0 %} 
+                                  
+                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
+
+                                {% endif %}
+
+                          {% endif %}
+
+                          <td scope="col px-md-5" class="{{ art.id ~ t.id  }} text-center border border-primary {{ color }}">{{ totales[art.id][t.id] }}</td>
+                          {% set j = j + 1 %}
+              {% endfor %}
+              {% set i = i + 1 %}
+            {% endfor %}
+      </tr>
+      <tr>
+            <td class="fixed-side border border-primary">TOTAL</td>
+
+            {% for art in articulos %}
+
+                  {% set pi = 'i' %}
+
+                  {% set total = 0 %}  
+
+                  {% for t in tipos %}
+
+                        {% set total = total + totales[art.id][t.id] %}
+                             
+                  {% endfor %}
+                  
+                  <td colspan="2" class="tot{{art.id}} h5 text-center border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{ total }}</td>
+            {% endfor %}
+      </tr>
+
       </tbody>
   </table>  
 </div>
@@ -224,7 +291,7 @@
   <hr>
   <div class="form-row">
       <div class="col-lg-3 col-sm-12">
-          {{ form_start(back, {'attr': {'novalidate': 'novalidate', 'class' : 'back'}}) }}
+          {{ form_start(back, {'attr': {'novalidate': 'novalidate',  'class' : 'back'}}) }}
           {{ form_widget(back.back) }}
           {{ form_end(back) }}
       </div>
@@ -294,6 +361,9 @@ $(document).ready(function () {
                                                          if (!data.error)
                                                          {
                                                           input.addClass('green 50');
+                                                          var td = $('.'+data.a+data.t);
+                                                          td.html(data.u);
+                                                          $('.tot'+data.a).html(data.tot);
                                                          }
                                                          else{
                                                               input.addClass('red 50');
@@ -320,6 +390,7 @@ $(document).ready(function () {
                                                           var i = input.data('index')+1;
 
                                                           $('.'+i).focus();
+
                                                          }
                                                          else{
                                                           input.addClass('red 50');

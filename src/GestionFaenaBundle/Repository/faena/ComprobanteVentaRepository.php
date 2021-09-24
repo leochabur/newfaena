@@ -135,4 +135,30 @@ class ComprobanteVentaRepository extends \Doctrine\ORM\EntityRepository
                                    FROM GestionFaenaBundle:faena\ComprobanteVenta p')
             		->getSingleScalarResult();
 	} 
+
+	public function getTotalVentasPorArticuloPorFecha(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $comprobante,
+													  \DateTime $fecha, 
+													  \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo, 
+													  \GestionFaenaBundle\Entity\faena\TipoVenta $tipo)
+	{
+        return $this->getEntityManager()
+	                ->createQuery('SELECT sum(it.cantidad) as cantidad
+	                               FROM GestionFaenaBundle:faena\ComprobanteVenta cv 
+	                               JOIN cv.items it
+	                               JOIN it.articulo art
+	                               JOIN it.tipoVenta tv
+	                               JOIN cv.asociados asociado
+	                               WHERE cv.eliminado = :eliminado AND
+	                                     art = :articulo AND
+	                                     tv = :tipo AND
+	                                     cv.fecha = :fecha AND
+	                                     (cv = :comprobante)
+	                               GROUP BY art')
+	                ->setParameter('articulo', $articulo)
+	                ->setParameter('tipo', $tipo)
+	                ->setParameter('eliminado', false)
+	                ->setParameter('comprobante', $comprobante)
+	                ->setParameter('fecha', $fecha)
+	                ->getOneOrNullResult();
+	}
 }
