@@ -869,12 +869,21 @@ class VentasController extends Controller
 
         $totalesXCategoria = [];
 
+        $totalGralCategoria = [];
+
+        $totalKg = [];
+
+        $totalPorArticulo = [];
+
     	foreach ($comprobantes as $comp)
     	{
     		$body[$comp->getId()] = [];
 
-            $totalesXCategoria[$comp->getId()] = [];
-    		
+            $totalKg[$comp->getId()] = ['u' => 0, 'k' => 0];
+
+            $totalesXCategoria[$comp->getId()] = [];    		
+
+
             foreach ($articulos as $art)
     		{
     			$body[$comp->getId()][$art->getId()] = [];
@@ -886,7 +895,13 @@ class VentasController extends Controller
 
                 if (!array_key_exists($art->getCategoriaVenta()->getId(), $totalesXCategoria[$comp->getId()]))
                 {
-                    $totalesXCategoria[$comp->getId()][$art->getCategoriaVenta()->getId()] = 0;
+                    $totalesXCategoria[$comp->getId()][$art->getCategoriaVenta()->getId()] = ['u' => 0, 'k' => 0];
+                }
+
+                if (!array_key_exists($art->getId(), $totalPorArticulo))
+                {
+                    $totalPorArticulo[$art->getId()] = [];
+                    $totalPorArticulo[$art->getId()]['t'] = 0;
                 }
     		}
 
@@ -894,14 +909,34 @@ class VentasController extends Controller
     		{
     			$body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()] = $it->getCantidad();
 
-                $categoria = $it->getArticulo()->getCategoriaVenta();
+                $articulo = $it->getArticulo();
+
+                $categoria = $articulo->getCategoriaVenta();
+
+                $tipo = $it->getTipoVenta();
 
                 if ($categoria)
                 {
                     if (array_key_exists($categoria->getId(), $totalesXCategoria[$comp->getId()]))
                     {
-                        $totalesXCategoria[$comp->getId()][$categoria->getId()]+= $it->getCantidad();
+                        $totalesXCategoria[$comp->getId()][$categoria->getId()]['u']+= $it->getCantidad();
+                        $totalKg[$comp->getId()]['k']+= ($it->getCantidad() * $articulo->getPresentacionKg());
+                        $totalKg[$comp->getId()]['u']+= $it->getCantidad();
                     }
+
+                    if (!array_key_exists($tipo->getId(), $totalPorArticulo[$articulo->getId()]))
+                    {
+                        $totalPorArticulo[$articulo->getId()][$tipo->getId()] = 0;
+                    }
+
+                    $totalPorArticulo[$articulo->getId()][$tipo->getId()]+= $it->getCantidad();
+                    $totalPorArticulo[$articulo->getId()]['t']+= $it->getCantidad();
+
+                    if (!array_key_exists($categoria->getId(), $totalGralCategoria))
+                    {
+                        $totalGralCategoria[$categoria->getId()] = 0;
+                    }
+                    $totalGralCategoria[$categoria->getId()]+= $it->getCantidad();
                 }
     		}
 
@@ -913,28 +948,154 @@ class VentasController extends Controller
                     {
                         $body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()]+= $it->getCantidad();
 
-                        $categoria = $it->getArticulo()->getCategoriaVenta();
+                        $articulo = $it->getArticulo();
+
+                        $categoria = $articulo->getCategoriaVenta();
+
+                        $tipo = $it->getTipoVenta();
 
                         if ($categoria)
                         {
                             if (array_key_exists($categoria->getId(), $totalesXCategoria[$comp->getId()]))
                             {
-                                $totalesXCategoria[$comp->getId()][$categoria->getId()]+= $it->getCantidad();
+                                $totalesXCategoria[$comp->getId()][$categoria->getId()]['u']+= $it->getCantidad();
+                                $totalKg[$comp->getId()]['k']+= ($it->getCantidad() * $articulo->getPresentacionKg());
+                                $totalKg[$comp->getId()]['u']+= $it->getCantidad();
                             }
+
+                            if (!array_key_exists($tipo->getId(), $totalPorArticulo[$articulo->getId()]))
+                            {
+                                $totalPorArticulo[$articulo->getId()][$tipo->getId()] = 0;
+                            }
+
+                            $totalPorArticulo[$articulo->getId()][$tipo->getId()]+= $it->getCantidad();
+                            $totalPorArticulo[$articulo->getId()]['t']+= $it->getCantidad();
+
+                            if (!array_key_exists($categoria->getId(), $totalGralCategoria))
+                            {
+                                $totalGralCategoria[$categoria->getId()] = 0;
+                            }
+                            $totalGralCategoria[$categoria->getId()]+= $it->getCantidad();
                         }
                     }
             }
     	}
-     //   return new Response(var_dump($totalesXCategoria));
+      //  return new Response(var_dump($totalGralCategoria));
 
     	return $this->render('@GestionVentas/ventas/listaVentasDiarias.html.twig', 
     						 ['fecha' => $data['fechaComprobante'],
     						  'comprobantes' => $comprobantes,
     						  'articulos' => $articulos,
     						  'tipos' => $tiposVenta,
+                              'totArticulo' => $totalPorArticulo,
                               'totales' => $totalesXCategoria,
+                              'totalKG' => $totalKg,
+                              'totalGral' => $totalGralCategoria,
     						  'data' => $body]);
     }
+
+/////////
+
+    /**
+     * @Route("/resumecbte/{id}", name="vtas_resumen_comprobante_venta")
+     */
+    public function resumenComprobanteVenta($id)
+    {
+
+        $em = $this->getDoctrine()->getManager();
+
+        $comp = $em->find(ComprobanteVenta::class, $id);
+
+        $body = [];
+
+        $totalesXCategoria = [];
+
+        $articulos = [];
+
+        //$comp = $repository->find($id);
+
+        foreach ($comp->getItems() as $it)
+        {
+
+            $articulo = $it->getArticulo();
+
+            $categoria = $articulo->getCategoriaVenta();
+
+              /*  if (!$it->getArticulo()->getCategoriaVenta())
+                {
+                    return new Response($comp->getId().'__    kakakakakaks adasdasdsad '.$articulo->getCodigoInterno());
+                }*/
+
+            $articulos[$articulo->getId()] = $articulo;
+
+            if ($categoria)
+            {
+                if (!array_key_exists($categoria->getId(), $body))
+                {
+                    $body[$categoria->getId()] = [];
+                }
+
+                if (!array_key_exists($articulo->getId(), $body[$categoria->getId()]))
+                {
+                    $body[$categoria->getId()][$articulo->getId()] = 0;
+                }
+
+
+                $body[$categoria->getId()][$articulo->getId()]+= $it->getCantidad();
+            }
+            
+        }
+       // return new Response(var_dump($body));
+
+
+        foreach ($comp->getAsociados() as $asoc)
+        {
+
+            foreach ($asoc->getItems() as $it)
+            {
+                $articulo = $it->getArticulo();
+
+                $categoria = $articulo->getCategoriaVenta();
+
+              /*  if (!$it->getArticulo()->getCategoriaVenta())
+                {
+                    return new Response('kakakakakaks '.$articulo->getCodigoInterno());
+                }*/
+
+                $articulos[$articulo->getId()] = $articulo;
+                if ($categoria)
+                {
+                    if (!array_key_exists($categoria->getId(), $body))
+                    {
+                        $body[$categoria->getId()] = [];
+                    }
+
+                    if (!array_key_exists($articulo->getId(), $body[$categoria->getId()]))
+                    {
+                        $body[$categoria->getId()][$articulo->getId()] = 0;
+                    }
+
+
+                    $body[$categoria->getId()][$articulo->getId()]+= $it->getCantidad();
+                }
+            }
+        }
+
+      //  return new Response(var_dump($body));
+        
+        return $this->render('@GestionVentas/ventas/resumenVentaComprobante.html.twig', 
+                             [
+                                'comprobante' => $comp,
+                                'data' => $body,
+                                'arts' => $articulos
+                             ]
+                             );
+
+    }
+    //////////
+
+
+
 
     /**
  	 * @Route("/delete/{id}", name="vtas_delete_comprobante_venta")

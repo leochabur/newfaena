@@ -59,6 +59,10 @@
 
 .zoom { background-color: lightyellow; }
 
+.total{
+  border-top: 4px solid grey !important;  
+}
+
 </style>
 {% endblock %}
 {% block out_container %}
@@ -94,7 +98,8 @@
                   </th>
                   {% set last = a.categoriaVenta %}
           {% endfor %}    
-          <th class='grey darken-1 text-white'>Total</th>    
+          <th class='grey darken-1 text-white'>Total</th>   
+          <th class='green accent-3' colspan='2'>TOTAL GENERAL</th>     
       </tr>
       <tr>
           {% set last = null %}
@@ -153,6 +158,8 @@
 
           {% endfor %}
           <th class='grey darken-1 text-white'> {{ last }}</th>
+          <th class='green accent-3'>Unidades</th>
+          <th class='green accent-3'>Kg.</th>
       </tr>
       </thead>
       <tbody>        
@@ -170,6 +177,9 @@
               <td class="{{ color }} not">
                     <a href="{{ path('vtas_agregar_articulos', { id : cmp.id }) }}"><i class="far fa-edit" title="Modificar"></i></a>
                     <a href="{{ path('vtas_delete_comprobante_venta', { id : cmp.id }) }}" data-action="eliminar" data-index="{{ cmp.entidad}}" class="deletecmp"><i class="far fa-trash-alt" title="Eliminar"></i></a>
+                    <a class="resume" href="{{ path('vtas_resumen_comprobante_venta', { id : cmp.id }) }}">
+                        <i class="fas fa-search"></i>
+                    </a>
                     <a href="{{ path('vtas_finalizar_comprobante_venta', { id : cmp.id }) }}" data-action="finalizar" data-index="{{ cmp.entidad}}" class="deletecmp"><i class="far fa-check-square" title="Finalizar"></i></a>
               </td>           
               {% set i = 1 %}  
@@ -180,7 +190,7 @@
 
                   {% if last and last != art.categoriaVenta %}
 
-                      <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id] }}</td>
+                      <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id].u }}</td>
 
                   {% endif %}
                   {% set last = art.categoriaVenta %}
@@ -235,19 +245,157 @@
                   {% set i = i + 1 %}
 
               {% endfor %}
-              <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id] }}</td>
+              <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id].u }}</td>
+              <td class='green accent-3 text-right'>{{ totalKG[cmp.id].u }}</td>
+              <td class='green accent-3 text-right'>{{ totalKG[cmp.id].k }}</td>
             </tr>
         {% endfor %}
+            <tr class="total">
+                <td class="fixed-side total font-italic" rowspan="2">TOTALES</td>
+                <td class="total" rowspan="2"></td>
+                <td class="total" rowspan="2"></td>
+                {% set last = null %}
+                {% set i = 1 %}  
+                {% for art in articulos %}
+
+                    {% if last and last != art.categoriaVenta %}
+                        <td rowspan="2" class="total align-bottom grey darken-1 text-white text-right">
+                            {% if totalGral[last.id] is defined %}
+                                {{ totalGral[last.id] }}
+                              {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                    
+                    {% set artIndex = loop.index %}
+
+                    {% set last = art.categoriaVenta %}
+
+                    {% set pi = 'i' %}
+
+                    {% if (i % 2) == 0 %}
+
+                        {% set pi = 'p' %}
+
+                    {% endif %}
+
+                    {% set color = '' %}
+
+                    {% set j = 0 %}  
+
+                    {% for tpo in tipos %}
+
+                          {% set tipoIndex = loop.index %}
+
+                          {% if pi == 'i' %}
+
+                              {% set color = 'teal accent-3' %}
+
+                              {% if (j % 2) == 0 %} 
+                                
+                                  {% set color = 'cyan lighten-2' %} 
+
+                              {% endif %}
+
+                          {% else %}
+
+                                {% set color = 'deep-orange lighten-2' %}
+
+                                {% if (j % 2) == 0 %} 
+                                  
+                                    {% set color = 'orange lighten-2' %} 
+
+                                {% endif %}
+
+                          {% endif %}
+
+                      <td class="{{ color }} total font-italic {{ 'col_' ~ artIndex ~ '_' ~ tipoIndex  }}" data-col="{{ artIndex ~ '_' ~ tipoIndex }}">
+                          {% if totArticulo[art.id][tpo.id] is defined %}
+                            {{ totArticulo[art.id][tpo.id] }}
+                          {% else %}
+                            0
+                          {% endif %}
+                      </td>
+                      {% set j = j + 1 %}
+                    {% endfor %}
+                    {% set i = i + 1 %}
+                {% endfor %}
+                
+                <td rowspan="2" class="font-italic align-bottom total grey darken-1 text-white text-right">
+                    {% if totalGral[last.id] is defined %}
+                      {{ totalGral[last.id] }}
+                    {% else %}
+                      0
+                    {% endif %}
+                </td>
+                
+                {% set un, kg = 0, 0 %}
+
+                {% for val in totalKG %}
+                    {% set un = un + val.u %}
+                    {% set kg = kg + val.k %}
+                {% endfor %}
+
+                <td rowspan="2" class="font-italic align-bottom total green accent-3 text-right">{{ un }}</td>
+                <td rowspan="2" class="font-italic align-bottom total green accent-3 text-right">{{ kg }}</td>
+            </tr>
+            <tr>
+                {% set last = null %}
+
+                {% for art in articulos %}
+                      
+                      {% set last = art.categoriaVenta %}
+
+                      <td colspan="2" class="font-weight-bold text-center {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">
+                          {% if totArticulo[art.id].t is defined %}
+                            {{ totArticulo[art.id].t }}
+                          {% else %}
+                            0
+                          {% endif %}
+                      </td>
+                {% endfor %}
+                
+            </tr>
       </tbody>
   </table>  
 </div>
 </div>
+
+<div class="modal fade" id="reume_venta" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body body_resume">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <br>
 <br>
 {% endblock out_container %}
 {% block javascripts %}
 
 <script type="text/javascript">
+  
+  $('.resume').click(function ( event ){
+                                        event.preventDefault();
+                                        let a = $(this);
+                                        $('.body_resume').html('<div class="h5">Cargando...</div>');
+                                        $('.body_resume').load(a.attr('href'));
+                                        $('#reume_venta').modal('show');
+
+  });
 
   $(".main-table").clone(true).appendTo('#table-scroll').addClass('clone');  
 

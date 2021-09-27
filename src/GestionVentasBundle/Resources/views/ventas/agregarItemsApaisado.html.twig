@@ -132,34 +132,34 @@
                   {% set color = '' %}
 
                   {% set j = 0 %}  
-              {% for t in tipos %}
+                  {% for t in tipos %}
 
-                          {% if pi == 'i' %}
+                              {% if pi == 'i' %}
 
-                              {% set color = 'teal accent-3 font-weight-light' %}
+                                  {% set color = 'teal accent-3 font-weight-light' %}
 
-                              {% if (j % 2) == 0 %} 
-                                
-                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
+                                  {% if (j % 2) == 0 %} 
+                                    
+                                      {% set color = 'cyan lighten-2 font-weight-bold' %} 
+
+                                  {% endif %}
+
+                              {% else %}
+
+                                    {% set color = 'deep-orange lighten-2 font-weight-light' %}
+
+                                    {% if (j % 2) == 0 %} 
+                                      
+                                        {% set color = 'orange lighten-2 font-weight-bold' %} 
+
+                                    {% endif %}
 
                               {% endif %}
 
-                          {% else %}
-
-                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
-
-                                {% if (j % 2) == 0 %} 
-                                  
-                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
-
-                                {% endif %}
-
-                          {% endif %}
-
-                          <th scope="col px-md-5" class=" text-center border border-primary {{ color }}">{{ t.codigo }}</th>
-                          {% set j = j + 1 %}
-              {% endfor %}
-              {% set i = i + 1 %}
+                              <th scope="col px-md-5" class=" text-center border border-primary {{ color }}">{{ t.codigo }}</th>
+                              {% set j = j + 1 %}
+                  {% endfor %}
+                  {% set i = i + 1 %}
             {% endfor %}
       </tr>
       </thead>
@@ -208,7 +208,7 @@
                           <td class="border border-primary {{ color }}">
                             {% if vvta[t.id] is defined %}
                                 {{ form_start(vvta[t.id], {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
-                                {{ form_widget(vvta[t.id].cantidad, {'attr' : {'size' : '100px', 'data-index' : k, 'class' : class }}) }}
+                                {{ form_widget(vvta[t.id].cantidad, {'attr' : {'title' : articulos[kvta], 'size' : '100px', 'data-index' : k, 'class' : class }}) }}
                                 {{ form_end(vvta[t.id]) }}
                             {% endif %}
                           </td>

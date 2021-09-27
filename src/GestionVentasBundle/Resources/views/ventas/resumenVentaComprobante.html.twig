@@ -1,0 +1,52 @@
+
+<div class="row">
+  <div class="col-lg-9 h6 card-title">Destinatario: {{ comprobante.entidad }}</div>
+  <div class="col-lg-3 h6 card-title">Fecha: {{ comprobante.fecha|date('d/m/Y') }} </div>
+</div>
+<hr>
+
+
+
+    <table class="table table-striped table-bordered table-hover table-sm mt-2">
+      <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+        </tr>
+        </thead>
+        <tbody>      
+            {% set cate = null %} 
+            {% set totGral = 0 %} 
+            {% set total = 0 %}
+            {% for v in data %}
+              {% set total = 0 %}
+              {% for k, t in v %}
+                {% set total = total + t %}
+                {% set totGral = totGral + t %} 
+                {% set cate = arts[k].categoriaVenta %}
+                <tr>
+                    <td>{{ arts[k].nombreVenta }}</td>
+                    <td class="text-right">{{ t }}</td>
+                </tr>
+              {% endfor %}
+                <tr>
+                    <td class="font-weight-bold">TOTAL {{ cate }}</td>
+                    <td class="font-weight-bold text-right">{{ total }}</td>
+                </tr>
+            {% endfor %}
+                <tr>
+                    <td class="font-weight-bold h5">TOTAL GENERAL</td>
+                    <td class="font-weight-bold h5 text-right">{{ totGral }}</td>
+                </tr>
+        </tbody>
+    </table>  
+<hr>
+<div class="row">
+
+
+
+</div>
+
+<script type="text/javascript">
+
+</script>
