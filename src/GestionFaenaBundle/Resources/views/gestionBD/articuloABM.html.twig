@@ -91,53 +91,55 @@
       {{ form_end(form) }}
 {% endif %}
 {% if not edit is defined %}
-    <br>
-    <span class="h5">Articulos Existentes</span>
-    <hr>
-    <table class="table table-striped table-bordered table-hover table-sm ">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Codigo</th>
-            <th>Nombre Faena</th>
-            {% if app.user.isPerfilVenta %}
-                <th>Nombre Venta</th>
-                <th>Categoria</th>
-            {% endif %}
-            {% if not app.user.isPerfilVenta %}
-                <th>Nom. Red.</th>
-                <th>Categoria</th>
-                <th>Subategoria</th>
-                <th>Cat. General</th>
-            {% endif %}
-            <th>Pres. Kg.</th>
-            <th>Pres. Uda.</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for f in articulos %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ f.codigoInterno }}</td>             
-              <td>{{ f.nombre }}</td>  
-              {% if app.user.isPerfilVenta %}
-                  <td>{{ f.descVenta }}</td>  
-                  <td>{{ f.categoriaVenta }}</td>
-              {% endif %}
-              {% if not app.user.isPerfilVenta %}
-                  <td>{{ f.nombreResumido }}</td> 
-                  <td>{{ f.categoria }}</td> 
-                  <td>{{ f.subcategoria }}</td> 
-                  <td>{{ f.categoriaGeneral }}</td> 
-              {% endif %}
-                  <td>{{ f.presentacionKg }}</td> 
-                  <td>{{ f.presentacionUnidad }}</td> 
-              <td><a href="{{ path('bd_editar_articulo_basico', { 'art' : f.id }) }}" class="btn btn-warning btn-sm">Editar</a></td>
-            </tr>
-          {% endfor %}
-        </tbody>
-    </table>
+   {% if articulos is defined %} 
+        <br>
+        <span class="h5">Articulos Existentes</span>
+        <hr>
+        <table class="table table-striped table-bordered table-hover table-sm ">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Codigo</th>
+                <th>Nombre Faena</th>
+                {% if app.user.isPerfilVenta %}
+                    <th>Nombre Venta</th>
+                    <th>Categoria</th>
+                {% endif %}
+                {% if not app.user.isPerfilVenta %}
+                    <th>Nom. Red.</th>
+                    <th>Categoria</th>
+                    <th>Subategoria</th>
+                    <th>Cat. General</th>
+                {% endif %}
+                <th>Pres. Kg.</th>
+                <th>Pres. Uda.</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for f in articulos %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ f.codigoInterno }}</td>             
+                  <td>{{ f.nombre }}</td>  
+                  {% if app.user.isPerfilVenta %}
+                      <td>{{ f.descVenta }}</td>  
+                      <td>{{ f.categoriaVenta }}</td>
+                  {% endif %}
+                  {% if not app.user.isPerfilVenta %}
+                      <td>{{ f.nombreResumido }}</td> 
+                      <td>{{ f.categoria }}</td> 
+                      <td>{{ f.subcategoria }}</td> 
+                      <td>{{ f.categoriaGeneral }}</td> 
+                  {% endif %}
+                      <td>{{ f.presentacionKg }}</td> 
+                      <td>{{ f.presentacionUnidad }}</td> 
+                  <td><a href="{{ path('bd_editar_articulo_basico', { 'art' : f.id }) }}" class="btn btn-warning btn-sm">Editar</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+        </table>
+      {% endif %}
 {% endif %}
 </div>
 {% endblock fos_user_content %}
