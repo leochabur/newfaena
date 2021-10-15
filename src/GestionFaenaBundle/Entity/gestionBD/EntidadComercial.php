@@ -48,6 +48,11 @@ abstract class EntidadComercial extends EntidadExterna
      */
     private $tiposVenta;
 
+    /**
+     * @ORM\Column(name="generasanitario", type="boolean", options={"default":true})
+     */
+    private $generaSanitario = true;
+    
 
     public function aceptaTipoVenta($tipoVenta)
     {
@@ -234,5 +239,29 @@ abstract class EntidadComercial extends EntidadExterna
     public function getTiposVenta()
     {
         return $this->tiposVenta;
+    }
+
+    /**
+     * Set generaSanitario
+     *
+     * @param boolean $generaSanitario
+     *
+     * @return EntidadComercial
+     */
+    public function setGeneraSanitario($generaSanitario)
+    {
+        $this->generaSanitario = $generaSanitario;
+
+        return $this;
+    }
+
+    /**
+     * Get generaSanitario
+     *
+     * @return boolean
+     */
+    public function getGeneraSanitario()
+    {
+        return $this->generaSanitario;
     }
 }

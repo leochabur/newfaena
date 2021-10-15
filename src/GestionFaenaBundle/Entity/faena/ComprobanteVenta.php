@@ -110,6 +110,18 @@ class ComprobanteVenta extends MovimientoStock
      */
     private $asociados;
 
+    /**
+     * @ORM\Column(name="generaSanitario", type="boolean", nullable=true)
+     */
+    private $generaSanitario;
+
+    /**
+     * @ORM\PrePersist
+     */
+    public function setVisiblePrePersist()
+    {
+        $this->generaSanitario = $this->entidad->getGeneraSanitario();
+    }
 
     public function getTotalItems()
     {
@@ -119,6 +131,47 @@ class ComprobanteVenta extends MovimientoStock
             $count+= $asoc->getItems()->count();
         }
         return $count;
+    }
+
+    public function getArrayOfTypeVentaUnitario()
+    {
+        $tipos = [];
+
+        foreach ($this->items as $it)
+        {
+            if ($it->getCantidad())
+            {
+                $tipos[$it->getTipoVenta()->getId()] = 1;
+            }
+        }
+
+        return $tipos;
+    }
+
+    public function getArrayOfTypeVenta()
+    {
+        $tipos = [];
+
+        foreach ($this->items as $it)
+        {
+            if ($it->getCantidad())
+            {
+                $tipos[$it->getTipoVenta()->getId()] = 1;
+            }
+        }
+
+        foreach ($this->asociados as $asoc)
+        {
+            foreach ($asoc->getItems() as $it)
+            {
+                if ($it->getCantidad())
+                {
+                    $tipos[$it->getTipoVenta()->getId()] = 1;
+                }
+            }
+        }
+
+        return $tipos;
     }
 
 
@@ -140,6 +193,21 @@ class ComprobanteVenta extends MovimientoStock
     public function getItemNoOficial()
     {
         return $this->getDetalleItems(false);
+    }
+
+
+    public function getDetailVenta(\GestionFaenaBundle\Entity\faena\TipoVenta $tipo)
+    {
+        $detalle = [];
+        foreach ($this->items as $it)
+        {
+            $tv = $it->getTipoVenta();
+            if ($tv == $tipo)
+            {
+                $detalle[] = $it; 
+            }
+        }
+        return $detalle;
     }
 
     private function getDetalleItems($tipo)
@@ -167,13 +235,17 @@ class ComprobanteVenta extends MovimientoStock
         return $detalle;
     }
 
-    public function getItemConTipoYArticulo(TipoVenta $tipo, \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    public function getItemConTipoYArticulo(TipoVenta $tipo, \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo, $zero = true)
     {
         foreach ($this->items as $it)
         {
             if (($it->getArticulo() == $articulo) && ($it->getTipoVenta() == $tipo))
             {
-                return $it;
+                if (($it->getCantidad()) ||  $zero)
+                {
+                    return $it;
+                }
+                return null;
             }
         }
         return null;
@@ -627,5 +699,29 @@ class ComprobanteVenta extends MovimientoStock
     public function getAsociados()
     {
         return $this->asociados;
+    }
+
+    /**
+     * Set generaSanitario
+     *
+     * @param boolean $generaSanitario
+     *
+     * @return ComprobanteVenta
+     */
+    public function setGeneraSanitario($generaSanitario)
+    {
+        $this->generaSanitario = $generaSanitario;
+
+        return $this;
+    }
+
+    /**
+     * Get generaSanitario
+     *
+     * @return boolean
+     */
+    public function getGeneraSanitario()
+    {
+        return $this->generaSanitario;
     }
 }

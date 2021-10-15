@@ -27,13 +27,6 @@ class AjusteStock extends MovimientoStock
     {
     }
 
-
-    public function updateValueAtribute($valor)
-    {
-
-
-    }
-
     public function getFactor()
     {
 

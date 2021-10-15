@@ -642,10 +642,318 @@ class VentasController extends Controller
     }
 
 
+    private function generateFormAddItem(ItemCarga $item = null, TipoVenta $tpo, Articulo $art, ComprobanteVenta $comprobante, $formVentas)
+    {
+        if (!array_key_exists($tpo->getId(), $formVentas[$comprobante->getId()][1]))
+        {
+            $formVentas[$comprobante->getId()][1][$tpo->getId()] = [0 => $tpo, 1 => []];
+        }
+
+        if (!array_key_exists($art->getId(), $formVentas[$comprobante->getId()][1][$tpo->getId()][1]))
+        {
+            $formVentas[$comprobante->getId()][1][$tpo->getId()][1][$art->getId()] = [];
+        }
+
+        $formVentas[$comprobante->getId()][1][$tpo->getId()][1][$art->getId()] =  $this->getFormAltaItem($comprobante, $art, $tpo, $item)->createView();
+
+        return $formVentas;
+    }
+
     /**
- 	 * @Route("/addart/{id}", name="vtas_agregar_articulos")
-     */
+     * @Route("/chemit/{id}", name="vtas_cambiar_emision_sanitario")
+    */
+    public function cambiarEmisionSanitario($id, Request $request)
+    {
+        try 
+        {
+            $em = $this->getDoctrine()->getManager();
+
+            $comprobante = $em->find(ComprobanteVenta::class, $id);
+
+            $data = $request->request->get('status');
+
+            $comprobante->setGeneraSanitario($data);
+
+            $em->flush();
+
+            return new JsonResponse(['ok' => false, 'message' => $data]);
+        }
+        catch (\Exception $e){
+                                return new JsonResponse(['ok' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+
+    /**
+     * @Route("/price/{comp}/{type}", name="vtas_set_price_venta")
+    */
+    public function setPriceVenta($comp, $type)
+    {
+        try 
+        {
+            $em = $this->getDoctrine()->getManager();
+
+            $comprobante = $em->find(ComprobanteVenta::class, $comp);
+
+            $tipo = $em->find(TipoVenta::class, $type);
+
+            $detalle = $comprobante->getDetailVenta($tipo);
+
+            return $this->render('@GestionVentas/ventas/setPriceItem.html.twig', ['comprobante' => $comprobante, 'items' => $detalle]);
+        }
+        catch (\Exception $e){
+                                return new Response($e->getMessage());
+        }
+    }
+
+    /**
+     * @Route("/setpriceit/{comp}", name="vtas_set_price_item_venta")
+    */
+    public function setPriceItemVenta($comp, Request $request)
+    {
+        $data = $request->request->all();
+        
+        $em = $this->getDoctrine()->getEntityManager();
+
+        $status = ['ok' => true, 'detail' => [], 'message' => ''];
+
+        foreach ($data as $k => $v)
+        {
+            $item = $em->find(ItemCarga::class, $k);
+            if (($item) && (is_numeric($v)))
+            {
+                $cant = $item->getCantidad();
+                $item->setPrecioUnitario($v);
+                $item->setPrecioTotal(($v*$cant));
+                $status['detail'][$k] = 1;
+            }
+            else
+            {
+                $status['detail'][$k] = 0;
+            }
+        }
+        try
+        {
+            $em->flush();
+        }
+        catch (\Exception $e) {
+                                $status['ok'] = false;
+                                $status['message'] = $e->getMessage();
+        }
+
+        return new JsonResponse($status);
+    }
+
+
+    /**
+     * @Route("/formvta/{comp}", name="vtas_generate_formulario_concignacion")
+    */
+    public function generatePDFVentaConsignacion($comp)
+    {
+        $em = $this->getDoctrine()->getEntityManager();
+        $comprobante = $em->find(ComprobanteVenta::class, $comp);
+
+        $detail = [];
+
+        foreach ($comprobante->getItems() as $it)
+        {
+            $art = $it->getArticulo();
+            $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+            $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+            $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+            $detail[$key] = $it;
+        }
+
+        ksort($detail);
+
+        $pdf = $this->get('app.fpdf');
+        $pdf->AddPage('P', 'A4'); 
+        $pdf->SetFont('Arial','',9);
+
+        $pdf = $this->getHeader($comprobante, $pdf, 'Consignatario');
+
+        $pdf = $this->getDetail($comprobante, $pdf, $detail);
+
+        $pdf->cell(0, 10, "__________________________________________________________________________________________________________", 0,1,'C');
+
+        $pdf = $this->getHeader($comprobante, $pdf, 'Consignatario');
+
+        $pdf = $this->getDetail($comprobante, $pdf, $detail);
+        
+        return new Response($pdf->Output(), 200, array('Content-Type' => 'application/pdf'));  
+    }
+
+    private function getHeader(ComprobanteVenta $comp, $pdf, $text)
+    {
+        $pdf->cell(0, 8, 'Fecha: '.$comp->getFecha()->format('d/m/Y'), 0,1,'R');
+
+        $pdf->cell(0, 8, $text.": ".$comp->getEntidad(), 0,1,'C');
+
+        return $pdf;
+    }
+
+    private function getDetail(ComprobanteVenta $comp, $pdf, $detail)
+    {
+        $i = 5;
+
+        $pdf->SetFillColor(150);
+        $pdf->cell(50, $i, "Articulo", 1,0,'C',1);
+        $pdf->cell(15, $i, "Cantidad", 1,0,'C',1);
+        $pdf->cell(20, $i, "TOT Kgs.", 1,0,'C',1);
+        $pdf->cell(25, $i, "$/KG", 1,0,'C',1);
+        $pdf->cell(25, $i, "$ NETO", 1,0,'C',1);
+        $pdf->cell(25, $i, "$ IVA", 1,0,'C',1);
+        $pdf->cell(0, $i, "$ TOTAL", 1,1,'C',1);
+
+        $result = ['cant' => 0, 'kg' => 0, 'neto' => 0, 'iva' => 0, 'tot' => 0];
+
+        foreach ($detail as $it)
+        {
+            $art = $it->getArticulo();
+
+            $montoItem = ($it->getPrecioUnitario() * ($it->getCantidad()*$art->getPresentacionKg()));
+            $iva = $montoItem * 0.105;
+
+            $pdf->cell(50, $i, $art->getNombreVenta(), 1,0,'L');
+            $pdf->cell(15, $i, $it->getCantidad(), 1,0,'R');
+            $pdf->cell(20, $i, ($it->getCantidad()*$art->getPresentacionKg()), 1,0,'R');
+            $pdf->cell(25, $i, "$".number_format($it->getPrecioUnitario(),2,',','.'), 1,0,'R');
+            $pdf->cell(25, $i, "$".number_format($montoItem,2,',','.'), 1,0,'R');
+            $pdf->cell(25, $i, "$".number_format($iva,2,',','.'), 1,0,'R');
+            $pdf->cell(0, $i, "$".number_format(($iva + $montoItem),2,',','.'), 1,1,'R');
+            $result['cant']+= $it->getCantidad();
+            $result['kg']+= ($it->getCantidad()*$art->getPresentacionKg());
+            $result['neto']+= $montoItem;
+            $result['iva']+= $iva;
+            $result['tot']+= ($iva + $montoItem);
+        }
+
+        $pdf->cell(50, $i, '', 1,0,'L',1);
+        $pdf->cell(15, $i, $result['cant'], 1,0,'R',1);
+        $pdf->cell(20, $i, $result['kg'], 1,0,'R',1);
+        $pdf->cell(25, $i, '', 1,0,'R',1);
+        $pdf->cell(25, $i, "$".number_format($result['neto'],2,',','.'), 1,0,'R',1);
+        $pdf->cell(25, $i, "$".number_format($result['iva'],2,',','.'), 1,0,'R',1);
+        $pdf->cell(0, $i, "$".number_format($result['tot'],2,',','.'), 1,1,'R',1);
+
+        return $pdf;
+    }
+
+
+    /**
+     * @Route("/addart/{id}", name="vtas_agregar_articulos")
+    */
     public function agregarArticulosAComprobanteVentaAction($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $comprobante = $em->find(ComprobanteVenta::class, $id);
+
+        $url = $this->generateUrl('vtas_update_form_ventas', ['id' => $id]);
+
+        $formUpd = $this->getFormIngresarVenta($url, $comprobante->getFecha(), $comprobante);
+
+        $repoArticulos = $em->getRepository(Articulo::class);
+
+        $articulos = $repoArticulos->getListaArticulosConCategoriaVenta();//getListaArticulosConCategoria(); //Recupera todos los articulos que se pueden comercializar
+
+        $repoTipos = $em->getRepository(TipoVenta::class);
+        
+        $tiposItem = $repoTipos->findAll(); //Recupera todos los tipos de Item Rayado o No
+
+        $formVentas = [];
+
+        $listaArticulos = [];
+
+        $entidad = $comprobante->getEntidad();
+
+        $totales = [];
+
+        $tiposVentas = $comprobante->getArrayOfTypeVentaUnitario();
+
+        foreach ($articulos as $art)
+        {
+            $listaArticulos[$art->getId()] = $art;
+
+            $totales[$art->getId()] = 0;
+
+            if (!array_key_exists($comprobante->getId(), $formVentas))
+            {
+                $formVentas[$comprobante->getId()] = [0 => $comprobante, 1 => []];
+            }
+
+            foreach ($tiposItem as $tpo)
+            {
+                $item = $comprobante->getItemConTipoYArticulo($tpo, $art, false);
+
+                if ((($item) && ($item->getCantidad())) || ($entidad->aceptaTipoVenta($tpo)) || (array_key_exists($tpo->getId(), $tiposVentas)) )
+                {                    
+                    $formVentas = $this->generateFormAddItem($item, $tpo, $art, $comprobante, $formVentas);
+                    $totales[$art->getId()]+= ($item?$item->getCantidad():0);
+                }
+            }
+        }
+
+        $listaComprobantes = [$comprobante->getId() => $comprobante];
+
+        foreach ($comprobante->getAsociados() as $comp)
+        {
+            $listaComprobantes[$comp->getId()] = $comp;
+
+            $tiposVentas = $comp->getArrayOfTypeVentaUnitario();
+
+            $entidad = $comp->getEntidad();
+
+            foreach ($articulos as $art)
+            {
+                $listaArticulos[$art->getId()] = $art;
+
+                if (!array_key_exists($comp->getId(), $formVentas))
+                {
+                    $formVentas[$comp->getId()] = [0 => $comp, 1 => []];
+                }
+
+                foreach ($tiposItem as $tpo)
+                {
+                    $item = $comp->getItemConTipoYArticulo($tpo, $art, false);
+
+                    if ((($item) && ($item->getCantidad())) || ($entidad->aceptaTipoVenta($tpo)) || (array_key_exists($tpo->getId(), $tiposVentas)) )
+                    {
+                        $formVentas = $this->generateFormAddItem($item, $tpo, $art, $comp, $formVentas);
+                        $totales[$art->getId()]+= ($item?$item->getCantidad():0);
+                    }
+                    else
+                    {
+                     /*   if (array_key_exists($tpo->getId(), $formVentas[$comprobante->getId()][1]))
+                        {
+                            $formVentas = $this->generateFormAddItem($item, $tpo, $art, $comp, $formVentas);
+                        }       */                    
+                    }
+                }
+            }
+        }
+
+        $form = $this->createFormBuilder()
+                     ->add('back', SubmitType::class, array_merge([], $comprobante->getConfirmado()?['label' => 'Volver']:['label' => 'Guardar y Volver']))    
+                     ->setAction($this->generateUrl('vtas_volver_add_items'))  
+                     ->add('fecha', HiddenType::class, ['data' => $comprobante->getFecha()->format('Ymd')])
+                     ->setMethod('POST')               
+                     ->getForm();
+
+        return $this->render('@GestionVentas/ventas/agregarItemsApaisado20.html.twig', [
+                                                                                      'comprobante' => $comprobante,
+                                                                                      'ventas' => $formVentas,
+                                                                                      'articulos' => $listaArticulos,
+                                                                                      'tipos' => $tiposItem,
+                                                                                      'totales' => $totales,
+                                                                                      'form' => $formUpd->createView(),
+                                                                                      'back' => $form->createView()]);
+    }
+
+
+    public function agregarArticulosAAAAAAAAAComprobanteVentaAction($id)
     {
     	$em = $this->getDoctrine()->getManager();
     	$comprobante = $em->find(ComprobanteVenta::class, $id);
@@ -658,6 +966,7 @@ class VentasController extends Controller
     	$articulos = $repoArticulos->getListaArticulosConCategoriaVenta();//getListaArticulosConCategoria(); //Recupera todos los articulos que se pueden comercializar
 
     	$repoTipos = $em->getRepository(TipoVenta::class);
+
     	$tiposItem = $repoTipos->findAll(); //Recupera todos los tipos de Item Rayado o No
 
     	$formVentas = [];
@@ -682,7 +991,7 @@ class VentasController extends Controller
 
                 if ($entidad->aceptaTipoVenta($tpo))
                 {
-    			     $item = $comprobante->getItemConTipoYArticulo($tpo, $art);
+    			     $item = $comprobante->getItemConTipoYArticulo($tpo, $art, true);
 
                      if ($item)
                      {
@@ -712,7 +1021,7 @@ class VentasController extends Controller
                     {
                         if ($entidad->aceptaTipoVenta($tpo))
                         {
-                             $item = $comp->getItemConTipoYArticulo($tpo, $art);
+                             $item = $comp->getItemConTipoYArticulo($tpo, $art, true);
 
                              if ($item)
                              {
@@ -793,7 +1102,7 @@ class VentasController extends Controller
 
     	try
     	{
-	    	$itemCarga = $cmp->getItemConTipoYArticulo($tpo, $art);
+	    	$itemCarga = $cmp->getItemConTipoYArticulo($tpo, $art, true);
 	    	$persistir = false;
 	    	$em = $this->getDoctrine()->getManager();
 	    	if (!$itemCarga)
@@ -847,6 +1156,130 @@ class VentasController extends Controller
 
     }
 
+
+
+    public function borrarEsteMetodo($comprobantes)
+    {
+        $articulos = $em->getRepository(Articulo::class)->getListaArticulosConCategoriaVenta();
+
+        $body = [];
+
+        $totalesXCategoria = [];
+
+        $totalGralCategoria = [];
+
+        $totalKg = [];
+
+        $totalPorArticulo = [];
+
+        foreach ($comprobantes as $comp)
+        {
+            $body[$comp->getId()] = [];
+
+            $totalKg[$comp->getId()] = ['u' => 0, 'k' => 0];
+
+            $totalesXCategoria[$comp->getId()] = [];            
+
+            foreach ($articulos as $art)
+            {
+                $body[$comp->getId()][$art->getId()] = [];
+
+                foreach ($tiposVenta as $tpo)
+                {
+                    $body[$comp->getId()][$art->getId()][$tpo->getId()] = null;
+                }
+
+                if (!array_key_exists($art->getCategoriaVenta()->getId(), $totalesXCategoria[$comp->getId()]))
+                {
+                    $totalesXCategoria[$comp->getId()][$art->getCategoriaVenta()->getId()] = ['u' => 0, 'k' => 0];
+                }
+
+                if (!array_key_exists($art->getId(), $totalPorArticulo))
+                {
+                    $totalPorArticulo[$art->getId()] = [];
+                    $totalPorArticulo[$art->getId()]['t'] = 0;
+                }
+            }
+
+            foreach ($comp->getItems() as $it)
+            {
+                $body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()] = $it->getCantidad();
+
+                $articulo = $it->getArticulo();
+
+                $categoria = $articulo->getCategoriaVenta();
+
+                $tipo = $it->getTipoVenta();
+
+                if ($categoria)
+                {
+                    if (array_key_exists($categoria->getId(), $totalesXCategoria[$comp->getId()]))
+                    {
+                        $totalesXCategoria[$comp->getId()][$categoria->getId()]['u']+= $it->getCantidad();
+                        $totalKg[$comp->getId()]['k']+= ($it->getCantidad() * $articulo->getPresentacionKg());
+                        $totalKg[$comp->getId()]['u']+= $it->getCantidad();
+                    }
+
+                    if (!array_key_exists($tipo->getId(), $totalPorArticulo[$articulo->getId()]))
+                    {
+                        $totalPorArticulo[$articulo->getId()][$tipo->getId()] = 0;
+                    }
+
+                    $totalPorArticulo[$articulo->getId()][$tipo->getId()]+= $it->getCantidad();
+                    $totalPorArticulo[$articulo->getId()]['t']+= $it->getCantidad();
+
+                    if (!array_key_exists($categoria->getId(), $totalGralCategoria))
+                    {
+                        $totalGralCategoria[$categoria->getId()] = 0;
+                    }
+                    $totalGralCategoria[$categoria->getId()]+= $it->getCantidad();
+                }
+            }
+
+
+            foreach ($comp->getAsociados() as $asoc)
+            {
+
+                    foreach ($asoc->getItems() as $it)
+                    {
+                        $body[$comp->getId()][$it->getArticulo()->getId()][$it->getTipoVenta()->getId()]+= $it->getCantidad();
+
+                        $articulo = $it->getArticulo();
+
+                        $categoria = $articulo->getCategoriaVenta();
+
+                        $tipo = $it->getTipoVenta();
+
+                        if ($categoria)
+                        {
+                            if (array_key_exists($categoria->getId(), $totalesXCategoria[$comp->getId()]))
+                            {
+                                $totalesXCategoria[$comp->getId()][$categoria->getId()]['u']+= $it->getCantidad();
+                                $totalKg[$comp->getId()]['k']+= ($it->getCantidad() * $articulo->getPresentacionKg());
+                                $totalKg[$comp->getId()]['u']+= $it->getCantidad();
+                            }
+
+                            if (!array_key_exists($tipo->getId(), $totalPorArticulo[$articulo->getId()]))
+                            {
+                                $totalPorArticulo[$articulo->getId()][$tipo->getId()] = 0;
+                            }
+
+                            $totalPorArticulo[$articulo->getId()][$tipo->getId()]+= $it->getCantidad();
+                            $totalPorArticulo[$articulo->getId()]['t']+= $it->getCantidad();
+
+                            if (!array_key_exists($categoria->getId(), $totalGralCategoria))
+                            {
+                                $totalGralCategoria[$categoria->getId()] = 0;
+                            }
+                            $totalGralCategoria[$categoria->getId()]+= $it->getCantidad();
+                        }
+                    }
+            }
+        }
+
+    }
+
+
     /**
  	 * @Route("/detvtaday", name="vtas_detalle_ventas_fecha")
      */
@@ -875,6 +1308,8 @@ class VentasController extends Controller
 
         $totalPorArticulo = [];
 
+        $cates = [];
+
     	foreach ($comprobantes as $comp)
     	{
     		$body[$comp->getId()] = [];
@@ -886,6 +1321,9 @@ class VentasController extends Controller
 
             foreach ($articulos as $art)
     		{
+
+                $cates[$art->getCategoriaVenta()->getId()] = $art->getCategoriaVenta();
+
     			$body[$comp->getId()][$art->getId()] = [];
 
     			foreach ($tiposVenta as $tpo)
@@ -982,7 +1420,7 @@ class VentasController extends Controller
     	}
       //  return new Response(var_dump($totalGralCategoria));
 
-    	return $this->render('@GestionVentas/ventas/listaVentasDiarias.html.twig', 
+    	return $this->render('@GestionVentas/ventas/listaVentasDiarias20.html.twig', 
     						 ['fecha' => $data['fechaComprobante'],
     						  'comprobantes' => $comprobantes,
     						  'articulos' => $articulos,
@@ -991,6 +1429,7 @@ class VentasController extends Controller
                               'totales' => $totalesXCategoria,
                               'totalKG' => $totalKg,
                               'totalGral' => $totalGralCategoria,
+                              'cates' => $cates,
     						  'data' => $body]);
     }
 
@@ -1137,6 +1576,8 @@ class VentasController extends Controller
      */
     public function finalizarComprobanteVenta($id)
     {
+
+
     	$em = $this->getDoctrine()->getManager();
     	$comprobante = $em->find(ComprobanteVenta::class, $id);
 

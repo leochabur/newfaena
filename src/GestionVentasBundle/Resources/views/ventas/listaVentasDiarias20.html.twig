@@ -81,86 +81,35 @@
   <div class="table-wrap">
   <table class="table table-bordered table-sm main-table">
     <thead>
-      <tr>
-          <th class="fixed-side" rowspan="2">Destinatario</th>
-          <th rowspan="2">Numero</th>
-          <th rowspan="2"></th>          
-          {% set i = 1 %}
-          {% set last = null %}
-          {% for a in articulos %}
+        <tr>
+            <th class="fixed-side" rowspan="2">Destinatario</th>
+            <th  rowspan="2">Numero</th>
+            <th rowspan="2"></th>          
+            {% set col = 1 %}
+            {% set last = null %}
+            {% for a in articulos %}
 
-                  {% if last and last != a.categoriaVenta %}
-                      <th class='grey darken-1 text-white'>Total</th>
-                  {% endif %}
+                    {% if last and last != a.categoriaVenta %}
+                        <th class='grey darken-1 text-white'>Total</th>
+                    {% endif %}
 
-                  <th colspan="{{ tipos|length  }}" class="text-center {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">
-                            {{ a.nombreVenta }}
-                  </th>
-                  {% set last = a.categoriaVenta %}
-          {% endfor %}    
-          <th class='grey darken-1 text-white'>Total</th>   
-          <th class='green accent-3' colspan='2'>TOTAL GENERAL</th>     
-      </tr>
-      <tr>
-          {% set last = null %}
-          {% for a in articulos %}
-                  {% set artIndex = loop.index %}
+                    <th data-col="{{ col }}" rowspan="2" class="col_{{ col }} text-center {% if loop.index is divisible by(2) %} yellow lighten-3{% else %} deep-orange lighten-2 {% endif %}" style="min-width: 66px;">
+                              {{ a.nombreVenta }}
+                    </th>
+                    {% set last = a.categoriaVenta %}
 
-                  {% set pi = 'i' %}
-
-                  {% if (i % 2) == 0 %}
-
-                      {% set pi = 'p' %}
-
-                  {% endif %}
-
-                  {% set color = '' %}
-
-                  {% set j = 0 %}  
-
-                  {% if last and last != a.categoriaVenta %}
-
-                      <th class='grey darken-1 text-white'> {{ last }}</th>
-
-                  {% endif %}
-                  {% set last = a.categoriaVenta %}
-            {% for t in tipos %}
-                          {% set tipoIndex = loop.index %}
-
-                          {% if pi == 'i' %}
-
-                              {% set color = 'teal accent-3 font-weight-light' %}
-
-                              {% if (j % 2) == 0 %} 
-                                
-                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
-
-                              {% endif %}
-
-                          {% else %}
-
-                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
-
-                                {% if (j % 2) == 0 %} 
-                                  
-                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
-
-                                {% endif %}
-
-                          {% endif %}
-
-                          <th class="text-center {{ color }} {{ 'col_' ~ artIndex ~ '_' ~ tipoIndex  }}" data-col="{{ artIndex ~ '_' ~ tipoIndex }}">{{ t.codigo }}</th>
-                          {% set j = j + 1 %}
-
+                    {% set col = col + 1 %}
+            {% endfor %}    
+            <th class='grey darken-1 text-white' style="min-width: 66px;">Total</th>   
+            <th class='green accent-3' colspan='2' style="min-width: 66px;">TOTAL GENERAL</th>     
+          </tr>
+          <tr>
+              {% for c in cates %}
+                  <th class="grey darken-1 text-white" style="min-width: 66px;">{{ c }}</th>
               {% endfor %}
-
-              {% set i = i + 1 %}
-
-          {% endfor %}
-          <th class='grey darken-1 text-white'> {{ last }}</th>
-          <th class='green accent-3'>Unidades</th>
-          <th class='green accent-3'>Kg.</th>
-      </tr>
+              <th class='green accent-3' style="min-width: 66px;">Unidades</th>
+              <th class='green accent-3' style="min-width: 66px;">Kilogramos</th>
+          </tr>
       </thead>
       <tbody>        
         {% for cmp in comprobantes %}
@@ -182,80 +131,59 @@
                     </a>
                     <a href="{{ path('vtas_finalizar_comprobante_venta', { id : cmp.id }) }}" data-comp="{{ cmp.id }}" data-action="finalizar" data-index="{{ cmp.entidad}}" class="deletecmp"><i class="far fa-check-square" title="Finalizar"></i></a>
               </td>           
-              {% set i = 1 %}  
 
               {% set last = null %}
 
+              {% set col = 1 %}
+
               {% for art in articulos %}
+
+                  {% set color = 'deep-orange lighten-2' %}
+
+                  {% if loop.index is divisible by(2) %}
+
+                      {% set color = ' yellow lighten-3' %} 
+
+                  {% endif %}
 
                   {% if last and last != art.categoriaVenta %}
 
                       <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id].u }}</td>
 
                   {% endif %}
+
                   {% set last = art.categoriaVenta %}
-                  {% set artIndex = loop.index %}
 
-                  {% set pi = 'i' %}
-
-                  {% if (i % 2) == 0 %}
-
-                      {% set pi = 'p' %}
-
-                  {% endif %}
-
-                  {% set color = '' %}
-
-                  {% set j = 0 %}  
+                  {% set acum = 0 %}  
                     
                   {% for tpo in tipos %}
 
-                          {% set tipoIndex = loop.index %}
-
-                          {% if pi == 'i' %}
-
-                              {% set color = 'teal accent-3 font-weight-light' %}
-
-                              {% if (j % 2) == 0 %} 
-                                
-                                  {% set color = 'cyan lighten-2 font-weight-bold' %} 
-
-                              {% endif %}
-
-                          {% else %}
-
-                                {% set color = 'deep-orange lighten-2 font-weight-light' %}
-
-                                {% if (j % 2) == 0 %} 
-                                  
-                                    {% set color = 'orange lighten-2 font-weight-bold' %} 
-
-                                {% endif %}
-
-                          {% endif %}
-
-                          <td class="{{ color }}  {{ 'col_' ~ artIndex ~ '_' ~ tipoIndex  }}" data-col="{{ artIndex ~ '_' ~ tipoIndex }}">
-                            {{ data[cmp.id][art.id][tpo.id] }}
-                          </td>
-
-                          {% set j = j + 1 %}
+                        {% set acum = acum +  data[cmp.id][art.id][tpo.id] %}
 
                   {% endfor %}
 
-                  {% set i = i + 1 %}
+                  <td class="{{ color }} col_{{ col }} text-right" data-col="{{ col }}">
+                    {{ acum }}
+                  </td>
 
+                  {% set col = col + 1 %}
+              
               {% endfor %}
               <td class='grey darken-1 text-white text-right'>{{ totales[cmp.id][last.id].u }}</td>
               <td class='green accent-3 text-right'>{{ totalKG[cmp.id].u }}</td>
               <td class='green accent-3 text-right'>{{ totalKG[cmp.id].k }}</td>
             </tr>
         {% endfor %}
-            <tr class="total">
-                <td class="fixed-side total font-italic" rowspan="2">TOTALES</td>
-                <td class="total" rowspan="2"></td>
-                <td class="total" rowspan="2"></td>
-                {% set last = null %}
-                {% set i = 1 %}  
+        
+
+        <tr class="total">
+                <td class="fixed-side total font-italic">TOTALES</td>
+                <td class="total"></td>
+                <td class="total"></td>
+                {% set last = null %}  
+
+                {% set col = 1 %}
+
                 {% for art in articulos %}
 
                     {% if last and last != art.categoriaVenta %}
@@ -272,57 +200,35 @@
 
                     {% set last = art.categoriaVenta %}
 
-                    {% set pi = 'i' %}
-
-                    {% if (i % 2) == 0 %}
-
-                        {% set pi = 'p' %}
-
-                    {% endif %}
-
                     {% set color = '' %}
 
-                    {% set j = 0 %}  
+                    {% set j, acum = 0, 0 %}  
 
                     {% for tpo in tipos %}
 
-                          {% set tipoIndex = loop.index %}
-
-                          {% if pi == 'i' %}
-
-                              {% set color = 'teal accent-3' %}
-
-                              {% if (j % 2) == 0 %} 
-                                
-                                  {% set color = 'cyan lighten-2' %} 
-
-                              {% endif %}
-
-                          {% else %}
-
-                                {% set color = 'deep-orange lighten-2' %}
-
-                                {% if (j % 2) == 0 %} 
-                                  
-                                    {% set color = 'orange lighten-2' %} 
-
-                                {% endif %}
-
-                          {% endif %}
-
-                      <td class="{{ color }} total font-italic {{ 'col_' ~ artIndex ~ '_' ~ tipoIndex  }}" data-col="{{ artIndex ~ '_' ~ tipoIndex }}">
                           {% if totArticulo[art.id][tpo.id] is defined %}
-                            {{ totArticulo[art.id][tpo.id] }}
-                          {% else %}
-                            0
+
+                            {% set acum = acum + totArticulo[art.id][tpo.id] %}
+
                           {% endif %}
-                      </td>
-                      {% set j = j + 1 %}
+
                     {% endfor %}
-                    {% set i = i + 1 %}
+
+                    {% set color = 'deep-orange lighten-2' %}
+
+                    {% if loop.index is divisible by(2) %}
+
+                        {% set color = ' yellow lighten-3' %} 
+
+                    {% endif %}
+
+                    <td class="{{ color }} total col_{{ col }} text-right font-italic" data-col="{{ col }}">
+                        {{ acum }}
+                    </td>
+                    {% set col = col + 1 %}
                 {% endfor %}
                 
-                <td rowspan="2" class="font-italic align-bottom total grey darken-1 text-white text-right">
+                <td rowspan="2" class="total font-italic align-bottom total grey darken-1 text-white text-right">
                     {% if totalGral[last.id] is defined %}
                       {{ totalGral[last.id] }}
                     {% else %}
@@ -339,23 +245,6 @@
 
                 <td rowspan="2" class="font-italic align-bottom total green accent-3 text-right">{{ un }}</td>
                 <td rowspan="2" class="font-italic align-bottom total green accent-3 text-right">{{ kg }}</td>
-            </tr>
-            <tr>
-                {% set last = null %}
-
-                {% for art in articulos %}
-                      
-                      {% set last = art.categoriaVenta %}
-
-                      <td colspan="2" class="font-weight-bold text-center {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">
-                          {% if totArticulo[art.id].t is defined %}
-                            {{ totArticulo[art.id].t }}
-                          {% else %}
-                            0
-                          {% endif %}
-                      </td>
-                {% endfor %}
-                
             </tr>
       </tbody>
   </table>  
@@ -387,7 +276,6 @@
 {% block javascripts %}
 
 <script type="text/javascript">
-  
   let route = "{{ path('vtas_generate_formulario_concignacion', { comp : 'ID_COMP'}) }}";
 
   $('.resume').click(function ( event ){
@@ -402,20 +290,23 @@
   $(".main-table").clone(true).appendTo('#table-scroll').addClass('clone');  
 
   $('.main-table tr td').hover(function() {
+
         let col = $(this);
 
-        $('.col_'+col.data('col')).addClass('accent-4');
+        $('.col_'+col.data('col')).addClass('font-weight-bold accent-4');
 
-        $(this).addClass('accent-4');
-        $(this).siblings().addClass('accent-4');
+        $(this).siblings().addClass('font-weight-bold accent-4');
+
+        $(this).addClass('font-weight-bold accent-4');
+
   });
   $('.main-table tr td').mouseout(function() {
         let col = $(this);
 
-        $('.col_'+col.data('col')).removeClass('accent-4');
+        $('.col_'+col.data('col')).removeClass('font-weight-bold accent-4');
 
-        $(this).siblings().removeClass('accent-4');
-        $(this).removeClass('accent-4');
+        $(this).siblings().removeClass('font-weight-bold accent-4');
+        $(this).removeClass('font-weight-bold accent-4');
   });
 
 
@@ -438,14 +329,13 @@
                                                               callback: function (result) {
                                                                   if (result)
                                                                   {
-                                                                      alert(route.replace('ID_COMP', a.data('comp')));
                                                                       $.post(a.attr('href'),
                                                                              function (data)
                                                                              {
                                                                                 if (!data.error)
                                                                                 {
-                                                                                      alert(route.replace('ID_COMP', a.data('comp')));
-                                                                                      window.location.href = route.replace('ID_COMP', a.data('comp'));                                                                                  
+                                                                                   window.open(route.replace('ID_COMP', a.data('comp')), '_blank'); 
+                                                                                  
                                                                                 }
                                                                                 else
                                                                                 {

@@ -44,7 +44,7 @@ class ConceptoMovimiento
     /**
      * @ORM\Column(name="ajusta", type="boolean", nullable=true, options={"default" : false})
      */
-    private $ajusta;
+    private $ajusta = false;
 
     public function getAtributoConcepto(\GestionFaenaBundle\Entity\gestionBD\ArticuloAtributoConcepto $apf)
     {
@@ -150,5 +150,29 @@ class ConceptoMovimiento
     public function getResumido()
     {
         return $this->resumido;
+    }
+
+    /**
+     * Set ajusta
+     *
+     * @param boolean $ajusta
+     *
+     * @return ConceptoMovimiento
+     */
+    public function setAjusta($ajusta)
+    {
+        $this->ajusta = $ajusta;
+
+        return $this;
+    }
+
+    /**
+     * Get ajusta
+     *
+     * @return boolean
+     */
+    public function getAjusta()
+    {
+        return $this->ajusta;
     }
 }

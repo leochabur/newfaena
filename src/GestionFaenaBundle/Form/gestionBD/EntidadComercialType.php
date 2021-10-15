@@ -26,6 +26,7 @@ class EntidadComercialType extends AbstractType
                             ))
                 ->add('tiposVenta')
                 ->add('cuit')
+                ->add('generaSanitario')
                 ->add('direccion');
         if ($original)
         {

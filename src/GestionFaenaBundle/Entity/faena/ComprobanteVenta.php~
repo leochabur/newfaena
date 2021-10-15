@@ -110,6 +110,62 @@ class ComprobanteVenta extends MovimientoStock
      */
     private $asociados;
 
+    /**
+     * @ORM\Column(name="generaSanitario", type="boolean", nullable=true)
+     */
+    private $generaSanitario;
+
+
+    public function getTotalItems()
+    {
+        $count = $this->items->count();
+        foreach ($this->asociados as $asoc)
+        {
+            $count+= $asoc->getItems()->count();
+        }
+        return $count;
+    }
+
+    public function getArrayOfTypeVentaUnitario()
+    {
+        $tipos = [];
+
+        foreach ($this->items as $it)
+        {
+            if ($it->getCantidad())
+            {
+                $tipos[$it->getTipoVenta()->getId()] = 1;
+            }
+        }
+
+        return $tipos;
+    }
+
+    public function getArrayOfTypeVenta()
+    {
+        $tipos = [];
+
+        foreach ($this->items as $it)
+        {
+            if ($it->getCantidad())
+            {
+                $tipos[$it->getTipoVenta()->getId()] = 1;
+            }
+        }
+
+        foreach ($this->asociados as $asoc)
+        {
+            foreach ($asoc->getItems() as $it)
+            {
+                if ($it->getCantidad())
+                {
+                    $tipos[$it->getTipoVenta()->getId()] = 1;
+                }
+            }
+        }
+
+        return $tipos;
+    }
 
 
     /**
@@ -118,6 +174,7 @@ class ComprobanteVenta extends MovimientoStock
     public function __construct()
     {
         $this->items = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->asociados = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -156,16 +213,51 @@ class ComprobanteVenta extends MovimientoStock
         return $detalle;
     }
 
-    public function getItemConTipoYArticulo(TipoVenta $tipo, \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    public function getItemConTipoYArticulo(TipoVenta $tipo, \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo, $zero = true)
     {
         foreach ($this->items as $it)
         {
             if (($it->getArticulo() == $articulo) && ($it->getTipoVenta() == $tipo))
             {
-                return $it;
+                if (($it->getCantidad()) ||  $zero)
+                {
+                    return $it;
+                }
+                return null;
             }
         }
         return null;
+    }
+
+    public function getItemTotalConArticuloYAsociados(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        $totales = [];
+
+        foreach ($this->getItems() as $it)
+        {            
+            if ($it->getArticulo() == $articulo)
+            {
+                $totales[$it->getTipoVenta()->getId()] = $it->getCantidad();
+            }
+        }
+
+        foreach ($this->getAsociados() as $asoc)
+        {
+            foreach ($asoc->getItems() as $it)
+            {            
+                if ($it->getArticulo() == $articulo)
+                {
+                    if (!array_key_exists($it->getTipoVenta()->getId(), $totales))
+                    {
+                        $totales[$it->getTipoVenta()->getId()] = 0;
+                    }
+
+                    $totales[$it->getTipoVenta()->getId()]+= $it->getCantidad();
+                }
+            }
+        }
+
+        return $totales;
     }
 
     protected function updateVisible()
@@ -527,5 +619,87 @@ class ComprobanteVenta extends MovimientoStock
     public function getAsociado()
     {
         return $this->asociado;
+    }
+
+    /**
+     * Set original
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $original
+     *
+     * @return ComprobanteVenta
+     */
+    public function setOriginal(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $original = null)
+    {
+        $this->original = $original;
+
+        return $this;
+    }
+
+    /**
+     * Get original
+     *
+     * @return \GestionFaenaBundle\Entity\faena\ComprobanteVenta
+     */
+    public function getOriginal()
+    {
+        return $this->original;
+    }
+
+    /**
+     * Add asociado
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado
+     *
+     * @return ComprobanteVenta
+     */
+    public function addAsociado(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado)
+    {
+        $this->asociados[] = $asociado;
+
+        return $this;
+    }
+
+    /**
+     * Remove asociado
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado
+     */
+    public function removeAsociado(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $asociado)
+    {
+        $this->asociados->removeElement($asociado);
+    }
+
+    /**
+     * Get asociados
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getAsociados()
+    {
+        return $this->asociados;
+    }
+
+    /**
+     * Set generaSanitario
+     *
+     * @param boolean $generaSanitario
+     *
+     * @return ComprobanteVenta
+     */
+    public function setGeneraSanitario($generaSanitario)
+    {
+        $this->generaSanitario = $generaSanitario;
+
+        return $this;
+    }
+
+    /**
+     * Get generaSanitario
+     *
+     * @return boolean
+     */
+    public function getGeneraSanitario()
+    {
+        return $this->generaSanitario;
     }
 }

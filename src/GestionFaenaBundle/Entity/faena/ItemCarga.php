@@ -22,11 +22,22 @@ class ItemCarga
     private $id;
 
     /**
-     * @var int
      *
      * @ORM\Column(name="cantidad", type="integer")
      */
     private $cantidad;
+
+    /**
+     *
+     * @ORM\Column(name="preciounitario", type="float", nullable=true)
+     */
+    private $precioUnitario;
+
+    /**
+     *
+     * @ORM\Column(name="preciototal", type="float", nullable=true)
+     */
+    private $precioTotal;
 
     /**
      * @ORM\ManyToOne(targetEntity="GestionFaenaBundle\Entity\gestionBD\Articulo")
@@ -210,5 +221,53 @@ class ItemCarga
     public function getItemMovimientoStock()
     {
         return $this->itemMovimientoStock;
+    }
+
+    /**
+     * Set precioUnitario
+     *
+     * @param float $precioUnitario
+     *
+     * @return ItemCarga
+     */
+    public function setPrecioUnitario($precioUnitario)
+    {
+        $this->precioUnitario = $precioUnitario;
+
+        return $this;
+    }
+
+    /**
+     * Get precioUnitario
+     *
+     * @return float
+     */
+    public function getPrecioUnitario()
+    {
+        return $this->precioUnitario;
+    }
+
+    /**
+     * Set precioTotal
+     *
+     * @param float $precioTotal
+     *
+     * @return ItemCarga
+     */
+    public function setPrecioTotal($precioTotal)
+    {
+        $this->precioTotal = $precioTotal;
+
+        return $this;
+    }
+
+    /**
+     * Get precioTotal
+     *
+     * @return float
+     */
+    public function getPrecioTotal()
+    {
+        return $this->precioTotal;
     }
 }

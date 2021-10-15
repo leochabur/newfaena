@@ -1186,9 +1186,10 @@ class InformesController extends Controller
             return $this->render('@GestionFaena/informes/informeTres.html.twig', ['faena' => $faena, 'form' => $form->createView()]);
     }
 
+
     /**
      * @Route("/informes/expinone/{proc}/{fd}/{ajs}/{exc}", name="export_informe_uno")
-     */
+    */
     public function generatePdfInformeUno($proc, $fd, $ajs, $exc = '')
     {
         $excluir = explode("&", $exc);
@@ -1215,7 +1216,12 @@ class InformesController extends Controller
         $pdf = $this->getBody($pdf, $detalle, $informe);
         return new Response($pdf->Output(), 200, array('Content-Type' => 'application/pdf'));  
     }
-
+      
+    
+    
+    
+    
+    
     /**
      * @Route("/informes/toexcel/{proc}/{fd}/{ajs}/{exc}", name="exportar_a_excel")
      */

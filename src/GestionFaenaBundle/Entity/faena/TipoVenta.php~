@@ -57,6 +57,15 @@ class TipoVenta
         return strtoupper($this->codigo);
     }
 
+    public function getShow()
+    {
+        if (!$this->oficial)
+        {
+            return " (".strtoupper($this->codigo).")";
+        }
+        return "";
+    }
+
     /**
      * Get id
      *

@@ -1,0 +1,349 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<style type="text/css">
+           
+  .table-scroll {
+    position:relative;
+    max-width:100%;
+    margin:auto;
+    overflow:hidden;
+  }
+  .table-wrap {
+    width:100%;
+    overflow:auto;
+  }
+  .table-scroll table {
+    width:100%;
+    margin:auto;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+  .table-scroll th, .table-scroll td {
+    
+
+    background:#fff;
+    white-space:nowrap;
+    vertical-align:top;
+  }
+  .table-scroll thead, .table-scroll tfoot {
+    background:#f9f9f9;
+  }
+  .clone {
+    position:absolute;
+    top:0;
+    left:0;
+    pointer-events:none;
+  }
+  .clone th, .clone td {
+    visibility:hidden
+  }
+  .clone td, .clone th {
+    border-color:transparent
+  }
+  .clone tbody th {
+    visibility:visible;
+  }
+  .clone .fixed-side {
+    visibility:visible;
+  }
+  .clone thead, .clone tfoot{background:transparent;}
+
+.miTablaPersonalizada th{
+  width: 230px;
+  overflow: auto;
+  border: 1px solid;
+}
+
+</style>
+
+<br>
+<hr>
+
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class' : 'updvta'}}) }}
+          <div class="form-row">
+            <div class="col-lg-4 col-sm-12">
+              {{ form_label(form.fechaComprobante) }}
+              {{ form_widget(form.fechaComprobante, {'attr' : {'class' : 'date' }}) }}
+            </div>
+            <div class="col-lg-5 col-sm-12">
+              {{ form_label(form.cliente) }}
+              {{ form_widget(form.cliente) }}
+            </div>
+          </div>
+          <div class="form-row mt-4">
+            <div class="col-lg-12 col-sm-12">
+              {{ form_label(form.comentario) }}
+              {{ form_widget(form.comentario) }}
+            </div>
+          </div>
+          {% include '@GestionFaena/messages.html.twig'  %}
+          {% if form.siguiente is defined%}
+              <div class="form-row mt-4">
+                <div class="col-lg-12 col-sm-12">
+                  {{ form_widget(form.siguiente) }}
+                </div>
+              </div>
+            {% endif %}
+{{ form_end(form) }}
+
+
+{% if comprobante.confirmado %}
+    <div class="row mt-4">
+        <div class="col-lg-4 fs-5 text-danger">
+          El formulario ya ha sido impreso
+        </div>
+    </div>
+{% endif %}
+{% for message in app.flashes('sussecc') %}
+	<div class="alert alert-success" role="alert">
+	  {{ message }}
+	</div>
+{% endfor %}
+{% endblock %}
+{% block out_container %}
+  <hr>
+<span class="h5 card-title">Agregar Articulos</span>
+<hr>
+<div id="table-scroll" class="table-scroll">
+  <div class="table-wrap">
+  <table class="table table-sm main-table">
+    <thead>
+      <tr>
+          <th class="fixed-side grey lighten-2 border border-primary">Destinatario</th>
+          <th class="grey lighten-2 border border-primary align-center">Generar Sanitario</th>
+          <th class="grey lighten-2 border border-primary align-center"></th>
+          {% for art in articulos %}
+
+              {% set color = 'aqua-gradient' %}
+              
+              {% if loop.index is divisible by(2) %}
+                  {% set color = 'peach-gradient' %}
+              {% endif %}
+
+              <th scope="col" 
+                  class="px-md-5 grey lighten-2 border border-primary {{ color }}">
+                    {{  art.nombreVenta }}
+              </th>
+
+          {% endfor %}
+          
+          </tr>
+      </thead>
+      <tbody>
+        {% for v in ventas %} 
+               
+                {% for k, t in v.1  %}
+                    <tr>
+                      <td class="fixed-side border border-primary align-middle">{{ v.0.entidad }}  {{ t.0.show }}</td>
+                      <td class="border border-primary text-center align-middle">
+
+                            {% if t.0.oficial %}
+
+                                <input class="change" type="checkbox" data-comp="{{ v.0.id }}" name="emite_{{v.0.id}}" {% if v.0.generaSanitario %} checked {% endif %}/>
+
+                            {% endif %}
+
+                      </td>
+                      <td class="border border-primary text-center pl-4 pr-4 align-middle">
+
+                            <button class="btn btn-primary btn-sm btn-price" data-type="{{ t.0.id }}" data-comp="{{ v.0.id }}" ><i class="fas fa-dollar-sign"></i></button>
+
+                      </td>
+                      {% for kf, f in t.1 %}
+
+                          {% set class =  "update form-control-sm " ~ kf %}
+
+                          {% set color = 'aqua-gradient' %}
+
+                          {% if loop.index is divisible by(2) %}
+
+                              {% set color = 'peach-gradient' %}
+
+                          {% endif %}
+
+                          <td class="border border-primary {{ color }}">
+
+                                {{ form_start(f, {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
+                                {{ form_widget(f.cantidad, {'attr' : {'title' : articulos[kf], 'size' : '100px', 'data-index' : kf, 'class' : class  }}) }}
+                                {{ form_end(f) }}
+
+                          </td>
+
+                      {% endfor %}
+                    </tr>
+                {% endfor %}
+        {% endfor %}
+      <tr>
+            <td class="fixed-side border border-primary">TOTAL</td>
+            <td class="border border-primary"></td>
+            <td class="border border-primary"></td>
+            {% for art in articulos %}
+                  
+                  <td class="tot{{art.id}} h5 text-center border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{ totales[art.id] }}</td>
+            {% endfor %}
+      </tr>
+
+      </tbody>
+  </table>  
+</div>
+</div>
+  <hr>
+  <div class="form-row">
+      <div class="col-lg-3 col-sm-12">
+          {{ form_start(back, {'attr': {'novalidate': 'novalidate',  'class' : 'back'}}) }}
+          {{ form_widget(back.back) }}
+          {{ form_end(back) }}
+      </div>
+      <div class="col-lg-2 col-sm-12">
+          <!--a class='btn btn-success finalice' href='{{ path('vtas_finalizar_comprobante_venta', { id : comprobante.id }) }}'>Finalizar</a-->
+      </div>
+  </div>
+
+<div class="modal fade" id="reume_venta" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body body_resume">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+{% endblock %}
+{% block javascripts %}
+ {{ parent() }}
+<script type="text/javascript">
+
+$(document).ready(function () {
+
+          const price = "{{ path('vtas_set_price_venta', { comp : 'ID_COMP', type : 'ID_TYPE' }) }}";
+          const path = "{{ path('vtas_cambiar_emision_sanitario', { id : 'ID_COMP'}) }}";  
+
+          $('.btn-price').click(function () {
+                                            let btn = $(this);
+                                            $.post(price.replace('ID_COMP', btn.data('comp')).replace('ID_TYPE', btn.data('type')),
+                                                   function(data)
+                                                   {    $('.modal-body').html(data);
+                                                        $('#reume_venta').modal('show');
+                                                   });
+          });
+
+          $('.change').change(function () {
+                                          let ch = $(this);
+                                          $.post(path.replace('ID_COMP', ch.data('comp')),
+                                                 {status : (ch.prop("checked")?1:0)},
+                                                 function ( data ){
+                                                                    
+                                                 });
+                                          
+          });
+
+          $(".main-table").clone(true).appendTo('#table-scroll').addClass('clone');  
+
+
+
+          $('.finalice').click(function(event){
+                                                event.preventDefault();
+                                                var a = $(this);
+                                                bootbox.confirm({                                        
+                                                        message: 'Seguro finalizar el comprobante de venta?',
+                                                        size: "large",
+                                                        buttons: {
+                                                                  confirm: {
+                                                                      label: 'Si',
+                                                                      className: 'btn-success'
+                                                                  },
+                                                                  cancel: {
+                                                                      label: 'No',
+                                                                      className: 'btn-danger'
+                                                                  }
+                                                              },
+                                                              callback: function (result) {
+                                                                  if (result)
+                                                                  {
+                                                                      $.post(a.attr('href'),
+                                                                             function (data)
+                                                                             {
+                                                                                if (!data.error)
+                                                                                {
+                                                                                   $('.back').trigger('submit');
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                  alert(data.message);
+                                                                                }
+                                                                             });
+                                                                  }
+                                                              }
+                                        });
+          });
+
+          $('.dataTables_length').addClass('bs-select');
+
+          $('.update').focusout(function(event){
+                                            event.preventDefault();
+                                            var input = $(this);
+                                            var form = input.closest('form');
+                                            if (input.val())
+                                            {
+                                              $.post(form.attr('action'),
+                                                     form.serialize(),
+                                                     function(data)
+                                                     {
+                                                         if (!data.error)
+                                                         {
+                                                          input.addClass('green 50');
+                                                          var td = $('.'+data.a+data.t);
+                                                          td.html(data.u);
+                                                          $('.tot'+data.a).html(data.tot);
+                                                         }
+                                                         else{
+                                                              input.addClass('red 50');
+                                                              alert(data.message);
+                                                         }
+                                                     });            
+                                            }
+             
+          });
+
+          $('.fupdate').submit(function(event){
+                                            event.preventDefault();
+                                            var form = $(this);
+                                            var input = form.find( ":text" );
+                                            if (input.val())
+                                            {
+                                              $.post(form.attr('action'),
+                                                     form.serialize(),
+                                                     function(data)
+                                                     {
+                                                       if (!data.error)
+                                                         {
+                                                          input.addClass('green 50');
+                                                          var i = input.data('index')+1;
+
+                                                          $('.'+i).focus();
+
+                                                         }
+                                                         else{
+                                                          input.addClass('red 50');
+                                                          alert(data.message);
+                                                         }
+                                                     });            
+                                            }
+             
+          });
+
+});
+</script>
+
+{% endblock  %}
