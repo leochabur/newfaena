@@ -28,7 +28,7 @@
         <a href="{{ path('vtas_editar_cliente_vario', { id : ente.id })}}"class="btn btn-sm btn-primary edit-vario">Editar</a>
       </div>
     </div>
-    <hr>
+    <!--hr>
 
         {{ form_start(asociar, {'attr': {'novalidate': 'novalidate'}}) }}
           <div class="form-row">
@@ -43,8 +43,8 @@
             </div>
           </div>
         {{ form_end(asociar) }}
+    <hr-->
     <hr>
-
     <span class="h5">Destinatarios asociados</span>
     <hr>
     <span class="h5">Nuevo</span>
@@ -74,6 +74,16 @@
         {{ form_label(form.comercial.original) }}
         {{ form_widget(form.comercial.original) }}
         {{ form_errors(form.comercial.original) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.esConsignatario) }}
+        {{ form_widget(form.esConsignatario) }}
+      </div>
+      <div class="col-2">
+        {{ form_label(form.comercial.generaSanitario) }}
+        {{ form_widget(form.comercial.generaSanitario) }}
       </div>
     </div>
     <div class="form-row">

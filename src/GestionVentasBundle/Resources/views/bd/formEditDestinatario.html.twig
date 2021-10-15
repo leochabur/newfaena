@@ -25,15 +25,21 @@
         {{ form_errors(form.comercial.tiposVenta) }}
       </div>
     </div>
+    <div class="form-row">
+      <div class="col-3">
+            {{ form_label(form.esConsignatario) }}
+            {{ form_widget(form.esConsignatario) }}
+      </div>
+      <div class="col-3">
+            {{ form_label(form.comercial.generaSanitario) }}
+            {{ form_widget(form.comercial.generaSanitario) }}
+      </div>
+    </div>
     {% if form.activa is defined %}
     <div class="form-row">
       <div class="col-3">
             {{ form_label(form.activa) }}
             {{ form_widget(form.activa) }}
-      </div>
-      <div class="col-3">
-            {{ form_label(form.comercial.generaSanitario) }}
-            {{ form_widget(form.comercial.generaSanitario) }}
       </div>
     </div>
     {% endif %}

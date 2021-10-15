@@ -13,6 +13,12 @@ use Doctrine\ORM\Mapping as ORM;
 class Destinatario extends EntidadComercial
 {
 
+    /**
+     * @ORM\Column(name="consignatario", type="boolean", options={"default":false}, nullable=true)
+     */
+
+    private $esConsignatario = true;
+
     protected function getIsCliente()
     {
         return false;
@@ -21,5 +27,39 @@ class Destinatario extends EntidadComercial
     public function getInstance()
     {
         return 12;
+    }
+
+    public function __toString()
+    {
+        if ($this->esConsignatario)
+        {
+            return strtoupper($this->getValor())." - CONSIGNATARIO";
+        }
+
+        return strtoupper($this->getValor());
+    }
+
+    /**
+     * Set esConsignatario
+     *
+     * @param boolean $esConsignatario
+     *
+     * @return Destinatario
+     */
+    public function setEsConsignatario($esConsignatario)
+    {
+        $this->esConsignatario = $esConsignatario;
+
+        return $this;
+    }
+
+    /**
+     * Get esConsignatario
+     *
+     * @return boolean
+     */
+    public function getEsConsignatario()
+    {
+        return $this->esConsignatario;
     }
 }

@@ -19,13 +19,14 @@ class DestinatarioType extends AbstractType
                                                         'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Destinatario',
                                                         'original' => $options['original']
                                 ))
+                ->add('esConsignatario')
                 ->add('guardar', SubmitType::class);
 
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event){
                                                                                                 $entidad = $event->getData();
                                                                                                 $form = $event->getForm();
 
-                                                                                                if ($entidad->getId()) {
+                                                                                                if (($entidad) && ($entidad->getId())) {
                                                                                                     $form->add('activa');
                                                                                                 }
                                                                                             });
