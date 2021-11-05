@@ -105,6 +105,19 @@
   <hr>
 <span class="h5 card-title">Agregar Articulos</span>
 <hr>
+<div class="row">
+    <div class="col-lg-4">
+        <select class="form-control form-control-sm view align-middle">
+            <option value="0">Todos</option>
+            {% for c in cates %}
+              <option value="{{ c.id }}">{{ c }} </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-lg-2">
+       <a class="btn btn-primary btn-sm align-middle global_price" href="{{ path('vtas_set_price_venta_global', { comp : comprobante.id }) }}">$</a>
+    </div>
+</div>
 <div id="table-scroll" class="table-scroll">
   <div class="table-wrap">
   <table class="table table-sm main-table">
@@ -122,7 +135,7 @@
               {% endif %}
 
               <th scope="col" 
-                  class="px-md-5 grey lighten-2 border border-primary {{ color }}">
+                  class="px-md-5 grey lighten-2 border border-primary {{ color }} cate-0 cate-{{ art.categoriaVenta.id }}" data-cate="{{art.categoriaVenta.id}}">
                     {{  art.nombreVenta }}
               </th>
 
@@ -162,7 +175,7 @@
 
                           {% endif %}
 
-                          <td class="border border-primary {{ color }}">
+                          <td class="border border-primary {{ color }} cate-0 cate-{{ articulos[kf].categoriaVenta.id }}" data-cate="{{articulos[kf].categoriaVenta.id}}">
 
                                 {{ form_start(f, {'attr': {'novalidate': 'novalidate', 'class': 'fupdate'}}) }}
                                 {{ form_widget(f.cantidad, {'attr' : {'title' : articulos[kf], 'size' : '100px', 'data-index' : kf, 'class' : class  }}) }}
@@ -180,7 +193,7 @@
             <td class="border border-primary"></td>
             {% for art in articulos %}
                   
-                  <td class="tot{{art.id}} h5 text-center border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{ totales[art.id] }}</td>
+                  <td data-cate="{{art.categoriaVenta.id }}" class="cate-0 cate-{{ art.categoriaVenta.id }} tot{{art.id}} h5 text-center border border-primary {% if loop.index is divisible by(2) %}peach-gradient{% else %} aqua-gradient {% endif %}">{{ totales[art.id] }}</td>
             {% endfor %}
       </tr>
 
@@ -218,6 +231,25 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="set_price_global" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body body_global">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
   
 {% endblock %}
 {% block javascripts %}
@@ -225,6 +257,38 @@
 <script type="text/javascript">
 
 $(document).ready(function () {
+          $('.global_price').click(function (event) {
+                                                      event.preventDefault();
+                                                      $('.body_global').html('Cargando...');
+                                                      let a = $(this);
+                                                      $('.body_global').load(a.attr('href'));
+                                                      $('#set_price_global').modal('show');
+
+          });
+
+          $('.view').change(function(){
+                                        let opt = $(this).val();
+                                        console.log(opt);
+                                        var tds = $('.cate-0');
+                                        if (opt != 0)
+                                        {
+                                          tds.each(function(it){
+                                                                let x = $(this);
+                                                                if (x.data('cate') == opt)
+                                                                {
+                                                                  x.show();
+                                                                }
+                                                                else
+                                                                {
+                                                                  x.hide();
+                                                                }
+                                          });
+                                        }
+                                        else
+                                        {
+                                          tds.show();
+                                        }
+          });
 
           const price = "{{ path('vtas_set_price_venta', { comp : 'ID_COMP', type : 'ID_TYPE' }) }}";
           const path = "{{ path('vtas_cambiar_emision_sanitario', { id : 'ID_COMP'}) }}";  

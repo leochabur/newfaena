@@ -40,6 +40,7 @@ class ArticuloType extends AbstractType
                 ->add('codigoInterno', TextType::class, $faena)
                 ->add('presentacionKg', TextType::class, $faena)
                 ->add('presentacionUnidad', TextType::class, $faena)
+                ->add('alicuotaIVA')
                 ->add('descVenta', TextType::class, $ventas)
                 ->add('guardar', SubmitType::class)
                 ->addEventListener(

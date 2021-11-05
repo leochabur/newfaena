@@ -53,6 +53,21 @@ abstract class EntidadComercial extends EntidadExterna
      */
     private $generaSanitario = true;
     
+    /**
+     * @ORM\Column(name="facturaIndividual", type="boolean", options={"default":true})
+     */
+    private $facturaIndividual = true; //utilizado para indicar si se debe facturar a el mismo al titular de la cuenta, si genera sanitario s tru y no se factura idnividual, se debe generar el sanitario al titular (Caso Torrejon)
+
+    /**
+     * @ORM\Column(name="consignatario", type="boolean", options={"default":false}, nullable=true)
+     */
+    private $esConsignatario = false;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="EntidadComercial")
+     * @ORM\JoinColumn(name="id_tit_sanit", referencedColumnName="id", nullable=true)
+     */
+    private $titularSanitario;
 
     public function aceptaTipoVenta($tipoVenta)
     {
@@ -263,5 +278,77 @@ abstract class EntidadComercial extends EntidadExterna
     public function getGeneraSanitario()
     {
         return $this->generaSanitario;
+    }
+
+    /**
+     * Set esConsignatario
+     *
+     * @param boolean $esConsignatario
+     *
+     * @return EntidadComercial
+     */
+    public function setEsConsignatario($esConsignatario)
+    {
+        $this->esConsignatario = $esConsignatario;
+
+        return $this;
+    }
+
+    /**
+     * Get esConsignatario
+     *
+     * @return boolean
+     */
+    public function getEsConsignatario()
+    {
+        return $this->esConsignatario;
+    }
+
+    /**
+     * Set facturaIndividual
+     *
+     * @param boolean $facturaIndividual
+     *
+     * @return EntidadComercial
+     */
+    public function setFacturaIndividual($facturaIndividual)
+    {
+        $this->facturaIndividual = $facturaIndividual;
+
+        return $this;
+    }
+
+    /**
+     * Get facturaIndividual
+     *
+     * @return boolean
+     */
+    public function getFacturaIndividual()
+    {
+        return $this->facturaIndividual;
+    }
+
+    /**
+     * Set titularSanitario
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\EntidadComercial $titularSanitario
+     *
+     * @return EntidadComercial
+     */
+    public function setTitularSanitario(\GestionFaenaBundle\Entity\gestionBD\EntidadComercial $titularSanitario = null)
+    {
+        $this->titularSanitario = $titularSanitario;
+
+        return $this;
+    }
+
+    /**
+     * Get titularSanitario
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\EntidadComercial
+     */
+    public function getTitularSanitario()
+    {
+        return $this->titularSanitario;
     }
 }

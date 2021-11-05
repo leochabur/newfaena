@@ -115,6 +115,18 @@ class ComprobanteVenta extends MovimientoStock
      */
     private $generaSanitario;
 
+    /**
+     * @ORM\OneToMany(targetEntity="PrecioVentaArticulo", mappedBy="comprobante")
+     */
+    private $precios;
+
+    /**
+     * @ORM\PrePersist
+     */
+    public function setVisiblePrePersist()
+    {
+        $this->generaSanitario = $this->entidad->getGeneraSanitario();
+    }
 
     public function getTotalItems()
     {
@@ -186,6 +198,21 @@ class ComprobanteVenta extends MovimientoStock
     public function getItemNoOficial()
     {
         return $this->getDetalleItems(false);
+    }
+
+
+    public function getDetailVenta(\GestionFaenaBundle\Entity\faena\TipoVenta $tipo)
+    {
+        $detalle = [];
+        foreach ($this->items as $it)
+        {
+            $tv = $it->getTipoVenta();
+            if ($tv == $tipo)
+            {
+                $detalle[] = $it; 
+            }
+        }
+        return $detalle;
     }
 
     private function getDetalleItems($tipo)

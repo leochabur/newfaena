@@ -10,11 +10,16 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="sp_gst_ent_ext_retos")
  * @ORM\Entity(repositoryClass="GestionFaenaBundle\Repository\gestionBD\RemitoRepository")
  */
-class Remito extends EntidadExterna
+class Remito extends EntidadComercial
 {
 
     protected function getIsCliente()
     {
         return true;
+    }
+
+    public function getInstance()
+    {
+        return 7;
     }
 }

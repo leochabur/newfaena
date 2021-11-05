@@ -16,4 +16,9 @@ class Exportacion extends EntidadExterna
     {
         return true;
     }
+
+    public function getInstance()
+    {
+        return 10;
+    }
 }

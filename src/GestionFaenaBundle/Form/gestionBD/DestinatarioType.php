@@ -14,20 +14,40 @@ class DestinatarioType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('comercial', 
-                      EntidadComercialType::class, array(
-                                                        'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Destinatario',
-                                                        'original' => $options['original']
-                                ))
-                ->add('esConsignatario')
-                ->add('guardar', SubmitType::class);
+        $builder->add('guardar', SubmitType::class);
+        $original = $options['original'];
 
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event){
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($original){
                                                                                                 $entidad = $event->getData();
                                                                                                 $form = $event->getForm();
 
-                                                                                                if (($entidad) && ($entidad->getId())) {
-                                                                                                    $form->add('activa');
+                                                                                                if (($entidad) && ($entidad->getId())) 
+                                                                                                {
+                                                                                                    $choices = ($entidad->getOriginal()?
+                                                                                                                $entidad->getOriginal()->getAsociados():
+                                                                                                                $entidad->getAsociados());
+
+                                                                                                    
+                                                                                                    $choices->add($entidad->getOriginal());
+
+                                                                                                    $form->add('activa')
+                                                                                                         ->add('comercial', 
+                                                                                                               EntidadComercialType::class, 
+                                                                                                               [
+                                                                                                                    'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Destinatario',
+                                                                                                                    'original' => $original,
+                                                                                                                    'choices' => $choices,
+                                                                                                                    'edited' => true
+                                                                                                                ]);
+                                                                                                }
+                                                                                                else
+                                                                                                {
+                                                                                                    $form->add('comercial', 
+                                                                                                                EntidadComercialType::class, 
+                                                                                                                [
+                                                                                                                        'data_class' => 'GestionFaenaBundle\Entity\gestionBD\Destinatario',
+                                                                                                                        'original' => $original
+                                                                                                                ]);
                                                                                                 }
                                                                                             });
     }

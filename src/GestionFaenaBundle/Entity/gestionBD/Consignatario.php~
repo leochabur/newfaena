@@ -22,4 +22,25 @@ class Consignatario extends EntidadComercial
     {
         return true;
     }
+
+    public function getInstance()
+    {
+        return 6;
+    }
+
+    public function getNombreVenta()
+    {
+        return strtoupper($this->getValor()." (Consig.)");
+    }
+
+    public function getAdmiteRayado()
+    {
+        return false;
+    }
+
+    public function aceptaTipoVenta($tipoVenta)
+    {
+        return $tipoVenta->getOficial();
+
+    }
 }

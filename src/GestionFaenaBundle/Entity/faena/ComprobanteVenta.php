@@ -116,6 +116,11 @@ class ComprobanteVenta extends MovimientoStock
     private $generaSanitario;
 
     /**
+     * @ORM\OneToMany(targetEntity="PrecioVentaArticulo", mappedBy="comprobante")
+     */
+    private $precios;
+
+    /**
      * @ORM\PrePersist
      */
     public function setVisiblePrePersist()
@@ -182,6 +187,7 @@ class ComprobanteVenta extends MovimientoStock
     {
         $this->items = new \Doctrine\Common\Collections\ArrayCollection();
         $this->asociados = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->precios = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -278,8 +284,98 @@ class ComprobanteVenta extends MovimientoStock
                 }
             }
         }
-
         return $totales;
+    }
+
+
+    private function updatePrecioVentaItem(\GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio)
+    {
+        foreach ($this->getItems() as $it)
+        {            
+            if ($it->getArticulo() == $precio->getArticulo())
+            {
+                $it->setPrecioUnitario($precio->getPrecio());
+                return;
+            }
+        }
+    }
+
+
+    public function updateAllItemsFromPrices()
+    {
+
+        foreach ($this->precios as $p)
+        {
+            $this->updatePrecioVentaItem($p);
+
+            foreach ($this->getAsociados() as $asoc)
+            {
+                $asoc->updatePrecioVentaItem($p);
+            }
+        }
+    }
+
+    public function getArticulosPreciosSort()
+    {
+
+        $articulos = [];
+
+        foreach ($this->getPrecios() as $it)
+        {            
+            $art = $it->getArticulo();
+
+            $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+            $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+            $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+
+            $articulos[$key] = $it;
+        }
+
+        return $articulos;
+    }
+
+
+    //devuelve una colleccion con los articulos individuales vendidos en todos los comprobantes asociados y propios
+    public function getAllArticulos()
+    {
+
+        $articulos = [];
+
+        foreach ($this->getItems() as $it)
+        {            
+            $art = $it->getArticulo();
+
+            $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+            $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+            $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+
+            $articulos[$art->getId()] = [0 => $key, 1 => $art];
+        }
+
+        foreach ($this->getAsociados() as $asoc)
+        {
+            foreach ($asoc->getItems() as $it)
+            {            
+                $art = $it->getArticulo();
+
+                $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+                $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+                $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+
+                if (!array_key_exists($key, $articulos))
+                {
+                    $articulos[$art->getId()] = [0 => $key, 1 => $art];
+                }                
+            }
+        }
+
+        return $articulos;
     }
 
     protected function updateVisible()
@@ -723,5 +819,39 @@ class ComprobanteVenta extends MovimientoStock
     public function getGeneraSanitario()
     {
         return $this->generaSanitario;
+    }
+
+    /**
+     * Add precio
+     *
+     * @param \GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio
+     *
+     * @return ComprobanteVenta
+     */
+    public function addPrecio(\GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio)
+    {
+        $this->precios[] = $precio;
+
+        return $this;
+    }
+
+    /**
+     * Remove precio
+     *
+     * @param \GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio
+     */
+    public function removePrecio(\GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio)
+    {
+        $this->precios->removeElement($precio);
+    }
+
+    /**
+     * Get precios
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getPrecios()
+    {
+        return $this->precios;
     }
 }

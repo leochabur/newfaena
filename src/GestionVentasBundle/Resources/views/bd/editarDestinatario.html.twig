@@ -78,14 +78,22 @@
     </div>
     <div class="form-row">
       <div class="col-3">
-        {{ form_label(form.esConsignatario) }}
-        {{ form_widget(form.esConsignatario) }}
+        {{ form_label(form.comercial.esConsignatario) }}
+        {{ form_widget(form.comercial.esConsignatario) }}
       </div>
       <div class="col-2">
         {{ form_label(form.comercial.generaSanitario) }}
         {{ form_widget(form.comercial.generaSanitario) }}
       </div>
     </div>
+    {% if form.comercial.titularSanitario is defined %}
+        <div class="form-row">
+          <div class="col-3">
+            {{ form_label(form.comercial.titularSanitario) }}
+            {{ form_widget(form.comercial.titularSanitario) }}
+          </div>
+        </div>
+    {% endif %}
     <div class="form-row">
       <div class="col">
         {{ form_widget(form.guardar) }}

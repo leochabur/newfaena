@@ -16,4 +16,9 @@ class Reparto extends EntidadComercial
     {
         return true;
     }
+
+    public function getInstance()
+    {
+        return 9;
+    }
 }

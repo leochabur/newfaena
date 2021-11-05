@@ -139,6 +139,11 @@ class Articulo
     */      
     private $categoriaVenta;
 
+    /**
+     * @ORM\Column(name="alicuota", type="float", nullable=true)
+     */
+    private $alicuotaIVA;
+    
 
     public function getNombrePallet()
     {
@@ -663,5 +668,29 @@ class Articulo
     public function getCategoriaVenta()
     {
         return $this->categoriaVenta;
+    }
+
+    /**
+     * Set alicuotaIVA
+     *
+     * @param float $alicuotaIVA
+     *
+     * @return Articulo
+     */
+    public function setAlicuotaIVA($alicuotaIVA)
+    {
+        $this->alicuotaIVA = $alicuotaIVA;
+
+        return $this;
+    }
+
+    /**
+     * Get alicuotaIVA
+     *
+     * @return float
+     */
+    public function getAlicuotaIVA()
+    {
+        return $this->alicuotaIVA;
     }
 }

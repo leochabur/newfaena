@@ -332,6 +332,7 @@
                                                                       $.post(a.attr('href'),
                                                                              function (data)
                                                                              {
+                                                                                console.log(data);
                                                                                 if (!data.error)
                                                                                 {
                                                                                    window.open(route.replace('ID_COMP', a.data('comp')), '_blank'); 

@@ -18,4 +18,9 @@ class Anexo extends EntidadComercial
         return true;
     }
 
+
+    public function getInstance()
+    {
+        return 8;
+    }
 }

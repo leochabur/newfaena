@@ -8,6 +8,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Doctrine\ORM\EntityRepository;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 
 
 class EntidadComercialType extends AbstractType
@@ -18,6 +20,7 @@ class EntidadComercialType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $original = $options['original'];
+        $edited = $options['edited'];
 
         $builder->add('entidad', 
                       EntidadExternaType::class, 
@@ -27,7 +30,21 @@ class EntidadComercialType extends AbstractType
                 ->add('tiposVenta')
                 ->add('cuit')
                 ->add('generaSanitario')
+                ->add('esConsignatario')
+                ->add('facturaIndividual')
                 ->add('direccion');
+
+        if ($edited)
+        {
+            $builder->add('titularSanitario', 
+                          EntityType::class,
+                          [
+                            'class' =>'GestionFaenaBundle\Entity\gestionBD\EntidadComercial',
+                            'choices' => $options['choices'],
+                            'required' => false
+                          ]);
+        }
+
         if ($original)
         {
             $builder->add('original', EntityType::class,
@@ -38,7 +55,6 @@ class EntidadComercialType extends AbstractType
         }
     }
 
-
     /**
      * {@inheritdoc}
      */
@@ -47,8 +63,12 @@ class EntidadComercialType extends AbstractType
         $resolver->setDefaults(array(
                     'inherit_data' => true,
                     'original' => false,
+                    'edited' => false,
+                    'choices' => []
                 ))
-                ->setRequired('original');
+                ->setRequired('original')
+                ->setRequired('choices')
+                ->setRequired('edited');
     }
 
     /**

@@ -139,6 +139,11 @@ class Articulo
     */      
     private $categoriaVenta;
 
+    /**
+     * @ORM\Column(name="alicuota", type="float", nullable=true)
+     */
+    private $alicuotaIVA;
+    
 
     public function getNombrePallet()
     {
@@ -639,5 +644,29 @@ class Articulo
     public function getCategoriaGeneral()
     {
         return $this->categoriaGeneral;
+    }
+
+    /**
+     * Set categoriaVenta
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo $categoriaVenta
+     *
+     * @return Articulo
+     */
+    public function setCategoriaVenta(\GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo $categoriaVenta = null)
+    {
+        $this->categoriaVenta = $categoriaVenta;
+
+        return $this;
+    }
+
+    /**
+     * Get categoriaVenta
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\CategoriaArticulo
+     */
+    public function getCategoriaVenta()
+    {
+        return $this->categoriaVenta;
     }
 }

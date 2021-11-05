@@ -16,4 +16,9 @@ class Cargador extends EntidadExterna
     {
         return false;
     }
+
+    public function getInstance()
+    {
+        return 4;
+    }
 }
