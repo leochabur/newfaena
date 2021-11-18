@@ -59,6 +59,27 @@ use GestionFaenaBundle\Form\gestionBD\EntidadComercialType;
 
 use GestionFaenaBundle\Entity\faena\PrecioVentaArticulo;
 
+use GestionVentasBundle\Entity\ListaPrecio;
+use GestionVentasBundle\Form\ListaPrecioType;
+
+use GestionVentasBundle\Entity\RemitoVenta;
+
+use GestionVentasBundle\Entity\ItemLista;
+
+use \jamesiarmes\PhpEws\Client;
+use \jamesiarmes\PhpEws\Request\SendItemType;
+
+use \jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType;
+use \jamesiarmes\PhpEws\Enumeration\ResponseClassType;
+
+use \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseItemIdsType;
+
+use \jamesiarmes\PhpEws\Type\DistinguishedFolderIdType;
+use \jamesiarmes\PhpEws\Type\ItemIdType;
+use \jamesiarmes\PhpEws\Type\TargetFolderIdType;
+
+use Doctrine\Common\Collections\ArrayCollection;
+
 /**
  * @Route("/ventas")
  */
@@ -1654,17 +1675,6 @@ class VentasController extends Controller
 
         $detalle = [0 => [], 1 => [], 2 => []];
 
-         $message = (new \Swift_Message('Hello Email'))
-                ->setFrom('leochabur@gmail.com')
-                ->setTo('leonardo@empresasantarita.com.ar')
-                ->setBody(
-                     '<h1>HELLO</h1>',
-                    'text/html'
-                )
-            ;
-
-            $this->get('mailer')->send($message);
-
         $detalle = $this->procesarCierreVenta($comprobante, $detalle);
 
         $detail = [];
@@ -1859,17 +1869,9 @@ class VentasController extends Controller
     public function finalizarComprobanteVenta($id)
     {
 
-        
-
     	$em = $this->getDoctrine()->getManager();
 
     	$comprobante = $em->find(ComprobanteVenta::class, $id);
-
-        
-
-        //return new JsonResponse(['error' => true, 'message' => "oja".http_build_query($detalle)]);
-
-
 
     	if ((!$comprobante) || ($comprobante->getEliminado())) //no se encuentra el comprobante o e mismo ha sido eliminado
     	{
@@ -1922,6 +1924,7 @@ class VentasController extends Controller
 
     /**
      * @Route("/incvtas", name="vtas_incorporar_ventas_a_faena", methods={"POST", "GET"})
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
      */
     public function incorporarVentasAFaena(Request $request)
     {        
@@ -1956,7 +1959,17 @@ class VentasController extends Controller
                 $data = $form->getData();
                 $fechaConsulta = ($fecha?$fecha:$data['fecha']);
                 $repository = $em->getRepository(ComprobanteVenta::class);
-                $comprobantes = $repository->getComprobantesVentaFinalizados($fechaConsulta);
+                $filtrar = $repository->getComprobantesVentaFinalizados($fechaConsulta);
+                $comprobantes = [];
+
+                foreach ($filtrar as $c)
+                {
+                    if (!$c->getEntidad()->getOriginal()) //al filtrar por las entidades que no tienen un original asociado quire decir que es la cabeza del grupo
+                    {
+                        $comprobantes[] = $c;
+                    }
+                }
+
                 $options = ['form' => $form->createView(), 'comprobantes' => $comprobantes];
                 return $this->render('@GestionVentas/ventas/incorporarVentas.html.twig', $options); 
             }
@@ -1969,6 +1982,343 @@ class VentasController extends Controller
      * @Route("/print/{cmp}", name="vtas_imprimir_comprobante")
      */
     public function imrpimirComprobante($cmp)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $comprobante = $em->find(ComprobanteVenta::class, $cmp);
+        $faenaDiaria = $em->getRepository(FaenaDiaria::class)->getFaenaConFecha($comprobante->getFecha());
+        if (!$faenaDiaria)
+        {
+            $this->addFlash(
+                              'error',
+                              'No existe una faena iniciada para el '.$comprobante->getFecha()->format('d/m/Y'.'!')
+                           );
+            return $this->redirectToRoute('vtas_incorporar_ventas_a_faena', ['du' => $comprobante->getFecha()->getTimestamp()]);
+        }
+
+        $detail = [];
+        $detail = $this->procesarComprobante($comprobante, $detail);
+        foreach ($comprobante->getAsociados() as $asoc)
+        {
+            $detail = $this->procesarComprobante($asoc, $detail);
+        }
+
+       $sanitarios = [];
+
+       $pdf = $this->get('remito.pdf');
+
+       $numeracion = $em->getRepository(NumeracionRemito::class)->getNumeracion();
+
+       foreach ($detail['titularOC']['sanitarios'] as $san)
+       {
+            $items = $san['items'];
+
+            $comp = $san['comprobante'];
+ 
+            if ($numeracion)
+            {
+                $remito = $comp->getRemito();
+
+                if (!$remito)
+                {
+                    $numeracion->incNumero();
+                    $remito = $this->generateRemitoVenta($comp, $san['titular'], $items, $numeracion->getUltimoUtilizado(), $numeracion);
+                    $em->persist($remito);
+                }
+
+                $pdf->AddPage('P', 'A4');                 
+                $pdf = $this->getHeaderRemitoOficial($pdf, 'Original', $remito);
+                $pdf = $this->footerRemitoOficial($pdf, $remito);
+                $pdf = $this->setDetalleRemitoOficial($pdf, $items);
+
+                $pdf->AddPage('P', 'A4');
+                $pdf = $this->getHeaderRemitoOficial($pdf, 'Duplicado', $remito);
+                $pdf = $this->footerRemitoOficial($pdf, $remito);
+                $pdf = $this->setDetalleRemitoOficial($pdf, $items);
+            }
+       }
+       $em->flush();
+       return new Response($pdf->Output(), 200, array('Content-Type' => 'application/pdf')); 
+    }
+
+    private function generateRemitoVenta(ComprobanteVenta $comp, EntidadExterna $entidad, $items, $numero, NumeracionRemito $numeracion)
+    {
+        $remito = new RemitoVenta();
+        $remito->setNumero($numero);
+        $remito->setCae($numeracion->getCai());
+        $remito->setVencimientoCAE($numeracion->getVencimiento());
+        $remito->setEntidad($entidad);
+        $remito->setComprobante($comp);
+        $remito->setCuit($entidad->getCuit());
+        $remito->setDireccion($entidad->getDireccion());
+        $remito->setRazonSocial($entidad->getValor());
+        $remito->setFecha($comp->getFecha());
+        $remito->setPuntoVenta($numeracion->getPuntoVenta());
+        foreach ($items as $it)
+        {
+            $itremito = new ItemCarga();
+            $itremito->setCantidad($it->getCantidad());
+            $itremito->setArticulo($it->getArticulo());
+            $itremito->setRemito($remito);
+        }
+
+        return $remito;
+    }
+    
+    private function getHeaderRemitoOficial($pdf, $original, RemitoVenta $remito)
+    {
+        $miralejos = $this->get('kernel')->getRootDir() . '/../web/resources/img/miralejos.jpg';
+        $sapucai = $this->get('kernel')->getRootDir() . '/../web/resources/img/logo2.jpg';
+
+        $x = $pdf->getX();
+
+        $y = $pdf->getY();
+        
+
+        $pdf->Image($miralejos,$x+3,$y+2,40);
+        $pdf->Image($sapucai,$x+60,$y+2,26);
+
+        ///texto bajo los logos
+
+        $pdf->SetFont('Arial','',8);
+        $pdf->text($x+17, $y+18, 'Administracion, ventas, deposito:');
+        $pdf->text($x+14, $y+22, 'Ruta 210 Km. 56 (CP 1984) Domselaar');
+        $pdf->text($x+19, $y+26, 'Tel.: 02225-491-801 al 899');
+        $pdf->text($x+18, $y+30, 'e-mail: info@sapucai.com.ar');
+
+        //////
+
+        $pdf->SetFont('Arial','',10);
+
+        $pdf->RoundedRect($x, $y, 191, 60, 2);
+
+        $pdf->RoundedRect($x, $y+61, 191, 190, 2);
+
+        $x+=3;
+
+        $pventa = str_pad($remito->getPuntoVenta(), 4, "0", STR_PAD_LEFT);
+
+        $numero = str_pad($remito->getNumero(), 8, "0", STR_PAD_LEFT);
+
+        $pdf->text($x+105, $y+9, 'REMITO '.iconv('UTF-8', 'windows-1252', 'Nº')."  $pventa - $numero");  
+
+        $pdf->SetFont('Arial','',8);
+        $pdf->text($x+105, $y+3, $original); 
+
+        $pdf->SetFont('Arial','',9);
+
+        $pdf->text($x+105, $y+13, 'FECHA: '.$remito->getFecha()->format('d/m/Y'));      
+
+        $pdf->text($x+105, $y+19, 'I.V.A.: RESPONSABLE INSCRIPTO'); 
+        $pdf->text($x+105, $y+22, 'C.U.I.T.: 30-57735081-3'); 
+        $pdf->text($x+105, $y+25, 'Imp. Ing. Brutos Conv. Mult.: 30-57735081-3'); 
+        $pdf->text($x+105, $y+28, 'Caja Prev. Com.: 1.042.708'); 
+        $pdf->text($x+105, $y+31, 'Imp. Int.: No Responsable');
+        $pdf->text($x+105, $y+34, 'Inicio Actividades: 01/01/1972');  
+
+        ///RECTANGULO LETRA COMPROBANTE
+        $x-=5;
+        $pdf->Rect($x+90, $y, 10, 10);
+        $pdf->SetFont('Arial','B',14);
+        $pdf->text($x+93, $y+7, 'R'); 
+        $pdf->Line($x+95, $y+10, $x+95, $y+47);
+
+        $x+=5;
+        ////////////////////////////////////
+
+        $x-=3;
+        $y+=30;
+
+        $pdf->SetFont('Arial','',7);
+
+        $pdf->Line($x, $y+6, $x+191, $y+6);
+        $pdf->text($x+20, $y+9, 'NOMBRE O RAZON SOCIAL'); $pdf->text($x+105, $y+9, 'DOMICILIO COMERCIAL - LOCALIDAD'); 
+
+        $pdf->SetFont('Arial','IB',8);
+        $pdf->text($x+20, $y+16, strtoupper($remito->getRazonSocial())); $pdf->text($x+105, $y+16, strtoupper($remito->getDireccion())); 
+        $pdf->Line($x, $y+10, $x+191, $y+10);
+        $pdf->Line($x, $y+17, $x+191, $y+17);
+
+        //SET IVA AND CUIT
+        $pdf->text($x+12, $y+22, ''); 
+        $pdf->text($x+105, $y+22, $remito->getCuit());
+        ///////////
+
+        $pdf->SetFont('Arial','',7);
+        $pdf->text($x+2, $y+22, 'I.V.A.:'); 
+        $pdf->text($x+95, $y+22, 'CUIT:');
+        $pdf->Line($x, $y+23, $x+191, $y+23);
+
+        $pdf->text($x+2, $y+29, 'TRANSPORTISTA:'); 
+        $pdf->text($x+95, $y+29, 'DOMICILIO:'); 
+        $pdf->text($x+160, $y+29, 'CUIT: 30-70986951-1'); 
+
+        $y+=7;
+        $pdf->SetFont('Arial','',9);
+        $pdf->text($x+1, $y+29, 'CODIGO'); 
+        $pdf->text($x+15, $y+29, 'DESCRIPCION'); 
+        $pdf->text($x+100, $y+29, 'CANT.'); 
+        $pdf->text($x+115, $y+29, 'KG. x CAJON'); 
+        $y+=1;
+        $pdf->Line($x, $y+30, $x+191, $y+30);
+        $pdf->Ln(20);
+
+        return $pdf;
+    }
+
+    private function footerRemitoOficial($pdf, RemitoVenta $remito)
+    {
+        $pdf->SetY(-40);
+
+        $x = $pdf->getX();
+        $y = $pdf->getY();
+
+        $pdf->SetFont('Arial','',9);
+
+        $pdf->RoundedRect($x, $y+6, 65, 20,2, '14');
+
+        $pdf->Rect($x+65, $y+6, 44, 20);
+
+        $pdf->text($x+1, $y+10, 'PEDIDOS: DE 7 A 14 HORAS');
+        $pdf->text($x+1, $y+14, 'RECLAMOS DE MERCADERIA');
+
+        $pdf->SetFont('Arial','',7);
+
+        $y+=18;
+
+        $pdf->text($x+1, $y, 'Deberan realizarse al fletero en el momento de la entrega');
+        $pdf->text($x+1, $y+3, 'No se dara curso a ninguna otra forma de reclamo');
+
+        $pdf->SetFont('Arial','',9);
+        
+        $x = $x + 110;
+        $y-=19;
+        $pdf->SetFont('Arial','',7);
+
+        $pdf->text($x+3, $y+10, 'ENTREGUE CONFORME');
+        $pdf->Rect($x-1, $y+7, 41, 5);
+        $pdf->text($x, $y+20, '._._._._._._._._._._._._._._._._._');
+        $pdf->text($x+4, $y+25, 'FIRMA CHOFER');
+        $pdf->Rect($x-1, $y+12, 41, 15);
+
+        $x = $x + 41;
+        $pdf->text($x+3, $y+10, 'RECIBI CONFORME');
+        $pdf->RoundedRect($x-1, $y+7, 41, 20,2,'23');
+        $pdf->text($x, $y+20, '._._._._._._._._._._._._._._._._._');
+        $pdf->text($x+4, $y+25, 'FIRMA CLIENTE');
+        $y+=1;
+
+        $pdf->RoundedRect($x-151, $y+27, 191, 7, 2);
+
+        $pdf->SetFont('Arial','',9);
+        $pdf->text($x-140, $y+32, 'C.A.I. '.$remito->getCae());
+        $pdf->text($x-40, $y+32, 'VTO '.$remito->getVencimientoCAE()->format('d-m-Y'));
+
+        return $pdf;    
+    }
+
+    private function setDetalleRemitoOficial($pdf, $detalle)
+    {
+  ;
+
+        $x = $pdf->getX();
+        $y = 83;
+
+        $pdf->SetFont('Arial','',9);
+
+        foreach ($detalle as $it)
+        {
+            $art = $it->getArticulo();
+
+            $pdf->text($x+1, $y, strtoupper($art->getCodigoInterno()));
+            $pdf->text($x+15, $y, strtoupper($art->getNombre()));
+            $pdf->text($x+100, $y, $it->getCantidad());
+            $pdf->text($x+115, $y, number_format($art->getPresentacionKg(),2,',','.'));
+            $y+=5;
+        }
+
+        return $pdf;    
+    }
+
+    
+    private function procesarComprobante(ComprobanteVenta $comp, $detalle)
+    {
+
+        $titular = $comp->getEntidad();
+
+        $oficial = $comp->getItemOficial();
+
+        if (!$titular->getOriginal()) /// Indica que es el titular de la cuenta, la orden de carga debe salir a su nombre
+        {
+            // Genera la entrada con el titular de la cuenta el cual sera el titular de la ordende camara
+            $detalle['titularOC'] = [
+                                     'entidad' => $titular, 
+                                     'detalle' => [], 
+                                     'sanitarios' => []
+                                     ]; 
+            foreach($comp->getItems() as $it)
+            {
+                $art = $it->getArticulo();
+                if (!array_key_exists($art->getId(), $detalle['titularOC']['detalle']))
+                {
+                    $detalle['titularOC']['detalle'][$art->getId()] = ['art' => $art, 'cant' => 0, 'kg' => 0];
+                }
+                $detalle['titularOC']['detalle'][$art->getId()]['cant']+= $it->getCantidad(); 
+                $detalle['titularOC']['detalle'][$art->getId()]['kg']+= ($it->getCantidad() * $art->getPresentacionKg());
+            }
+        }
+        else // quiere decir que no es el titular de la cuenta
+        {
+            foreach($comp->getItems() as $it)
+            {
+                $art = $it->getArticulo();
+                if (!array_key_exists($art->getId(), $detalle['titularOC']['detalle']))
+                {
+                    $detalle['titularOC']['detalle'][$art->getId()] = ['art' => $art, 'cant' => 0, 'kg' => 0];
+                }
+                $detalle['titularOC']['detalle'][$art->getId()]['cant']+= $it->getCantidad(); 
+                $detalle['titularOC']['detalle'][$art->getId()]['kg']+= ($it->getCantidad() * $art->getPresentacionKg());
+            }
+
+            if ($comp->getGeneraSanitario()) //el comprobante debe generar el sanitario
+            {
+                if ($titular->getTitularSanitario()) // si tiene configurado un titular para el sanitario toma ese como titular del sanitario, sino el titular es el mismo
+                {
+                    $titular = $titular->getTitularSanitario();
+                }
+                else
+                {
+                    $titular = $comp->getEntidad(); //si genera sanitario pero no tiene quien es el titular se debe emitir a nombre de el mimso
+                }
+            }
+            else //sino genera sanitario el mismo se debe emitir a nombre del titular de la cuenta
+            {
+                $titular = $titular->getOriginal();
+            }
+        }
+
+        if ($oficial)
+        {
+            $itemsOficiales = $comp->getDetalleItemsOficial(true);
+
+            if (!array_key_exists($titular->getId(), $detalle['titularOC']['sanitarios']))
+            {
+                $detalle['titularOC']['sanitarios'][$titular->getId()] = ['titular' => $titular, 'comprobante' => $comp, 'items' => $itemsOficiales];
+            }
+            else
+            {
+                $items = $detalle['titularOC']['sanitarios'][$titular->getId()]['items'];
+                $detalle['titularOC']['detalle'] = array_merge($items, $itemsOficiales);
+            }
+        }
+
+        return $detalle;        
+    }
+
+
+    /**
+   
+     */
+    public function imrpimirComprobanteAction($cmp)
     {
         $em = $this->getDoctrine()->getManager();
 
@@ -2003,7 +2353,7 @@ class VentasController extends Controller
         //Recupera el ProcesoFaenaDiaria correspondiente al ProcesoFaena recuperado anteriormente
         $procesoFaenaDiaria = $em->getRepository(ProcesoFaenaDiaria::class)->getProcesoFaenaDiariaWhitProcess($procesoFaena);
 
-        $entidadConcepto = $em->getRepository(EntidadExternaConcepto::class)->getEntidadOfClass(get_class($comprobante->getEntidad()), $procesoFaena);
+        $entidadConcepto = $em->getRepository(EntidadExternaConcepto::class)->getEntidadOfClass($comprobante->getEntidad()->getTypeOfVenta(), $procesoFaena);
 
         $conceptoMovimientoVenta = $entidadConcepto->getConcepto();
 
@@ -2684,5 +3034,190 @@ class VentasController extends Controller
     private function getFormAltaNumeracion($numeracion)
     {
         return $this->createForm(NumeracionRemitoType::class, $numeracion, ['method' => 'POST']);
+    }
+
+
+    private function getFormAltaLista($lista)
+    {
+        return $this->createForm(ListaPrecioType::class, $lista, ['method' => 'POST']);
+    }
+
+
+    /**
+     * @Route("/gstlist", name="vtas_gestionar_lista_precios", methods={"POST", "GET"})
+    */
+    public function gestionarListaPrecios(Request $request)
+    {
+        $lista = new ListaPrecio();
+        $form = $this->getFormAltaLista($lista);
+        $em = $this->getDoctrine()->getManager();
+        $listas = $em->getRepository(ListaPrecio::class)->findAll();
+
+        if ($request->isMethod('POST'))
+        {
+            $form->handleRequest($request);
+            if ($form->isValid())
+            {
+                $repoArticulos = $em->getRepository(Articulo::class);
+
+                $articulos = $repoArticulos->getListaArticulosConCategoriaVenta();
+
+                foreach ($articulos as $art)
+                {
+                    $item = new ItemLista();
+                    $item->setArticulo($art);
+                    $item->setListaPrecio($lista);
+                    $lista->addItem($item);
+                }
+
+                $em->persist($lista);
+                $em->flush();
+                return $this->redirectToRoute('vtas_gestionar_lista_precios');
+            }
+        }
+        
+        return $this->render('@GestionVentas/ventas/listaPrecio.html.twig', ['form' => $form->createView(), 'listas' => $listas]); 
+    }
+
+
+
+    /**
+     * @Route("/setlista", name="vtas_cargar_lista_precio", methods={"POST", "GET"})
+    */
+    public function cargarListaPrecio(Request $request)
+    {
+
+        $em = $this->getDoctrine()->getManager();
+        $listas = $em->getRepository(ListaPrecio::class)->findAll();
+        $repoArticulos = $em->getRepository(Articulo::class);
+        $articulos = $repoArticulos->getListaArticulosConCategoriaVenta();
+
+        $detalle = [];
+
+        foreach ($articulos as $art)
+        {
+            $detalle[$art->getId()] = ['codigo' => $art->getCodigoInterno(), 'art' => ($art->getDescVenta()?$art->getDescVenta():$art->getNombre()), 'detail' => []];
+            foreach ($listas as $list)
+            {
+                $item = $list->getItemWithArticle($art);
+                $detalle[$art->getId()]['detail'][$list->getId()] = ($item?$item->getValorKg():'');
+            }
+        }
+
+        
+        return $this->render('@GestionVentas/ventas/setAlllistaPrecio.html.twig', ['detalle' => $detalle, 'listas' => $listas]); 
+    }
+
+    /**
+     * @Route("/synclist/{id}", name="vtas_sicronizar_lista_precio", methods={"POST", "GET"})
+    */
+    public function sincronizarListaPrecio($id)
+    {
+
+        $em = $this->getDoctrine()->getManager();
+        $lista = $em->find(ListaPrecio::class, $id);
+
+        $repoArticulos = $em->getRepository(Articulo::class);
+        $articulos = $repoArticulos->getListaArticulosConCategoriaVenta();
+
+        foreach ($articulos as $art)
+        {
+            $item = $lista->existePrecioArticulo($art);
+            if (!$item)
+            {
+                $item = new ItemLista();
+                $item->setArticulo($art);
+                $item->setListaPrecio($lista);
+                $em->persist($item);
+            }
+        }
+        $em->flush();
+        return $this->redirectToRoute('vtas_gestionar_lista_precios');
+    }
+
+
+    /**
+     * @Route("/artlista/{id}", name="vtas_set_precio_articulos_lista", methods={"POST", "GET"})
+    */
+    public function setPrecioArticuloLista($id)
+    {
+
+        $em = $this->getDoctrine()->getManager();
+        $lista = $em->find(ListaPrecio::class, $id);
+
+        $detalle = [];
+
+        foreach ($lista->getItems() as $it)
+        {
+            $art = $it->getArticulo();
+            $key = $this->getKey($art);
+            $detalle[$key] = ['id' => $it->getId(), 'it' => $it];
+        }
+        
+        ksort($detalle);
+
+        return $this->render('@GestionVentas/listas/setPrecioArticulo.html.twig', ['detalle' => $detalle, 'lista' => $lista]); 
+    }
+
+    /**
+     * @Route("/artalllista", name="vtas_set_precio_articulos_all_lista")
+    */
+    public function setAllPrecioArticuloLista()
+    {
+
+        $em = $this->getDoctrine()->getManager();
+
+        $allListas = $em->getRepository(ListaPrecio::class)->getAllLista();
+
+        $listas = [];
+        $articulos = [];
+        $body = [];
+
+        foreach ($allListas as $li)
+        {
+            $listas[$li->getId()] = $li;
+
+            foreach ($li->getItems() as $it)
+            {
+                $art = $it->getArticulo();
+                $key = $this->getKey($art);
+                if (!array_key_exists($key, $articulos))
+                {
+                    $articulos[$key] = $art;
+                }
+                $body[$li->getId()][$art->getId()] = ['id' => $it->getId(), 'it' => $it];
+            }
+        }
+        
+        ksort($articulos);
+
+        return $this->render('@GestionVentas/listas/setPrecioArticulo.html.twig', ['all' => true, 'detalle' => $body, 'listas' => $listas, 'articulos' => $articulos]); 
+    }
+
+
+    /**
+     * @Route("/setprit/{id}", name="vtas_set_price_item", methods={"POST"})
+    */
+    public function setPriceItem($id, Request $request)
+    {
+        $price = $request->get('price');
+        if (!is_numeric($price))
+        {
+            return new JsonResponse(['ok' => false, 'message' => 'El valor ingresado debe ser numerico']);
+        }
+        $em = $this->getDoctrine()->getManager();
+        $item = $em->find(ItemLista::class, $id);
+        try
+        {
+            $item->setValorKg($price);
+            $em->flush();
+            return new JsonResponse(['ok' => true]);
+
+        }
+        catch (\Exception $e) {
+                                return new JsonResponse(['ok' => false, 'message' => $e->getMessage()]);
+        }
+
+        return new JsonResponse(['ok' => false, 'id' => $id]);
     }
 }

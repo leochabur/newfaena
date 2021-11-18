@@ -1,0 +1,50 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+  <script type="text/javascript" src="{{ asset('resources/js/tables/jquery.tablehover.js') }}"></script>
+<br>
+<hr>
+<span class="h5 card-title">Lista de Precios</span>
+
+{% include '@GestionFaena/messages.html.twig'  %}
+
+
+<hr>
+  <table class="table table-bordered table-sm main-table table-striped table-hover">
+    <thead>
+      <tr>
+          <th rowspan="2">Codigo</th>
+          <th rowspan="2">Descripcion</th>
+          {% for n in listas %}
+                <th>{{ n.codigo }}</th>
+          {% endfor %}             
+      </tr>
+      <tr>
+          {% for n in listas %}
+                <th>{{ n.descripcion|upper }}</th>
+          {% endfor %}             
+      </tr>
+    </thead>
+    <tbody>
+          {% for d in detalle %}
+          
+            <tr>
+                <td>{{ d.codigo|upper }}</td>
+                <td>
+                        {{ d.art }}
+                </td>
+                {% for i in d.detail %}
+                  <td></td>
+                {% endfor %}
+            </tr>
+
+          {% endfor %}    
+
+    </tbody>
+  </table>
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+
+
+{% endblock  %}

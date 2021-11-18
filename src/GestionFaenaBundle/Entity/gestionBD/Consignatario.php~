@@ -43,4 +43,9 @@ class Consignatario extends EntidadComercial
         return $tipoVenta->getOficial();
 
     }
+
+    public function getTypeOfVenta()
+    {
+        return get_class($this);
+    }
 }

@@ -23,4 +23,9 @@ class Anexo extends EntidadComercial
     {
         return 8;
     }
+
+    public function getTypeOfVenta()
+    {
+        return get_class($this);
+    }
 }

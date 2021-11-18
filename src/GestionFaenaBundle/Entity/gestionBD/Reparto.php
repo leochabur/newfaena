@@ -21,4 +21,9 @@ class Reparto extends EntidadComercial
     {
         return 9;
     }
+
+    public function getTypeOfVenta()
+    {
+        return get_class($this);
+    }
 }

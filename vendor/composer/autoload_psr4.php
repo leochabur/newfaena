@@ -6,6 +6,8 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'jamesiarmes\\PhpNtlm\\' => array($vendorDir . '/jamesiarmes/php-ntlm/src'),
+    'jamesiarmes\\PhpEws\\' => array($vendorDir . '/php-ews/php-ews/src'),
     'Twig\\' => array($vendorDir . '/twig/twig/src'),
     'Tests\\' => array($baseDir . '/tests'),
     'Symfony\\Polyfill\\Util\\' => array($vendorDir . '/symfony/polyfill-util'),

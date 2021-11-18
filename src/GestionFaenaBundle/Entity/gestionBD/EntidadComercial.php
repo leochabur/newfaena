@@ -69,6 +69,16 @@ abstract class EntidadComercial extends EntidadExterna
      */
     private $titularSanitario;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="GestionVentasBundle\Entity\ListaPrecio")
+     * @ORM\JoinColumn(name="id_lista_precio", referencedColumnName="id", nullable=true)
+     */
+    private $listaPrecio;
+
+
+    //Devuelve a que tipo tieneque afectar la venta en lo que seria el parte diario (Remito, Anexo, Consignatario)
+    public abstract function getTypeOfVenta();
+
     public function aceptaTipoVenta($tipoVenta)
     {
         if ($this->tiposVenta->isEmpty()) 
@@ -350,5 +360,29 @@ abstract class EntidadComercial extends EntidadExterna
     public function getTitularSanitario()
     {
         return $this->titularSanitario;
+    }
+
+    /**
+     * Set listaPrecio
+     *
+     * @param \GestionVentasBundle\Entity\ListaPrecio $listaPrecio
+     *
+     * @return EntidadComercial
+     */
+    public function setListaPrecio(\GestionVentasBundle\Entity\ListaPrecio $listaPrecio = null)
+    {
+        $this->listaPrecio = $listaPrecio;
+
+        return $this;
+    }
+
+    /**
+     * Get listaPrecio
+     *
+     * @return \GestionVentasBundle\Entity\ListaPrecio
+     */
+    public function getListaPrecio()
+    {
+        return $this->listaPrecio;
     }
 }

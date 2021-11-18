@@ -14,7 +14,8 @@ class DestinatarioType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('guardar', SubmitType::class);
+        $builder->add('guardar', SubmitType::class)
+                ->add('listaPrecio');
         $original = $options['original'];
 
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($original){

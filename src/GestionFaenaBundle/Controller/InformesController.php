@@ -1800,8 +1800,6 @@ class InformesController extends Controller
                 $resumen[$key]['tapados'] = $t['stock'];
             }
 
-          //  ksort($resumen);
-
             $columns = array_column($resumen, 'fecha');
             array_multisort($columns, SORT_ASC, $resumen);
 

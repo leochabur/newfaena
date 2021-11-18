@@ -39,6 +39,11 @@ services:
         public: true
         arguments: ["null"]
 
+    remito.pdf:
+        class: GestionFaenaBundle\Services\fpdf\RemitoPDF
+        public: true
+        arguments: ["null"]
+
     app.faena_controller:
         class: GestionFaenaBundle\Controller\GestionFaenaController
     # add more services, or override services that need manual wiring

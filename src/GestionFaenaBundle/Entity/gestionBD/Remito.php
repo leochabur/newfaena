@@ -22,4 +22,14 @@ class Remito extends EntidadComercial
     {
         return 7;
     }
+
+    public function getTypeOfVenta()
+    {
+        if ($this->getEsConsignatario())
+        {
+            return Consignatario::class;
+        }
+
+        return get_class($this);
+    }
 }

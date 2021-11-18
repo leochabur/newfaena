@@ -32,4 +32,14 @@ class Destinatario extends EntidadComercial
 
         return strtoupper($this->getValor());
     }
+
+    public function getTypeOfVenta()
+    {
+        if ($this->getEsConsignatario())
+        {
+            return Consignatario::class;
+        }
+
+        return Remito::class;
+    }
 }

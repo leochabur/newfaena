@@ -669,4 +669,28 @@ class Articulo
     {
         return $this->categoriaVenta;
     }
+
+    /**
+     * Set alicuotaIVA
+     *
+     * @param float $alicuotaIVA
+     *
+     * @return Articulo
+     */
+    public function setAlicuotaIVA($alicuotaIVA)
+    {
+        $this->alicuotaIVA = $alicuotaIVA;
+
+        return $this;
+    }
+
+    /**
+     * Get alicuotaIVA
+     *
+     * @return float
+     */
+    public function getAlicuotaIVA()
+    {
+        return $this->alicuotaIVA;
+    }
 }

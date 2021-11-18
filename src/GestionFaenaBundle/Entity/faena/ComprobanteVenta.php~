@@ -121,6 +121,11 @@ class ComprobanteVenta extends MovimientoStock
     private $precios;
 
     /**
+     * @ORM\OneToOne(targetEntity="GestionVentasBundle\Entity\RemitoVenta", mappedBy="comprobante")
+     */
+    private $remito;
+
+    /**
      * @ORM\PrePersist
      */
     public function setVisiblePrePersist()
@@ -187,6 +192,7 @@ class ComprobanteVenta extends MovimientoStock
     {
         $this->items = new \Doctrine\Common\Collections\ArrayCollection();
         $this->asociados = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->precios = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
 
@@ -215,6 +221,23 @@ class ComprobanteVenta extends MovimientoStock
         return $detalle;
     }
 
+    //devuelve los items segun el parametro oficiales/no oficiales
+    public function getDetalleItemsOficial($oficial)
+    {
+        $detalle = [];
+        foreach ($this->items as $it)
+        {
+            $tv = $it->getTipoVenta();
+
+            if ($tv->getOficial() == $oficial)
+            {
+                $detalle[] = $it;
+
+            }
+        }
+        return $detalle;
+    }
+
     private function getDetalleItems($tipo)
     {
         $detalle = 0;
@@ -237,6 +260,25 @@ class ComprobanteVenta extends MovimientoStock
                 }
             }
         }
+        return $detalle;
+    }
+
+    private function getDetalleVentas() //devuelve una coleccion con los articulos vendidos agrupados por cada tipo venta. x Ej....rayado y oficial
+    {
+        $detalle = [];
+        foreach ($this->items as $it)
+        {
+            $tv = $it->getTipoVenta();
+
+            if (!array_key_exists($tv->getId(), $detalle))
+            {
+                $detalle[$tv->getId()] = ['tipo' => $tv, 'items' => []];
+            }
+
+            $detalle[$tv->getId()]['items'][] = $it;
+
+        }
+
         return $detalle;
     }
 
@@ -283,8 +325,98 @@ class ComprobanteVenta extends MovimientoStock
                 }
             }
         }
-
         return $totales;
+    }
+
+
+    private function updatePrecioVentaItem(\GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio)
+    {
+        foreach ($this->getItems() as $it)
+        {            
+            if ($it->getArticulo() == $precio->getArticulo())
+            {
+                $it->setPrecioUnitario($precio->getPrecio());
+                return;
+            }
+        }
+    }
+
+
+    public function updateAllItemsFromPrices()
+    {
+
+        foreach ($this->precios as $p)
+        {
+            $this->updatePrecioVentaItem($p);
+
+            foreach ($this->getAsociados() as $asoc)
+            {
+                $asoc->updatePrecioVentaItem($p);
+            }
+        }
+    }
+
+    public function getArticulosPreciosSort()
+    {
+
+        $articulos = [];
+
+        foreach ($this->getPrecios() as $it)
+        {            
+            $art = $it->getArticulo();
+
+            $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+            $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+            $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+
+            $articulos[$key] = $it;
+        }
+
+        return $articulos;
+    }
+
+
+    //devuelve una colleccion con los articulos individuales vendidos en todos los comprobantes asociados y propios
+    public function getAllArticulos()
+    {
+
+        $articulos = [];
+
+        foreach ($this->getItems() as $it)
+        {            
+            $art = $it->getArticulo();
+
+            $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+            $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+            $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+
+            $articulos[$art->getId()] = [0 => $key, 1 => $art];
+        }
+
+        foreach ($this->getAsociados() as $asoc)
+        {
+            foreach ($asoc->getItems() as $it)
+            {            
+                $art = $it->getArticulo();
+
+                $id_cv = ($art->getCategoriaVenta()?$art->getCategoriaVenta()->getId():10000);
+
+                $id_c = ($art->getCategoria()?$art->getCategoria()->getOrden():10000);
+
+                $key = $id_cv."-".$id_c."-".($art->getOrden()?$art->getOrden()."-".$art->getId():$art->getId());
+
+                if (!array_key_exists($key, $articulos))
+                {
+                    $articulos[$art->getId()] = [0 => $key, 1 => $art];
+                }                
+            }
+        }
+
+        return $articulos;
     }
 
     protected function updateVisible()
@@ -728,5 +860,63 @@ class ComprobanteVenta extends MovimientoStock
     public function getGeneraSanitario()
     {
         return $this->generaSanitario;
+    }
+
+    /**
+     * Add precio
+     *
+     * @param \GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio
+     *
+     * @return ComprobanteVenta
+     */
+    public function addPrecio(\GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio)
+    {
+        $this->precios[] = $precio;
+
+        return $this;
+    }
+
+    /**
+     * Remove precio
+     *
+     * @param \GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio
+     */
+    public function removePrecio(\GestionFaenaBundle\Entity\faena\PrecioVentaArticulo $precio)
+    {
+        $this->precios->removeElement($precio);
+    }
+
+    /**
+     * Get precios
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getPrecios()
+    {
+        return $this->precios;
+    }
+
+    /**
+     * Set remito
+     *
+     * @param \GestionVentasBundle\Entity\RemitoVenta $remito
+     *
+     * @return ComprobanteVenta
+     */
+    public function setRemito(\GestionVentasBundle\Entity\RemitoVenta $remito = null)
+    {
+        $this->remito = $remito;
+
+        return $this;
+    }
+
+    /**
+     * Get remito
+     *
+     * @return \GestionVentasBundle\Entity\RemitoVenta
+     */
+    public function getRemito()
+    {
+        return $this->remito;
     }
 }

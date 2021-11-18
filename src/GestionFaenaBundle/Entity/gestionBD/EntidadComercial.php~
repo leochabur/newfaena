@@ -69,6 +69,16 @@ abstract class EntidadComercial extends EntidadExterna
      */
     private $titularSanitario;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="GestionVentasBundle\Entity\ListaPrecio")
+     * @ORM\JoinColumn(name="id_lista_precio", referencedColumnName="id", nullable=true)
+     */
+    private $listaPrecio;
+
+
+    //Devuelve a que tipo tieneque afectar la venta en lo que seria el parte diario (Remito, Anexo, Consignatario)
+    public abstract function getTypeOfVenta();
+
     public function aceptaTipoVenta($tipoVenta)
     {
         if ($this->tiposVenta->isEmpty()) 
@@ -302,5 +312,53 @@ abstract class EntidadComercial extends EntidadExterna
     public function getEsConsignatario()
     {
         return $this->esConsignatario;
+    }
+
+    /**
+     * Set facturaIndividual
+     *
+     * @param boolean $facturaIndividual
+     *
+     * @return EntidadComercial
+     */
+    public function setFacturaIndividual($facturaIndividual)
+    {
+        $this->facturaIndividual = $facturaIndividual;
+
+        return $this;
+    }
+
+    /**
+     * Get facturaIndividual
+     *
+     * @return boolean
+     */
+    public function getFacturaIndividual()
+    {
+        return $this->facturaIndividual;
+    }
+
+    /**
+     * Set titularSanitario
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\EntidadComercial $titularSanitario
+     *
+     * @return EntidadComercial
+     */
+    public function setTitularSanitario(\GestionFaenaBundle\Entity\gestionBD\EntidadComercial $titularSanitario = null)
+    {
+        $this->titularSanitario = $titularSanitario;
+
+        return $this;
+    }
+
+    /**
+     * Get titularSanitario
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\EntidadComercial
+     */
+    public function getTitularSanitario()
+    {
+        return $this->titularSanitario;
     }
 }

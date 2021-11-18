@@ -276,7 +276,7 @@
 {% block javascripts %}
 
 <script type="text/javascript">
-  let route = "{{ path('vtas_generate_formulario_concignacion', { comp : 'ID_COMP'}) }}";
+  let route_finalice = "{{ path('vtas_generate_formulario_concignacion', { comp : 'ID_COMP'}) }}";
 
   $('.resume').click(function ( event ){
                                         event.preventDefault();
@@ -335,7 +335,7 @@
                                                                                 console.log(data);
                                                                                 if (!data.error)
                                                                                 {
-                                                                                   window.open(route.replace('ID_COMP', a.data('comp')), '_blank'); 
+                                                                                   window.open(route_finalice.replace('ID_COMP', a.data('comp')), '_blank'); 
                                                                                   
                                                                                 }
                                                                                 else

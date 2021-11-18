@@ -50,5 +50,76 @@ class PrecioVentaArticulo
         return $this->id;
     }
 
-}
 
+    /**
+     * Set precio
+     *
+     * @param float $precio
+     *
+     * @return PrecioVentaArticulo
+     */
+    public function setPrecio($precio)
+    {
+        $this->precio = $precio;
+
+        return $this;
+    }
+
+    /**
+     * Get precio
+     *
+     * @return float
+     */
+    public function getPrecio()
+    {
+        return $this->precio;
+    }
+
+    /**
+     * Set articulo
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo
+     *
+     * @return PrecioVentaArticulo
+     */
+    public function setArticulo(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo = null)
+    {
+        $this->articulo = $articulo;
+
+        return $this;
+    }
+
+    /**
+     * Get articulo
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\Articulo
+     */
+    public function getArticulo()
+    {
+        return $this->articulo;
+    }
+
+    /**
+     * Set comprobante
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ComprobanteVenta $comprobante
+     *
+     * @return PrecioVentaArticulo
+     */
+    public function setComprobante(\GestionFaenaBundle\Entity\faena\ComprobanteVenta $comprobante = null)
+    {
+        $this->comprobante = $comprobante;
+
+        return $this;
+    }
+
+    /**
+     * Get comprobante
+     *
+     * @return \GestionFaenaBundle\Entity\faena\ComprobanteVenta
+     */
+    public function getComprobante()
+    {
+        return $this->comprobante;
+    }
+}

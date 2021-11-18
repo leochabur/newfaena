@@ -97,4 +97,28 @@ class EntidadExternaConcepto
     {
         return $this->concepto;
     }
+
+    /**
+     * Set proceso
+     *
+     * @param \GestionFaenaBundle\Entity\ProcesoFaena $proceso
+     *
+     * @return EntidadExternaConcepto
+     */
+    public function setProceso(\GestionFaenaBundle\Entity\ProcesoFaena $proceso = null)
+    {
+        $this->proceso = $proceso;
+
+        return $this;
+    }
+
+    /**
+     * Get proceso
+     *
+     * @return \GestionFaenaBundle\Entity\ProcesoFaena
+     */
+    public function getProceso()
+    {
+        return $this->proceso;
+    }
 }

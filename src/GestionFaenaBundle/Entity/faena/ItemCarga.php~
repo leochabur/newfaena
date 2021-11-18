@@ -53,13 +53,13 @@ class ItemCarga
 
     /**
      * @ORM\ManyToOne(targetEntity="ComprobanteVenta", inversedBy="items")
-     * @ORM\JoinColumn(name="id_it_cte", referencedColumnName="id")
+     * @ORM\JoinColumn(name="id_it_cte", referencedColumnName="id", nullable=true)
      */
     private $comprobante;
 
     /**
      * @ORM\ManyToOne(targetEntity="TipoVenta")
-     * @ORM\JoinColumn(name="id_tpo_vta", referencedColumnName="id")
+     * @ORM\JoinColumn(name="id_tpo_vta", referencedColumnName="id", nullable=true)
      */
     private $tipoVenta;
 
@@ -68,6 +68,12 @@ class ItemCarga
     * @ORM\JoinColumn(name="id_it_mv_st", referencedColumnName="id", nullable=true)
     */      
     private $itemMovimientoStock;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="GestionVentasBundle\Entity\RemitoVenta", inversedBy="items")
+     * @ORM\JoinColumn(name="id_rmto_vta", referencedColumnName="id", nullable=true)
+     */
+    private $remito;
 
     /**
      * Get id
@@ -269,5 +275,29 @@ class ItemCarga
     public function getPrecioTotal()
     {
         return $this->precioTotal;
+    }
+
+    /**
+     * Set remito
+     *
+     * @param \GestionVentasBundle\Entity\RemitoVenta $remito
+     *
+     * @return ItemCarga
+     */
+    public function setRemito(\GestionVentasBundle\Entity\RemitoVenta $remito = null)
+    {
+        $this->remito = $remito;
+
+        return $this;
+    }
+
+    /**
+     * Get remito
+     *
+     * @return \GestionVentasBundle\Entity\RemitoVenta
+     */
+    public function getRemito()
+    {
+        return $this->remito;
     }
 }

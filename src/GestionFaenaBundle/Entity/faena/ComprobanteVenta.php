@@ -121,6 +121,11 @@ class ComprobanteVenta extends MovimientoStock
     private $precios;
 
     /**
+     * @ORM\OneToOne(targetEntity="GestionVentasBundle\Entity\RemitoVenta", mappedBy="comprobante")
+     */
+    private $remito;
+
+    /**
      * @ORM\PrePersist
      */
     public function setVisiblePrePersist()
@@ -216,6 +221,23 @@ class ComprobanteVenta extends MovimientoStock
         return $detalle;
     }
 
+    //devuelve los items segun el parametro oficiales/no oficiales
+    public function getDetalleItemsOficial($oficial)
+    {
+        $detalle = [];
+        foreach ($this->items as $it)
+        {
+            $tv = $it->getTipoVenta();
+
+            if ($tv->getOficial() == $oficial)
+            {
+                $detalle[] = $it;
+
+            }
+        }
+        return $detalle;
+    }
+
     private function getDetalleItems($tipo)
     {
         $detalle = 0;
@@ -238,6 +260,25 @@ class ComprobanteVenta extends MovimientoStock
                 }
             }
         }
+        return $detalle;
+    }
+
+    private function getDetalleVentas() //devuelve una coleccion con los articulos vendidos agrupados por cada tipo venta. x Ej....rayado y oficial
+    {
+        $detalle = [];
+        foreach ($this->items as $it)
+        {
+            $tv = $it->getTipoVenta();
+
+            if (!array_key_exists($tv->getId(), $detalle))
+            {
+                $detalle[$tv->getId()] = ['tipo' => $tv, 'items' => []];
+            }
+
+            $detalle[$tv->getId()]['items'][] = $it;
+
+        }
+
         return $detalle;
     }
 
@@ -853,5 +894,29 @@ class ComprobanteVenta extends MovimientoStock
     public function getPrecios()
     {
         return $this->precios;
+    }
+
+    /**
+     * Set remito
+     *
+     * @param \GestionVentasBundle\Entity\RemitoVenta $remito
+     *
+     * @return ComprobanteVenta
+     */
+    public function setRemito(\GestionVentasBundle\Entity\RemitoVenta $remito = null)
+    {
+        $this->remito = $remito;
+
+        return $this;
+    }
+
+    /**
+     * Get remito
+     *
+     * @return \GestionVentasBundle\Entity\RemitoVenta
+     */
+    public function getRemito()
+    {
+        return $this->remito;
     }
 }

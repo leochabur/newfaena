@@ -24,4 +24,9 @@ class Sucursal extends EntidadComercial
         return 5;
     }
 
+    public function getTypeOfVenta()
+    {
+        return get_class($this);
+    }
+
 }

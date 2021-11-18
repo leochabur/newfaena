@@ -1,0 +1,58 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+
+{% block fos_user_content %}
+  <script type="text/javascript" src="{{ asset('resources/js/tables/jquery.tablehover.js') }}"></script>
+<br>
+<hr>
+<span class="h5 card-title">Lista de Precios</span>
+<hr>
+
+{% include '@GestionFaena/messages.html.twig'  %}
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate', 'class' : 'updvta'}}) }}
+          <div class="form-row">
+            <div class="col-lg-3 col-sm-12">
+              {{ form_label(form.codigo) }}
+              {{ form_widget(form.codigo) }}
+            </div>
+            <div class="col-lg-6 col-sm-12">
+              {{ form_label(form.descripcion) }}
+              {{ form_widget(form.descripcion) }}
+            </div>
+          </div>
+          <div class="form-row mt-4">
+            <div class="col-lg-12 col-sm-12">
+              {{ form_widget(form.guardar) }}
+            </div>
+          </div>
+{{ form_end(form) }}
+
+<hr>
+  <table class="table table-bordered table-sm main-table">
+    <thead>
+      <tr>
+          <th>Codigo</th>
+          <th>Descripcion</th>
+          <th class="text-center"><a href="{{ path('vtas_set_precio_articulos_all_lista')}}"><i class="fas fa-sync-alt"></i></a></th>             
+      </tr>
+    </thead>
+    <tbody>
+        {% for n in listas %}
+            <tr>
+                <td>{{ n.codigo }}</td>
+                <td>{{ n.descripcion|upper }}</td>
+                <td class="text-center">
+                      <a href="{{ path('vtas_set_precio_articulos_lista', { id : n.id })}}"><i class="fas fa-pencil-alt"></i></a>
+                      <a href="{{ path('vtas_sicronizar_lista_precio', { id : n.id })}}"><i class="fas fa-redo"></i></a>
+
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+{% endblock fos_user_content %}
+
+{% block javascripts %}
+
+
+{% endblock  %}
