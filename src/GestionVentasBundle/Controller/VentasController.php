@@ -1752,7 +1752,7 @@ class VentasController extends Controller
         $server = 'smtp.office365.com';
         $username = 'sistema@sapucai.com.ar';
         $password = 'Leo181979';  
-        $client = new Client($server, $username, $password);
+        $client = new \jamesiarmes\PhpEws\Client($server, $username, $password);
         $file = new \SplFileObject($file_path);
         $finfo = finfo_open();
         $filename = $file->getBasename();

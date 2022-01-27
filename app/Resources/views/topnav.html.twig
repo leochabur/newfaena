@@ -60,6 +60,12 @@
                           <li><a class="dropdown-item" href="{{ path('bd_add_entity_exportacion') }}">Nueva Entidad Exportacion</a></li>
                     </ul>
                   </li>
+                  <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Opciones de Venta</a>
+                    <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="{{ path('bd_add_empresa_transporte') }}">Nueva Empresa de Transporte</a></li>
+                          <li><a class="dropdown-item" href="{{ path('bd_add_camion_venta') }}">Nuevo Camion Venta</a></li>
+                    </ul>
+                  </li>
                   {% if is_granted('ROLE_ADMIN') %}
                   <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Configurar informes</a>
                     <ul class="dropdown-menu">
