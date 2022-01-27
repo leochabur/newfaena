@@ -1,0 +1,60 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Empresas de Transporte</span>
+<hr>
+{% for message in app.flashes('sussecc') %}
+	<div class="alert alert-success" role="alert">
+	  {{ message }}
+	</div>
+{% endfor %}
+
+    <br>
+    <span class="h5">Nuevo</span>
+    <hr>
+    	{{ form_start(trans, {'attr': {'novalidate': 'novalidate'}}) }}
+        <div class="form-row">
+          <div class="col">
+              {{ form_label(trans.entidad.valor, 'Razon Social') }}
+              {{ form_widget(trans.entidad.valor) }}
+          </div>
+          <div class="col">
+              {{ form_label(trans.cuit, 'CUIT') }}
+              {{ form_widget(trans.cuit) }}
+          </div>
+          <div class="col">
+              {{ form_label(trans.direccion) }}
+              {{ form_widget(trans.direccion) }}
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="col">
+              {{ form_widget(trans.guardar) }}
+          </div>
+        </div>
+    	{{ form_end(trans) }}
+    <br>
+    <span class="h5">Empresas de Transporte Existentes</span>
+    <hr>
+    <table class="table table-striped table-bordered table-hover table-sm ">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Razon Social</th>
+            <th>CUIT</th>
+            <th>Direccion</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for f in empresas %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ f }}</td>  
+              <td>{{ f.cuit }}</td>            
+              <td>{{ f.direccion }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+{% endblock fos_user_content %}

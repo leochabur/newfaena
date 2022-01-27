@@ -18,10 +18,22 @@
             {% for it in precios %}
                 <tr>
                     <td class="font-weight-bold align-middle">{{ it.articulo.nombreVenta }}</td>
+                    <td>
+                        <select class="form-control form-control-sm listap" data-art="{{ it.articulo.id }}">
+                            {% if default %}
+                                <option value="{{ default.id }}">{{ default }}</option>
+                            {% else %}
+                                <option value="0"></option>
+                            {% endif %}
+                            {% for l in listas %}
+                                <option value="{{ l.id }}">{{ l }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
                     <td class="font-weight-bold text-right align-middle">
                         <div class="row">
                             <div class="col-lg-4">
-                                <input type="text" name="{{ it.id }}" class="form-control form-control-sm" value="{{ it.precio }}"/>
+                                <input type="text" name="{{ it.id }}" class="form-control form-control-sm  lista-{{ it.articulo.id }}" value="{{ it.precio }}"/>
                             </div>
                         </div>
                     </td>
@@ -35,6 +47,27 @@
 </form>
 
 <script type="text/javascript">
+$(document).ready(function(){
+    const routeFind = "{{ path('vtas_get_precio_articulo_lista', { lta : 'ID_LISTA', art : 'ID_ART'}) }}";
+
+    $('.listap').change(function() {
+                                    let opt = $(this);                                    
+                                    let rutaFind = routeFind.replace('ID_LISTA', opt.val()).replace('ID_ART', opt.data('art'));
+                                    $.post(rutaFind, 
+                                           function (data){
+                                                            if (data.ok)
+                                                            {
+                                                                let input = $('.lista-' + opt.data('art'));
+                                                                input.val(data.message);
+                                                            }
+                                                            else
+                                                            {
+                                                                alert(data.message);
+                                                            }
+                                           });
+                                    
+                                   
+    });
 
     $('#save_global_price').click(function(){
                                 let form = $('#update');
@@ -65,5 +98,5 @@
                                        });
 
     });
-
+});
 </script>

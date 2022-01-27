@@ -42,6 +42,18 @@ class ListaPrecio
      */
     private $activa = true;
 
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="last_actualiacion", type="datetime", nullable=true)
+     */
+    private $ultimaActualizacion;
+
+    /**
+    * @ORM\ManyToOne(targetEntity="AppBundle\Entity\User") 
+    * @ORM\JoinColumn(name="id_user", referencedColumnName="id")
+    */      
+    private $usuario;
 
     /**
     * @ORM\OneToMany(targetEntity="ItemLista", mappedBy="listaPrecio", cascade={"persist", "remove"})
@@ -199,5 +211,53 @@ class ListaPrecio
             }
         }
         return null;
+    }
+
+    /**
+     * Set ultimaActualizacion
+     *
+     * @param \DateTime $ultimaActualizacion
+     *
+     * @return ListaPrecio
+     */
+    public function setUltimaActualizacion($ultimaActualizacion)
+    {
+        $this->ultimaActualizacion = $ultimaActualizacion;
+
+        return $this;
+    }
+
+    /**
+     * Get ultimaActualizacion
+     *
+     * @return \DateTime
+     */
+    public function getUltimaActualizacion()
+    {
+        return $this->ultimaActualizacion;
+    }
+
+    /**
+     * Set usuario
+     *
+     * @param \AppBundle\Entity\User $usuario
+     *
+     * @return ListaPrecio
+     */
+    public function setUsuario(\AppBundle\Entity\User $usuario = null)
+    {
+        $this->usuario = $usuario;
+
+        return $this;
+    }
+
+    /**
+     * Get usuario
+     *
+     * @return \AppBundle\Entity\User
+     */
+    public function getUsuario()
+    {
+        return $this->usuario;
     }
 }

@@ -53,6 +53,7 @@ use GestionFaenaBundle\Form\gestionBD\RemitoType;
 
 use GestionFaenaBundle\Entity\gestionBD\Destinatario;
 use GestionFaenaBundle\Form\gestionBD\DestinatarioType;
+use \jamesiarmes\PhpEws\Enumeration\BodyTypeType;
 
 use GestionFaenaBundle\Entity\gestionBD\EntidadComercial;
 use GestionFaenaBundle\Form\gestionBD\EntidadComercialType;
@@ -67,18 +68,32 @@ use GestionVentasBundle\Entity\RemitoVenta;
 use GestionVentasBundle\Entity\ItemLista;
 
 use \jamesiarmes\PhpEws\Client;
+use \jamesiarmes\PhpEws\Type\MessageType;
+use \jamesiarmes\PhpEws\Type\EmailAddressType;
+use \jamesiarmes\PhpEws\Type\SingleRecipientType;
+use \jamesiarmes\PhpEws\Type\BodyType;
+use \jamesiarmes\PhpEws\Request\CreateItemType;
+use \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfAllItemsType;
 use \jamesiarmes\PhpEws\Request\SendItemType;
-
+use \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfAttachmentsType;
+use \jamesiarmes\PhpEws\Type\FileAttachmentType;
 use \jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType;
 use \jamesiarmes\PhpEws\Enumeration\ResponseClassType;
 
 use \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseItemIdsType;
+use \jamesiarmes\PhpEws\Enumeration\MessageDispositionType;
+
+use \jamesiarmes\PhpEws\ArrayType\ArrayOfRecipientsType;
 
 use \jamesiarmes\PhpEws\Type\DistinguishedFolderIdType;
 use \jamesiarmes\PhpEws\Type\ItemIdType;
 use \jamesiarmes\PhpEws\Type\TargetFolderIdType;
 
+use \jamesiarmes\PhpEws\Request\CreateAttachmentType;
+
 use Doctrine\Common\Collections\ArrayCollection;
+
+
 
 /**
  * @Route("/ventas")
@@ -736,9 +751,19 @@ class VentasController extends Controller
     {
         try 
         {
+
+
             $em = $this->getDoctrine()->getManager();
 
             $comprobante = $em->find(ComprobanteVenta::class, $comp);
+
+            $listaDefault = $comprobante->getEntidad()->getListaPrecio();
+
+            $lista = $comprobante->getEntidad()->getListaPrecio();
+
+            //throw new \Exception("LISTA   _".$lista->getCodigo());
+
+            $listas = $em->getRepository(ListaPrecio::class)->getAllLista();
 
             $detalle = $comprobante->getAllArticulos();
 
@@ -756,9 +781,20 @@ class VentasController extends Controller
 
             foreach ($detalle as $art)
             {
+                $precio = null;
+                if ($lista)
+                {
+                    
+                    $items = $lista->getItems();
+
+                    //return new  Response($lista->getCodigo());
+                    $item = $lista->existePrecioArticulo($art[1]);
+                    $precio = ($item?$item->getValorKg():null);
+                }
                 $price = new PrecioVentaArticulo();
                 $price->setArticulo($art[1]);
                 $price->setComprobante($comprobante);
+                $price->setPrecio($precio);
                 $comprobante->addPrecio($price);
                 $em->persist($price);
             }
@@ -769,14 +805,35 @@ class VentasController extends Controller
 
             ksort($precios);
 
-            return $this->render('@GestionVentas/ventas/setPriceGlobal.html.twig', ['precios' => $precios, 'comprobante' => $comprobante]);
+            return $this->render('@GestionVentas/ventas/setPriceGlobal.html.twig', ['default' => $listaDefault, 'listas' => $listas, 'precios' => $precios, 'comprobante' => $comprobante]);
         }
         catch (\Exception $e)
         {
-                                return new Response($e->getMessage());
+                                return new Response($e->getMessage()." - LINES 789");
         }
     }
 
+
+    /**
+     * @Route("/priceit/{lta}/{art}", name="vtas_get_precio_articulo_lista")
+    */
+    public function getPriceLista($lta, $art)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $lista = $em->find(ListaPrecio::class, $lta);
+
+        $articulo = $em->find(Articulo::class, $art);
+
+        $item = $lista->existePrecioArticulo($articulo);
+
+        if (!$item)
+        {
+            return new JsonResponse(['ok' => false, 'message' => 'No existe precio del articulo para la lista indicada!']);
+        }
+
+        return new JsonResponse(['ok' => true, 'message' => number_format($item->getValorKg(), 2, '.', '')]);
+    }
 
     /**
      * @Route("/applyprice/{comp}", name="vtas_apply_price_comprobante")
@@ -1046,7 +1103,7 @@ class VentasController extends Controller
     }
 
 
-    public function agregarArticulosAAAAAAAAAComprobanteVentaAction($id)
+  /*  public function agregarArticulosAAAAAAAAAComprobanteVentaAction($id)
     {
     	$em = $this->getDoctrine()->getManager();
     	$comprobante = $em->find(ComprobanteVenta::class, $id);
@@ -1142,7 +1199,7 @@ class VentasController extends Controller
                                                                                       'totales' => $totales,
                                                                                       'form' => $formUpd->createView(),
             																		  'back' => $form->createView()]);
-    }
+    }*/
 
     /**
  	 * @Route("/back", name="vtas_volver_add_items", methods={"POST"})
@@ -1204,6 +1261,29 @@ class VentasController extends Controller
 	    		$persistir = true;
 	    	}
 
+
+            $unitario = null;
+
+
+          /*  $lista = $cmp->getEntidad()->getListaPrecio();
+            $exists = true;
+            if ($lista)
+            {
+                $item = $lista->existePrecioArticulo($art);
+                if ($item)
+                {
+                    $unitario = $item->getValorKg();
+                }
+                else
+                {
+                    $exists = false;
+                }
+            }*/
+
+
+
+
+
 	    	$form = $this->getFormAltaItem($cmp, $art, $tpo, $itemCarga);
 	    	$form->handleRequest($request);
 	    	$data = $form->getData();  	    	
@@ -1219,6 +1299,7 @@ class VentasController extends Controller
 
 	    	if ($persistir)
 	    	{
+
 		    	$itemCarga->setComprobante($cmp);                
 		    	$itemCarga->setArticulo($art);
 		    	$itemCarga->setTipoVenta($tpo);
@@ -1664,6 +1745,181 @@ class VentasController extends Controller
     	catch (\Exception $e){ return new JsonResponse(['error' => true, 'message' => $e->getMessage()]); }
     }
 
+    private function sendEmailAttach($file_path, $recpient_name, $recipient_email, $entidad, $fecha)
+    {
+
+
+        $server = 'smtp.office365.com';
+        $username = 'sistema@sapucai.com.ar';
+        $password = 'Leo181979';  
+        $client = new Client($server, $username, $password);
+        $file = new \SplFileObject($file_path);
+        $finfo = finfo_open();
+        $filename = $file->getBasename();
+
+        // Build the request.
+        $request = new CreateItemType();
+        $request->Items = new NonEmptyArrayOfAllItemsType();
+
+        // Save the message, but do not send it.
+        $request->MessageDisposition = MessageDispositionType::SEND_AND_SAVE_COPY;
+
+        // Create the message.
+        $message = new MessageType();
+        $message->Subject = 'Ventas Correspondientes a '.strtoupper($entidad->getValor()).'  -  Fecha: '.$fecha->format('d/m/Y');
+        $message->ToRecipients = new ArrayOfRecipientsType();
+        $message->Attachments = new NonEmptyArrayOfAttachmentsType();
+
+        // Set the sender.
+        $message->From = new SingleRecipientType();
+        $message->From->Mailbox = new EmailAddressType();
+        $message->From->Mailbox->EmailAddress = $username;
+
+        // Set the recipient.
+        $recipient = new EmailAddressType();
+        $recipient->Name = $recpient_name;
+        $recipient->EmailAddress = $recipient_email;
+        $message->ToRecipients->Mailbox[] = $recipient;
+
+        // Set the message body.
+        $message->Body = new BodyType();
+        $message->Body->BodyType = BodyTypeType::HTML;
+        $message->Body->_ = <<<BODY
+        <html>
+          <head></head>
+          <body>
+            <p>Archivo adjunto con detalle de venta</p>
+          </body>
+        </html>
+        BODY;
+
+        // Build the file attachment.
+        $attachment = new FileAttachmentType();
+        $attachment->IsInline = true;
+        $attachment->Content = $file->openFile()->fread($file->getSize());
+        $attachment->Name = $filename;
+        $attachment->IsInline = true;
+        $attachment->ContentType = finfo_file($finfo, $file_path);
+        $attachment->ContentId = $filename;
+        $message->Attachments->FileAttachment[] = $attachment;
+
+        // Add the message to the request.
+        $request->Items->Message[] = $message;
+
+        $response = $client->CreateItem($request);
+
+    }
+
+    private function sendMail($entidad, $comprobante, $detalle, $titulo, $file_name)
+    {
+        $ews = new Client('', '', '', '');
+        $server = 'smtp.office365.com';
+        $username = 'sistema@sapucai.com.ar';
+        $password = 'Leo181979';  
+        $ews = new Client($server, $username, $password);
+
+        $msg = new MessageType();
+
+        $toAddresses = array();
+        $toAddresses[0] = new EmailAddressType();
+        $toAddresses[0]->EmailAddress = 'leochabur@gmail.com';
+        $toAddresses[0]->Name = 'John Doe';   
+
+        $msg->ToRecipients = $toAddresses;
+
+        $fromAddress = new EmailAddressType();
+        $fromAddress->EmailAddress = 'sistema@sapucai.com.ar';
+        $fromAddress->Name = 'Sistema';
+
+        $msg->From = new SingleRecipientType();
+        $msg->From->Mailbox = $fromAddress;
+
+        $msg->Subject = $titulo . "  -  " . $entidad;
+
+        $msg->Body = new BodyType();
+        $msg->Body->BodyType = 'HTML';
+
+      /*  $table = "<style>
+                    th, td {
+                              padding: 10px;
+                            }
+                    .impar {
+                                               background-color: #ccc;
+                                            }
+                  </style>
+                  <table border='1'>
+                    <thead>
+                        <tr>
+                            <th>Articulo</th>
+                            <th>Cantidad</th>
+                            <th>TOT. Kgs.</th>
+                            <th>$ x Kgs.</th>
+                            <th>Neto</th>
+                            <th>IVA</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>";
+        $cant = $kg = $neto = $ivatot = $total = $i = 0;
+        foreach ($detalle as $it)
+        {
+            $art = $it['art'];
+
+            $montoItem = ($it['unit'] * ($it['cant']*$art->getPresentacionKg()));
+            $iva = $montoItem * ($art->getAlicuotaIVA()/100);
+
+            $class = ($i++%2)?'impar':'par';
+
+            $table.="<tr class='$class'>
+                        <td>".$art->getNombreVenta()."</td>
+                        <td align='right'>".$it['cant']."</td>
+                        <td align='right'>".($it['cant']*$art->getPresentacionKg())."</td>
+                        <td align='right'>"."$".number_format($it['unit'],2,',','.')."</td>
+                        <td align='right'>"."$".number_format($montoItem,2,',','.')."</td>
+                        <td align='right'>"."$".number_format($iva,2,',','.')."</td>
+                        <td align='right'>"."$".number_format(($iva + $montoItem),2,',','.')."</td>
+                    </tr>";
+            $cant+= $it['cant'];
+            $kg+= ($it['cant']*$art->getPresentacionKg());
+            $neto+= $montoItem;
+            $ivatot+= $iva;
+            $total+= ($iva + $montoItem);
+        }
+        $table.="</tbody>
+                </table>";*/
+
+        $msg->Body->_ = 'DETAIL';
+
+        $msgRequest = new CreateItemType();
+        $msgRequest->Items = new NonEmptyArrayOfAllItemsType();
+        $msgRequest->Items->Message = $msg;
+        $msgRequest->MessageDisposition = 'SendAndSaveCopy';
+        $msgRequest->MessageDispositionSpecified = true;
+
+        // Open file handlers.
+        $file = new \SplFileObject($file_name);
+        $finfo = finfo_open();
+
+        // Build the request,
+        $request = new CreateAttachmentType();
+        $request->ParentItemId = new ItemIdType();
+
+        $request->Attachments = new NonEmptyArrayOfAttachmentsType();
+
+        // Build the file attachment.
+        $attachment = new FileAttachmentType();
+        $attachment->Content = $file->openFile()->fread($file->getSize());
+        $attachment->Name = $file->getBasename();
+        $attachment->ContentType = finfo_file($finfo, $file_name);
+        $request->Attachments->FileAttachment[] = $attachment;
+
+        $response = $ews->CreateAttachment($request);
+
+$response_messages = $response->ResponseMessages
+    ->CreateAttachmentResponseMessage;
+        //$response = $ews->CreateItem($msgRequest);
+    } 
+
 
     /**
      * @Route("/formvta/{comp}", name="vtas_generate_formulario_concignacion")
@@ -1671,6 +1927,7 @@ class VentasController extends Controller
     public function generatePDFVentaConsignacion($comp)
     {
         $em = $this->getDoctrine()->getEntityManager();
+
         $comprobante = $em->find(ComprobanteVenta::class, $comp);
 
         $detalle = [0 => [], 1 => [], 2 => []];
@@ -1688,7 +1945,7 @@ class VentasController extends Controller
 
         //imprime todos los comprobantes de venta en concepto de consignacion
         foreach ($detalle[0] as $vtas)
-        {   
+        {
             $detail = $vtas['detalle'];
             if (count($detail))
             {
@@ -1706,6 +1963,8 @@ class VentasController extends Controller
                 $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Consignatario');
 
                 $pdf = $this->getDetail($comprobante, $pdf, $detail);
+
+               // $this->sendMail($vtas['entidad'], $comprobante, $detail, 'VENTAS CONSIGNACION');
             }
         }
 
@@ -1713,20 +1972,25 @@ class VentasController extends Controller
         foreach ($detalle[1] as $vtas)
         {   
             $detail = $vtas['detalle'];
-            ksort($detail);
-  
-            $pdf->AddPage('P', 'A4'); 
-            $pdf->SetFont('Arial','',9);
+            if (count($detail))
+            {
+                ksort($detail);
+      
+                $pdf->AddPage('P', 'A4'); 
+                $pdf->SetFont('Arial','',9);
 
-            $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Oficiales');
+                $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Oficiales');
 
-            $pdf = $this->getDetail($comprobante, $pdf, $detail);
+                $pdf = $this->getDetail($comprobante, $pdf, $detail);
 
-            $pdf->cell(0, 10, "__________________________________________________________________________________________________________", 0,1,'C');
+                $pdf->cell(0, 10, "__________________________________________________________________________________________________________", 0,1,'C');
 
-            $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Oficiales');
+                $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Oficiales');
 
-            $pdf = $this->getDetail($comprobante, $pdf, $detail);
+                $pdf = $this->getDetail($comprobante, $pdf, $detail);
+
+               // $this->sendMail($vtas['entidad'], $comprobante, $detail, 'VENTAS OFICIALES');
+            }
         }
 
         //imprime todos los comprobantes de venta en concepto de ventas rayadas
@@ -1734,23 +1998,42 @@ class VentasController extends Controller
         {   
             $detail = $vtas['detalle'];
             ksort($detail);
-  
-            $pdf->AddPage('P', 'A4'); 
-            $pdf->SetFont('Arial','',9);
+            
+            if (count($detail))
+            {
+                $pdf->AddPage('P', 'A4'); 
+                $pdf->SetFont('Arial','',9);
 
-            $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Rayadas');
+                $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Rayadas');
 
-            $pdf = $this->getDetail($comprobante, $pdf, $detail);
+                $pdf = $this->getDetail($comprobante, $pdf, $detail);
 
-            $pdf->cell(0, 10, "__________________________________________________________________________________________________________", 0,1,'C');
+                $pdf->cell(0, 10, "__________________________________________________________________________________________________________", 0,1,'C');
 
-            $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Rayadas');
+                $pdf = $this->getHeader($vtas['comp'], $vtas['entidad'], $pdf, 'Ventas Rayadas');
 
-            $pdf = $this->getDetail($comprobante, $pdf, $detail);
+                $pdf = $this->getDetail($comprobante, $pdf, $detail);
+
+                
+            }
         }
+
+        $nameFile = str_replace(' ', '_', $comprobante->getEntidad()->getValor()."_".$comprobante->getFecha()->format('d-m-Y').".pdf");
+
+        $ventas = realpath($this->get('kernel')->getRootDir().'/../web/ventas/').DIRECTORY_SEPARATOR;
+
+        $pdf->Output('F', $ventas.$nameFile, true);
+
+        $mail = 'leochabur@gmail.com';
+        $destinatario = 'Leonardo Chabur';
+
+        $this->sendEmailAttach($ventas.$nameFile, $destinatario, $mail, $comprobante->getEntidad(), $comprobante->getFecha());
 
         return new Response($pdf->Output(), 200, array('Content-Type' => 'application/pdf'));  
     }
+
+
+
 
 
     private function getKey(Articulo $art)
@@ -1885,9 +2168,10 @@ class VentasController extends Controller
 
     	try
     	{  
+            
 
-    		if (!$comprobante->getTotalItems())
-    		{
+    		if (!$comprobante->getTotalItems())    		
+            {
     			return new JsonResponse(['error' => true, 'message' => 'El comprobante no tiene cargado ningun articulo!']);
     		}
 
@@ -1933,8 +2217,8 @@ class VentasController extends Controller
         $fecha = null;
         if($du)
         {
-            $fecha = new \DateTime();
-            $fecha->setTimestamp($du);
+          //  $fecha = new \DateTime();
+           // $fecha->setTimestamp($du);
         }
 
 
@@ -1978,6 +2262,56 @@ class VentasController extends Controller
         return $this->render('@GestionVentas/ventas/incorporarVentas.html.twig', ['form' => $form->createView()]); 
     }
 
+
+    /**
+     * @Route("/selcam/{cmp}", name="vtas_seleccionar_camion")
+     */
+    public function getFormSelectCamion($cmp)
+    {
+        $form = $this->getFormularioSelectCamion($cmp);
+        return $this->render('@GestionVentas/ventas/setCamionComprobanteVenta.html.twig', ['form' => $form->createView()]);  
+    }
+
+    private function getFormularioSelectCamion($cmp)
+    {
+        return $this->createFormBuilder()
+                        ->add('camion', 
+                              EntityType::class, [
+                              'class' => 'GestionFaenaBundle:gestionBD\CamionVenta',    
+                              'required' => true,                 
+                              'query_builder' => function (EntityRepository $er) {
+                                                                                    return $er->createQueryBuilder('t')
+                                                                                              ->where('t.activa = :activa')
+                                                                                              ->setParameter('activa', true)
+                                                                                              ->orderBy('t.valor');
+                                                                                 },
+                        ])
+                        ->add('asignar', SubmitType::class)
+                        ->setAction($this->generateUrl('vtas_set_camion_comprobante_venta', ['cmp' => $cmp]))  
+                        ->setMethod('POST')               
+                        ->getForm(); 
+    }
+
+    /**
+     * @Route("/setcamcv/{cmp}", name="vtas_set_camion_comprobante_venta")
+     */
+    public function setCamionComprobanteVenta($cmp, Request $request)
+    {
+
+        $em = $this->getDoctrine()->getManager();
+        $comprobante = $em->find(ComprobanteVenta::class, $cmp);
+
+        $form = $this->getFormularioSelectCamion($cmp);
+        $form->handleRequest($request);
+
+        $data = $form->getData();
+        $comprobante->setCamion($data['camion']);
+        $em->flush();
+        return new JsonResponse(['oka' => 'okoaskdoaskdosakdosadka  '.$data['camion']]);
+    }
+
+
+
     /**
      * @Route("/print/{cmp}", name="vtas_imprimir_comprobante")
      */
@@ -1995,11 +2329,30 @@ class VentasController extends Controller
             return $this->redirectToRoute('vtas_incorporar_ventas_a_faena', ['du' => $comprobante->getFecha()->getTimestamp()]);
         }
 
-        $detail = [];
-        $detail = $this->procesarComprobante($comprobante, $detail);
-        foreach ($comprobante->getAsociados() as $asoc)
+        
+        if (!$comprobante->getCamion())
         {
-            $detail = $this->procesarComprobante($asoc, $detail);
+            $this->addFlash(
+                              'error',
+                              'El comprobante no tiene asignado un transporte!'
+                           );
+            return $this->redirectToRoute('vtas_incorporar_ventas_a_faena', ['du' => $comprobante->getFecha()->getTimestamp()]);
+        }
+
+        $detail = [];
+
+        if ($comprobante->getTotalCantidadComprobante()) //existen cantidades cargadas al comprobante
+        {
+            $detail = $this->procesarComprobante($comprobante, $detail); //Procesa el comprobante principal
+        }
+        
+
+        foreach ($comprobante->getAsociados() as $asoc) //recorre los comprobantes asociados al comprobante principal
+        {
+            if ($asoc->getTotalCantidadComprobante()) //existen cantidades cargadas al comprobante
+            {
+                $detail = $this->procesarComprobante($asoc, $detail);
+            }
         }
 
        $sanitarios = [];
@@ -2036,8 +2389,178 @@ class VentasController extends Controller
                 $pdf = $this->setDetalleRemitoOficial($pdf, $items);
             }
        }
+
+
+       if ($comprobante->getTotalCantidadComprobante()) //Ingresa a
+       {
+            if (!$comprobante->getOrdenCarga()) //quiere decir que aun no se ha procesado el comprobante
+            {
+                $ordenCarga = $em->getRepository(OrdenCarga::class)->findOrdenCargaEntidad($comprobante->getEntidad(), $faenaDiaria, $comprobante);
+                $ingresar = true;
+                if (!$ordenCarga)
+                {
+                    //La orden de carga no existe, debe generar una
+                    $ordenCarga = new OrdenCarga();
+                    $ordenCarga->setFecha($comprobante->getFecha());
+                    //agrega el comprobante de venta a la orden
+                    $ordenCarga->addComprobante($comprobante);
+                    //agrega la entidad como destinatario
+                    $ordenCarga->addEntidade($comprobante->getEntidad());
+                    //de existir agrega el rubro, esto se utiliza cuando varias entidades se agrupan en una misma orden
+                    $ordenCarga->setRubro($comprobante->getEntidad()->getRubro());
+
+                    $ordenCarga->setFaenaDiaria($faenaDiaria);
+                    $comprobante->setConfirmado(true);
+                    $comprobante->setOrdenCarga($ordenCarga);
+                    $comprobante->setUserConfirm($this->getUser());
+                    $em->persist($ordenCarga);
+                }
+                else
+                {
+                    if (!$ordenCarga->existeComprobanteCargado($comprobante))
+                    {
+                        $comprobante->setConfirmado(true);
+                        $comprobante->setUserConfirm($this->getUser());
+                        $ordenCarga->addComprobante($comprobante);
+                        $comprobante->setOrdenCarga($ordenCarga);
+                        $ordenCarga->addEntidade($comprobante->getEntidad());
+                    }
+                    else
+                    {
+                        $ingresar = false;
+                    }
+                }
+                $this->ingresarComprobantes($comprobante, $em, $ingresar);
+            }
+       }
+
+        foreach ($comprobante->getAsociados() as $asoc) //recorre los comprobantes asociados al comprobante principal
+        {
+            if ($asoc->getTotalCantidadComprobante()) //existen cantidades cargadas al comprobante
+            {
+                if (!$asoc->getOrdenCarga())
+                {
+                   /* $ordenCarga = $em->getRepository(OrdenCarga::class)->findOrdenCargaEntidad($comprobante->getEntidad(), $faenaDiaria, $comprobante);
+                    $ingresar = true;
+                    if (!$ordenCarga)
+                    {
+                        //La orden de carga no existe, debe generar una
+                        $ordenCarga = new OrdenCarga();
+                        $ordenCarga->setFecha($comprobante->getFecha());
+                        //agrega el comprobante de venta a la orden
+                        $ordenCarga->addComprobante($comprobante);
+                        //agrega la entidad como destinatario
+                        $ordenCarga->addEntidade($comprobante->getEntidad());
+                        //de existir agrega el rubro, esto se utiliza cuando varias entidades se agrupan en una misma orden
+                        $ordenCarga->setRubro($comprobante->getEntidad()->getRubro());
+
+                        $ordenCarga->setFaenaDiaria($faenaDiaria);
+                        $comprobante->setConfirmado(true);
+                        $em->persist($ordenCarga);
+                    }
+                    else
+                    {*/
+                        if (!$ordenCarga->existeComprobanteCargado($asoc))
+                        {
+                            $asoc->setConfirmado(true);
+                            $asoc->setUserConfirm($this->getUser());
+                            $ordenCarga->addComprobante($asoc);
+                            $ordenCarga->addEntidade($asoc->getEntidad());
+                            $asoc->setOrdenCarga($ordenCarga);
+                            $asoc->setUserConfirm($this->getUser());
+                        }
+                        else
+                        {
+                            $ingresar = false;
+                        }
+                   // }
+
+                    $this->ingresarComprobantes($asoc, $em, $ingresar);
+                }
+            }
+        }
+
        $em->flush();
        return new Response($pdf->Output(), 200, array('Content-Type' => 'application/pdf')); 
+    }
+
+    private function generateSolicitudes($titular, $detalle)
+    {
+                $region = $em->find(Region::class, $rgn);
+                $solicitudes = $em->getRepository(Solicitud::class)->findSolicitudes($grupo, $region);
+                $tr = $grupo->getTropa();
+                $zipName = 'solicitudesFecha'.$grupo->getFecha()->format('dmY').'Region'.$region->getRegion().'.zip';
+                foreach ($solicitudes as $sol)
+                {
+                    $dom = new \DOMDocument('1.0', 'utf-8');
+                    $dom->xmlStandalone = true;
+                    $solicitud = $dom->createElement('se:solicitud');
+                    $solicitud->setAttribute( "xmlns:se", "http://www.senasa.gov.ar/solicitud" );
+                    $solicitud->setAttribute( "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance" );
+                    $solicitud->setAttribute( "xsi:schemaLocation", "http://www.senasa.gov.ar/solicitud solicitudCertCarnicos.xsd");
+                    $version = $dom->createElement( "se:version", $grupo->getVersion());
+                    $solicitud->appendChild($version);
+                    $tpp = $dom->createElement( "se:tropasPorProducto", 'true');
+                    $solicitud->appendChild($tpp);
+                    $paisDestino = $dom->createElement( "se:paisDestino", $grupo->getPaisDestino()->getCodigo());
+                    $solicitud->appendChild($paisDestino);
+                    $establecimiento = $dom->createElement( "se:establecimiento", $grupo->getCodigoEstablecimiento());
+                    $solicitud->appendChild($establecimiento);
+                    $lugarDestino = $dom->createElement( "se:lugarDestino", $sol->getLugarDestino());
+                    $solicitud->appendChild($lugarDestino);
+                    
+                    $detalles = $dom->createElement('se:detalles');
+                    $ok = false;
+                    foreach ($sol->getDetalles() as $deta)
+                    {
+                        if ($deta->getCantidad())
+                        {
+                            $detalle = $dom->createElement('se:detalle');
+                                $producto = $dom->createElement('se:producto');
+                                  $codigo = $dom->createElement('se:codigoProducto', $deta->getArticulo()->getCodigoCapa());
+                                $producto->appendChild($codigo);
+                            $detalle->appendChild($producto);
+                           // $congelado = $tr->getFechaCongelado()->format('Y-m-d');
+                            $tropa = $dom->createElement('se:tropa');
+                            $tropa->setAttribute( "fechaDeCongelado", "" .$tr->getFechaElaboracion()->format('Y-m-d'));
+                            $tropa->setAttribute( "fechaDeElaboracion", "".$tr->getFechaElaboracion()->format('Y-m-d'));
+                            $tropa->setAttribute( "fechaDeFaena", "".$tr->getFechaFaena()->format('Y-m-d') );
+                            $tropa->setAttribute( "fechaDeVencimiento", ''.$tr->getFechaVto()->format('Y-m-d'));
+                            //$tropa->setAttribute( "numeroTropa", ''.$tr->getNumeroTropa() );
+                            $tropa->setAttribute( "numeroTropa", ''.$tr->getLote() );
+                            $tropa->setAttribute( "lote", ''.$tr->getLote());
+                            $detalle->appendChild($tropa);
+                            $detalle->appendChild($dom->createElement('se:pesoNeto', $deta->getPesoNeto()));
+                            $detalle->appendChild($dom->createElement('se:pesoBruto', $deta->getPesoBruto()));
+                            $detalle->appendChild($dom->createElement('se:cantidad', $deta->getCantidad()));
+                            $detalle->appendChild($dom->createElement('se:envasePrimario', $deta->getEnvasePrimario()->getNombre()));
+                            $detalle->appendChild($dom->createElement('se:envaseSecundario', $deta->getEnvaseSecundario()->getNombre()));
+                            $detalle->appendChild($dom->createElement('se:codEnvasePrimarioSENASA', $deta->getEnvasePrimario()->getCodigo()));
+                            $detalle->appendChild($dom->createElement('se:codEnvaseSecundarioSENASA', $deta->getEnvaseSecundario()->getCodigo()));
+                            $detalle->appendChild($dom->createElement('se:marca', $deta->getArticulo()->getMarca()));
+                            $detalles->appendChild($detalle);
+                            $ok = true;
+                        }
+                    }
+                    if ($ok)
+                    {
+                        $generateZip = true;
+                        $solicitud->appendChild($detalles);
+                        $solicitud->appendChild($dom->createElement('se:precintoSENASA', $sol->getPrecintoSenasa()));
+                        $camion = $dom->createElement('se:camion');
+                          $camion->appendChild($dom->createElement('se:tipoDeTransporte', $sol->getCamion()->getTipo()));
+                          $camion->appendChild($dom->createElement('se:patenteCamion', $sol->getCamion()->getPatente()));
+                          $camion->appendChild($dom->createElement('se:habilitacionTransporte', $sol->getCamion()->getSenasa()));
+                        $solicitud->appendChild($camion);
+                        $solicitud->appendChild($dom->createElement('se:temperatura', $sol->getTemperatura()));
+                        $solicitud->appendChild($dom->createElement('se:territorio', 'AR-1'));
+                        $solicitud->appendChild($dom->createElement('se:rolDelEstablecimiento', $grupo->getRoleEstablecimiento()));
+                        $dom->appendChild($solicitud);
+                        $name = $zip."sol_".$sol->getId().".xml";
+                        $dom->save($name);
+                        $files["sol_".$sol->getId().".xml"] = $name;
+                    }
+                }
     }
 
     private function generateRemitoVenta(ComprobanteVenta $comp, EntidadExterna $entidad, $items, $numero, NumeracionRemito $numeracion)
@@ -2156,8 +2679,8 @@ class VentasController extends Controller
         $pdf->SetFont('Arial','',9);
         $pdf->text($x+1, $y+29, 'CODIGO'); 
         $pdf->text($x+15, $y+29, 'DESCRIPCION'); 
-        $pdf->text($x+100, $y+29, 'CANT.'); 
-        $pdf->text($x+115, $y+29, 'KG. x CAJON'); 
+        $pdf->text($x+130, $y+29, 'CANT.'); 
+        $pdf->text($x+150, $y+29, 'KG. x CAJON'); 
         $y+=1;
         $pdf->Line($x, $y+30, $x+191, $y+30);
         $pdf->Ln(20);
@@ -2218,7 +2741,6 @@ class VentasController extends Controller
 
     private function setDetalleRemitoOficial($pdf, $detalle)
     {
-  ;
 
         $x = $pdf->getX();
         $y = 83;
@@ -2231,8 +2753,8 @@ class VentasController extends Controller
 
             $pdf->text($x+1, $y, strtoupper($art->getCodigoInterno()));
             $pdf->text($x+15, $y, strtoupper($art->getNombre()));
-            $pdf->text($x+100, $y, $it->getCantidad());
-            $pdf->text($x+115, $y, number_format($art->getPresentacionKg(),2,',','.'));
+            $pdf->text($x+130, $y, $it->getCantidad());
+            $pdf->text($x+150, $y, number_format($art->getPresentacionKg(),2,',','.'));
             $y+=5;
         }
 
@@ -2240,12 +2762,13 @@ class VentasController extends Controller
     }
 
     
-    private function procesarComprobante(ComprobanteVenta $comp, $detalle)
+    private function procesarComprobante(ComprobanteVenta $comp, $detalle, $ppal = false)
     {
 
         $titular = $comp->getEntidad();
 
         $oficial = $comp->getItemOficial();
+        $comp->setConfirmado(true);
 
         if (!$titular->getOriginal()) /// Indica que es el titular de la cuenta, la orden de carga debe salir a su nombre
         {
@@ -2315,14 +2838,12 @@ class VentasController extends Controller
     }
 
 
-    /**
-   
-     */
-    public function imrpimirComprobanteAction($cmp)
+    //public function imrpimirComprobanteAction($cmp)
+    public function ingresarComprobantes(ComprobanteVenta $comprobante, $em, $ingresar)
     {
-        $em = $this->getDoctrine()->getManager();
+      //  $em = $this->getDoctrine()->getManager();
 
-        $comprobante = $em->find(ComprobanteVenta::class, $cmp);
+        //$comprobante = $em->find(ComprobanteVenta::class, $cmp);
 
         //obtiene la faena diaria de la fecha del comprobante
         $faenaDiaria = $em->getRepository(FaenaDiaria::class)->getFaenaConFecha($comprobante->getFecha());
@@ -2358,26 +2879,24 @@ class VentasController extends Controller
         $conceptoMovimientoVenta = $entidadConcepto->getConcepto();
 
         //Buscar si existe una orden de carga generada para la entidad del comprobante
-        $ordenCarga = $em->getRepository(OrdenCarga::class)->findOrdenCargaEntidad($comprobante->getEntidad(), $faenaDiaria, $comprobante);
-
-     /*   if (!$ordenCarga)
-            return new Response('OK '.$comprobante->getEntidad()->getRubro()->getId());*/
+        //$ordenCarga = $em->getRepository(OrdenCarga::class)->findOrdenCargaEntidad($comprobante->getEntidad(), $faenaDiaria, $comprobante);
+     /*   $ordenCarga = $em->getRepository(OrdenCarga::class)->findOrdenCargaEntidad($comprobanteOC->getEntidad(), $faenaDiaria, $comprobanteOC);
 
         $ingresar = true;
-        if (!$ordenCarga) 
+        if (!$ordenCarga)
         {
             //La orden de carga no existe, debe generar una
             $ordenCarga = new OrdenCarga();
-            $ordenCarga->setFecha($comprobante->getFecha());
+            $ordenCarga->setFecha($comprobanteOC->getFecha());
             //agrega el comprobante de venta a la orden
-            $ordenCarga->addComprobante($comprobante);
+            $ordenCarga->addComprobante($comprobanteOC);
             //agrega la entidad como destinatario
-            $ordenCarga->addEntidade($comprobante->getEntidad());
+            $ordenCarga->addEntidade($comprobanteOC->getEntidad());
             //de existir agrega el rubro, esto se utiliza cuando varias entidades se agrupan en una misma orden
-            $ordenCarga->setRubro($comprobante->getEntidad()->getRubro());
+            $ordenCarga->setRubro($comprobanteOC->getEntidad()->getRubro());
 
             $ordenCarga->setFaenaDiaria($faenaDiaria);
-            $comprobante->setConfirmado(true);
+            $comprobanteOC->setConfirmado(true);
             $em->persist($ordenCarga);
         }
         else
@@ -2393,7 +2912,7 @@ class VentasController extends Controller
             {
                 $ingresar = false; //No debe generar ningun ingreso ya que la orden ya se ha procesado
             }
-        }
+        }*/
 
         $artAtrCon = null;
 
@@ -2457,16 +2976,16 @@ class VentasController extends Controller
                 $em->persist($salida);
             }
         }
-        if ($ingresar)
+      /*  if ($ingresar)
         {
             $comprobante->setOrdenCarga($ordenCarga);
             $comprobante->setArtProcFaena($artAtrCon);
             $comprobante->setFaenaDiaria($faenaDiaria);
             $comprobante->setProcesoFnDay($procesoFaenaDiaria);
-        }
-        $em->flush();
+        }*/
+     //   $em->flush();
 
-        if ($comprobante->getItemOficial())
+     /*   if ($comprobante->getItemOficial())
         {
             $items = $em->getRepository(ItemCarga::class)->itemsAImprimir($comprobante, 1); //recupera todos los items oficiales del comprobante
 
@@ -2488,7 +3007,7 @@ class VentasController extends Controller
                   'Comprobante ingresado exitosamente'
               );
             return $this->redirectToRoute('vtas_incorporar_ventas_a_faena', ['du' => $comprobante->getFecha()->getTimestamp()]);
-        }
+        }*/
     }
 
     private function existeArtAtrCon($articulos, 
@@ -3070,6 +3589,8 @@ class VentasController extends Controller
                     $lista->addItem($item);
                 }
 
+                $lista->setUsuario($this->getUser());
+                $lista->setUltimaActualizacion(new \DateTime());
                 $em->persist($lista);
                 $em->flush();
                 return $this->redirectToRoute('vtas_gestionar_lista_precios');
@@ -3164,6 +3685,7 @@ class VentasController extends Controller
     */
     public function setAllPrecioArticuloLista()
     {
+   //     var_dump($response);     
 
         $em = $this->getDoctrine()->getManager();
 
@@ -3209,6 +3731,9 @@ class VentasController extends Controller
         $item = $em->find(ItemLista::class, $id);
         try
         {
+            $item->getListaPrecio()
+                 ->setUsuario($this->getUser())
+                 ->setUltimaActualizacion(new \DateTime());
             $item->setValorKg($price);
             $em->flush();
             return new JsonResponse(['ok' => true]);

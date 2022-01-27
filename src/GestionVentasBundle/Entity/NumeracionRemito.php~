@@ -53,7 +53,7 @@ class NumeracionRemito
     /**
      * @ORM\Column(name="puntoVenta", type="integer")
      */
-    private $puntoVenta;
+    private $puntoVenta = 19;
 
     /**
      *

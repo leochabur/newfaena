@@ -126,6 +126,13 @@ class ComprobanteVenta extends MovimientoStock
     private $remito;
 
     /**
+     * @ORM\ManyToOne(targetEntity="GestionFaenaBundle\Entity\gestionBD\CamionVenta")
+     * @ORM\JoinColumn(name="id_cm_vta", referencedColumnName="id", nullable=true)
+     */
+    private $camion;
+
+
+    /**
      * @ORM\PrePersist
      */
     public function setVisiblePrePersist()
@@ -133,8 +140,30 @@ class ComprobanteVenta extends MovimientoStock
         $this->generaSanitario = $this->entidad->getGeneraSanitario();
     }
 
+    public function getTotalCantidadComprobante() //devuelve la cantidad de items registrados en un comprobante, usad para saber si el comprobante se debe procesar o no
+    {
+        $count = 0;
+        foreach ($this->items as $it)
+        {
+            $count+= $it->getCantidad();
+        }
+        return $count;
+    }
+
     public function getTotalItems()
     {
+        $count = $this->items->count();
+        foreach ($this->asociados as $asoc)
+        {
+            $count+= $asoc->getItems()->count();
+        }
+        return $count;
+    }
+
+    public function getCostoTotalComprobante() // Determina segun si los comprobantes tienen todos el precio cargado.
+    {
+        $totalCosto = 
+
         $count = $this->items->count();
         foreach ($this->asociados as $asoc)
         {
@@ -918,5 +947,30 @@ class ComprobanteVenta extends MovimientoStock
     public function getRemito()
     {
         return $this->remito;
+    }
+
+
+    /**
+     * Set camion.
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\CamionVenta|null $camion
+     *
+     * @return ComprobanteVenta
+     */
+    public function setCamion(\GestionFaenaBundle\Entity\gestionBD\CamionVenta $camion = null)
+    {
+        $this->camion = $camion;
+
+        return $this;
+    }
+
+    /**
+     * Get camion.
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\CamionVenta|null
+     */
+    public function getCamion()
+    {
+        return $this->camion;
     }
 }

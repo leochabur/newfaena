@@ -126,6 +126,13 @@ class ComprobanteVenta extends MovimientoStock
     private $remito;
 
     /**
+     * @ORM\ManyToOne(targetEntity="GestionFaenaBundle\Entity\gestionBD\CamionVenta")
+     * @ORM\JoinColumn(name="id_cm_vta", referencedColumnName="id", nullable=true)
+     */
+    private $camion;
+
+
+    /**
      * @ORM\PrePersist
      */
     public function setVisiblePrePersist()
@@ -919,4 +926,5 @@ class ComprobanteVenta extends MovimientoStock
     {
         return $this->remito;
     }
+
 }

@@ -90,7 +90,7 @@
             {% for a in articulos %}
 
                     {% if last and last != a.categoriaVenta %}
-                        <th class='grey darken-1 text-white'>Total</th>
+                        <th class='grey darken-1 text-white' rowspan='2'>Total</th>
                     {% endif %}
 
                     <th data-col="{{ col }}" rowspan="2" class="col_{{ col }} text-center {% if loop.index is divisible by(2) %} yellow lighten-3{% else %} deep-orange lighten-2 {% endif %}" style="min-width: 66px;">
@@ -100,12 +100,12 @@
 
                     {% set col = col + 1 %}
             {% endfor %}    
-            <th class='grey darken-1 text-white' style="min-width: 66px;">Total</th>   
+            <th class='grey darken-1 text-white' style="min-width: 66px;" rowspan="2">Total</th>   
             <th class='green accent-3' colspan='2' style="min-width: 66px;">TOTAL GENERAL</th>     
           </tr>
           <tr>
               {% for c in cates %}
-                  <th class="grey darken-1 text-white" style="min-width: 66px;">{{ c }}</th>
+                  <!--th class="grey darken-1 text-white" style="min-width: 66px;">{{ c }}</th-->
               {% endfor %}
               <th class='green accent-3' style="min-width: 66px;">Unidades</th>
               <th class='green accent-3' style="min-width: 66px;">Kilogramos</th>
@@ -273,10 +273,10 @@
 <br>
 <br>
 {% endblock out_container %}
-{% block javascripts %}
+
 
 <script type="text/javascript">
-  let route_finalice = "{{ path('vtas_generate_formulario_concignacion', { comp : 'ID_COMP'}) }}";
+  const route_finalice_ventas_diarias = "{{ path('vtas_generate_formulario_concignacion', { comp : 'ID_COMP'}) }}";
 
   $('.resume').click(function ( event ){
                                         event.preventDefault();
@@ -335,7 +335,7 @@
                                                                                 console.log(data);
                                                                                 if (!data.error)
                                                                                 {
-                                                                                   window.open(route_finalice.replace('ID_COMP', a.data('comp')), '_blank'); 
+                                                                                   window.open(route_finalice_ventas_diarias.replace('ID_COMP', a.data('comp')), '_blank'); 
                                                                                   
                                                                                 }
                                                                                 else
@@ -352,4 +352,3 @@
 
 </script>
 
-{% endblock  %}

@@ -67,19 +67,15 @@
                 <td class="text-right">{{ cmp.itemNoOficial }}</td>
                 <td class="text-center">
 
-
-<a class="dropdown-toggle mr-4" data-toggle="dropdown"
-  aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog fa-2x"></i></a>
-
-<div class="dropdown-menu">
-    <a class="dropdown-item" target="_blank" href="{{  path('vtas_imprimir_comprobante', { cmp : cmp.id }) }}">Imprimir Remito</a>
-    {% if cmp.ordenCarga %}
-      <a class="dropdown-item" target="_blanck" href="{{ path('vtas_imprimir_orden_carga', { oc : cmp.ordenCarga.id }) }}">Imprimir Orden Carga</a>
-    {% endif %}
-    <a class="dropdown-item open" data-number="{{ "%06d" | format(cmp.numero) }}"  href="{{ path('vtas_view_detalle_cmbte', { cmp : cmp.id }) }}">Ver Detalle</a>
-</div>
-
-                  
+                        <a class="dropdown-toggle mr-4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog fa-2x"></i></a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" target="_blank" href="{{  path('vtas_imprimir_comprobante', { cmp : cmp.id }) }}">Imprimir Remito</a>
+                            <a class="dropdown-item transp" target="_blank" href="{{  path('vtas_seleccionar_camion', { cmp : cmp.id }) }}">Asignar Transporte</a>
+                            {% if cmp.ordenCarga %}
+                              <a class="dropdown-item" target="_blanck" href="{{ path('vtas_imprimir_orden_carga', { oc : cmp.ordenCarga.id }) }}">Imprimir Orden Carga</a>
+                            {% endif %}
+                            <a class="dropdown-item open" data-number="{{ "%06d" | format(cmp.numero) }}"  href="{{ path('vtas_view_detalle_cmbte', { cmp : cmp.id }) }}">Ver Detalle</a>
+                        </div>                  
                   </td>     
               </tr>
           {% endfor %}
@@ -131,6 +127,15 @@
 
 <script type="text/javascript">
 
+  $('.transp').click(function(event){
+                                  event.preventDefault();
+                                  var a = $(this);
+                                  $('#exampleModalLabel').html('Remito Nº '+a.data('number'));                                  
+                                  $('.body-transportista').html('<div class="text-center loading"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+                                  $('.body-transportista').load(a.attr('href'));
+                                  $('#asignarTransporte').modal('show');
+  });
+
   $('.open').click(function(event){
                                   event.preventDefault();
                                   var a = $(this);
@@ -141,6 +146,7 @@
   });
   
   $(".main-table").clone(true).appendTo('#table-scroll').addClass('clone');  
+
   $('.deletecmp').click(function(event){
                                         event.preventDefault();
                                         var a = $(this);

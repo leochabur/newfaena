@@ -81,6 +81,13 @@ use GestionFaenaBundle\Entity\gestionBD\Anexo;
 use GestionFaenaBundle\Entity\gestionBD\Reparto;
 use GestionVentasBundle\Entity\options\EntidadExternaConcepto;
 
+
+use GestionFaenaBundle\Entity\gestionBD\EmpresaTransporte;
+use GestionFaenaBundle\Form\gestionBD\EmpresaTransporteType;
+
+use GestionFaenaBundle\Entity\gestionBD\CamionVenta;
+use GestionFaenaBundle\Form\gestionBD\CamionVentaType;
+
 class GestionBDController extends Controller
 {
 
@@ -93,6 +100,103 @@ class GestionBDController extends Controller
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         return $this->render('@GestionFaena/Default/success.html.twig');
     }
+
+
+    /////////////////Alta Camion Transporte Venta
+    /**
+     * @Route("/config/addcmvta", name="bd_add_camion_venta")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function addCamionVenta()
+    {
+        $camion = new CamionVenta();
+        $form = $this->getFormAltaCamionVenta($camion);
+        $camiones = $this->getDoctrine()->getManager()->getRepository(CamionVenta::class)->findAll();
+        return $this->render('@GestionFaena/gestionBD/camionVentaAlta.html.twig', array('camiones' => $camiones, 'trans' => $form->createView()));
+    }
+
+    private function getFormAltaCamionVenta($camion)
+    {
+        return $this->createForm(CamionVentaType::class, 
+                                  $camion, 
+                                  ['action' => $this->generateUrl('bd_add_camion_venta_procesar'),'method' => 'POST']);
+    }
+
+    /**
+     * @Route("/config/addcmvtaprc", name="bd_add_camion_venta_procesar", methods={"POST"})
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function procesarFormularioAltaCamionVenta(Request $request)
+    {
+        $camion = new CamionVenta();
+        $form = $this->getFormAltaCamionVenta($camion);
+        $form->handleRequest($request);
+        $entityManager = $this->getDoctrine()->getManager();
+        if ($form->isValid())
+        {
+            
+            $entityManager->persist($camion);
+            $entityManager->flush();
+            $this->addFlash(
+                        'sussecc',
+                        'Camion almacenado exitosamente!'
+                    );
+            return $this->redirectToRoute('bd_add_camion_venta');
+        }
+        $camiones = $entityManager->getRepository(CamionVenta::class)->findAll();
+        return $this->render('@GestionFaena/gestionBD/camionVentaAlta.html.twig', array('camiones' => $camiones, 'trans' => $form->createView()));
+    }
+    //////////////////Fin Alta Camion Transporte Venta
+
+
+
+    /////////////////Alta Empresa de Transporte
+    /**
+     * @Route("/config/addemptr", name="bd_add_empresa_transporte")
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function addEmpresaTransporte()
+    {
+        $empresa = new EmpresaTransporte();
+        $form = $this->getFormAltaEmpresaTransporte($empresa);
+        $empresas = $this->getDoctrine()->getManager()->getRepository(EmpresaTransporte::class)->findAll();
+        return $this->render('@GestionFaena/gestionBD/empresaTransporteAlta.html.twig', array('empresas' => $empresas, 'trans' => $form->createView()));
+    }
+
+    private function getFormAltaEmpresaTransporte($empresa)
+    {
+        return $this->createForm(EmpresaTransporteType::class, 
+                                  $empresa, 
+                                  ['action' => $this->generateUrl('bd_add_empresa_transporte_procesar'),'method' => 'POST']);
+    }
+
+    /**
+     * @Route("/config/addemptrprc", name="bd_add_empresa_transporte_procesar", methods={"POST"})
+     * @Security("is_granted('IS_AUTHENTICATED_FULLY')")
+     */
+    public function procesarFormularioAltaEmpresaTransporte(Request $request)
+    {
+        $empresa = new EmpresaTransporte();
+        $form = $this->getFormAltaEmpresaTransporte($empresa);
+        $form->handleRequest($request);
+        $entityManager = $this->getDoctrine()->getManager();
+        if ($form->isValid())
+        {
+            
+            $entityManager->persist($empresa);
+            $entityManager->flush();
+            $this->addFlash(
+                        'sussecc',
+                        'Empresa de Transporte almacenada exitosamente!'
+                    );
+            return $this->redirectToRoute('bd_add_empresa_transporte');
+        }
+        $empresas = $entityManager->getRepository(EmpresaTransporte::class)->findAll();
+        return $this->render('@GestionFaena/gestionBD/empresaTransporteAlta.html.twig', array('empresas' => $empresas, 'trans' => $form->createView()));
+    }
+    //////////////////Fin Alta Empresa de Transporte
+
+
 
 
     ////////////////////////ALTA ARTICULO ATRIBUTO CONCEPTO

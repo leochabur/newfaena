@@ -45,6 +45,7 @@ class Transportista extends EntidadExterna
      */
     private $acoplado;
 
+
     public function getInstance()
     {
         return 3;

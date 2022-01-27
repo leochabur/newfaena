@@ -63,6 +63,10 @@ class TipoVenta
         {
             return " (".strtoupper($this->codigo).")";
         }
+        elseif ($this->oficial)
+        {
+            return " (Factura)";
+        }
         return "";
     }
 

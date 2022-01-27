@@ -78,12 +78,27 @@
     </div>
     <div class="form-row">
       <div class="col-3">
+        {{ form_label(form.comercial.listaPrecio, 'Lista de Precios') }}
+        {{ form_widget(form.comercial.listaPrecio, { 'attr' : { 'class' : 'text-uppercase' }}) }}
+        {{ form_errors(form.comercial.listaPrecio) }}
+      </div>
+    </div>
+    <div class="form-row pt-2">
+      <div class="col-3">
         {{ form_label(form.comercial.esConsignatario) }}
         {{ form_widget(form.comercial.esConsignatario) }}
       </div>
       <div class="col-2">
         {{ form_label(form.comercial.generaSanitario) }}
         {{ form_widget(form.comercial.generaSanitario) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.comercial.facturaIndividual) }}
+        {{ form_widget(form.comercial.facturaIndividual) }}
+      </div>
+      <div class="col-2">
+        {{ form_label(form.comercial.bonificado) }}
+        {{ form_widget(form.comercial.bonificado) }}
       </div>
     </div>
     {% if form.comercial.titularSanitario is defined %}
@@ -135,6 +150,9 @@
           {% endfor %}
         </tbody>
     </table>
+    <div>
+      <a href="{{ path('bd_alta_entidad', {id : 7})}}" class="btn btn-success btn-sm"> << Volver </a>
+    </div>
 </div>
 
 

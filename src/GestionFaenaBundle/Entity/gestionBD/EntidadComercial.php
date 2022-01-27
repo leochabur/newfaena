@@ -75,7 +75,11 @@ abstract class EntidadComercial extends EntidadExterna
      */
     private $listaPrecio;
 
-
+    /**
+     * @ORM\Column(name="bonificado", type="boolean", options={"default":false})
+     */
+    private $bonificado = false; //para cuando se debe enviar mercaderias en concepto de errores anteriores
+    
     //Devuelve a que tipo tieneque afectar la venta en lo que seria el parte diario (Remito, Anexo, Consignatario)
     public abstract function getTypeOfVenta();
 
@@ -384,5 +388,29 @@ abstract class EntidadComercial extends EntidadExterna
     public function getListaPrecio()
     {
         return $this->listaPrecio;
+    }
+
+    /**
+     * Set bonificado.
+     *
+     * @param bool $bonificado
+     *
+     * @return EntidadComercial
+     */
+    public function setBonificado($bonificado)
+    {
+        $this->bonificado = $bonificado;
+
+        return $this;
+    }
+
+    /**
+     * Get bonificado.
+     *
+     * @return bool
+     */
+    public function getBonificado()
+    {
+        return $this->bonificado;
     }
 }

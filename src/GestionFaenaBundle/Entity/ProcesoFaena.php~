@@ -216,15 +216,22 @@ abstract class ProcesoFaena
     }
 
     //dado un Articulo devuelve si el mismo se encuentra definido para manejar el stock - Devuelve un objeto FactorCalculo
-    public function existeArticuloDefinidoManejoStock(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    public function existeArticuloDefinidoManejoStock(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo, $idArticulo = null)
     {
-        foreach ($this->manejosStock as $stock) {
-            if ($stock->getArticulo() == $articulo)
+        foreach ($this->manejosStock as $stock) 
+        {
+            $idArt = $stock->getArticulo()->getId();
+            if (($idArticulo) && ($idArt == $idArticulo))
+            {
                 return $stock;
+            }
+            elseif ($idArt == $articulo->getId())
+            {
+                return $stock;
+            }
         }
         return null;
     }
-
 
     //dado un Articulo devuelve si el mismo se encuentra definido para manejar el stock - Devuelve un objeto FactorCalculo
     public function existeArticuloConIdDefinidoManejoStock($idArticulo)
@@ -1085,5 +1092,29 @@ abstract class ProcesoFaena
     public function getUnidadMedidaventa()
     {
         return $this->unidadMedidaventa;
+    }
+
+    /**
+     * Set isTransito
+     *
+     * @param boolean $isTransito
+     *
+     * @return ProcesoFaena
+     */
+    public function setIsTransito($isTransito)
+    {
+        $this->isTransito = $isTransito;
+
+        return $this;
+    }
+
+    /**
+     * Get isTransito
+     *
+     * @return boolean
+     */
+    public function getIsTransito()
+    {
+        return $this->isTransito;
     }
 }

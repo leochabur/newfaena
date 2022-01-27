@@ -32,6 +32,8 @@ class EntidadComercialType extends AbstractType
                 ->add('generaSanitario')
                 ->add('esConsignatario')
                 ->add('facturaIndividual')
+                ->add('bonificado')
+                ->add('listaPrecio')
                 ->add('direccion');
 
         if ($edited)

@@ -124,7 +124,7 @@
     <thead>
       <tr>
           <th class="fixed-side grey lighten-2 border border-primary">Destinatario</th>
-          <th class="grey lighten-2 border border-primary align-center">Generar Sanitario</th>
+          <!--th class="grey lighten-2 border border-primary align-center">Generar Sanitario</th-->
           <th class="grey lighten-2 border border-primary align-center"></th>
           {% for art in articulos %}
 
@@ -148,8 +148,12 @@
                
                 {% for k, t in v.1  %}
                     <tr>
-                      <td class="fixed-side border border-primary align-middle">{{ v.0.entidad }}  {{ t.0.show }}</td>
-                      <td class="border border-primary text-center align-middle">
+                      <td class="fixed-side border border-primary align-middle">{{ v.0.entidad }}  
+                            {% if not v.0.entidad.esConsignatario %}
+                              {{ t.0.show }}
+                            {% endif %}
+                      </td>
+                      <!--td class="border border-primary text-center align-middle">
 
                             {% if t.0.oficial %}
 
@@ -157,7 +161,7 @@
 
                             {% endif %}
 
-                      </td>
+                      </td-->
                       <td class="border border-primary text-center pl-4 pr-4 align-middle">
 
                             <button class="btn btn-primary btn-sm btn-price" data-type="{{ t.0.id }}" data-comp="{{ v.0.id }}" ><i class="fas fa-dollar-sign"></i></button>
@@ -189,7 +193,6 @@
         {% endfor %}
       <tr>
             <td class="fixed-side border border-primary">TOTAL</td>
-            <td class="border border-primary"></td>
             <td class="border border-primary"></td>
             {% for art in articulos %}
                   

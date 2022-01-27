@@ -76,7 +76,7 @@ class GrupoMovimientosAutomatico
 
     public function __toString()
     {
-        return $this->nombre;
+        return $this->nombre."(".$this->orden.")";
     }
 
     /**
@@ -272,5 +272,29 @@ class GrupoMovimientosAutomatico
     public function getPasoProceso()
     {
         return $this->pasoProceso;
+    }
+
+    /**
+     * Set eliminado
+     *
+     * @param boolean $eliminado
+     *
+     * @return GrupoMovimientosAutomatico
+     */
+    public function setEliminado($eliminado)
+    {
+        $this->eliminado = $eliminado;
+
+        return $this;
+    }
+
+    /**
+     * Get eliminado
+     *
+     * @return boolean
+     */
+    public function getEliminado()
+    {
+        return $this->eliminado;
     }
 }

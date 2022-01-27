@@ -44,6 +44,13 @@ class Camion
     /**
      * @var string
      *
+     * @ORM\Column(name="acoplado", type="string", length=255, nullable=true)
+     */
+    private $acoplado;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="senasa", type="string", length=255)
      * @Assert\NotNull(message="El campo no puede permanecer en blanco!")
      */

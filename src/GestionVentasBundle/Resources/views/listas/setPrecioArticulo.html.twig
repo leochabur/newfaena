@@ -13,6 +13,9 @@
 <span class="h5 card-title">
       {% if lista is defined %}
           Codigo: {{ lista.codigo }} - Descripcion: {{ lista.descripcion|upper }}
+          <p>
+               Ultima Actualizacion: {{ lista.ultimaActualizacion|date('d/m/Y - H:i:s') }}
+          </p>
       {% else %}
           Todas las listas
       {% endif %}
@@ -58,7 +61,10 @@
             </tr>
             <tr>
                 {% for l in listas %}
-                  <th>{{ l.codigo }}</th>
+                  <th>
+                      <p>Lista {{ l.codigo }}</p>
+                      {{ l.ultimaActualizacion|date('d/m/Y - H:i:s') }}
+                  </th>
                 {% endfor %}
             </tr>
             </thead>

@@ -46,6 +46,12 @@ class ConceptoVenta
     */      
     private $atributo;
 
+
+    public function __toString()
+    {
+        return $this->concepto."";
+    }
+
     /**
      * Get id
      *
@@ -79,5 +85,76 @@ class ConceptoVenta
     {
         return $this->entidadExterna;
     }
-}
 
+    /**
+     * Set procesoFaena
+     *
+     * @param \GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena
+     *
+     * @return ConceptoVenta
+     */
+    public function setProcesoFaena(\GestionFaenaBundle\Entity\ProcesoFaena $procesoFaena = null)
+    {
+        $this->procesoFaena = $procesoFaena;
+
+        return $this;
+    }
+
+    /**
+     * Get procesoFaena
+     *
+     * @return \GestionFaenaBundle\Entity\ProcesoFaena
+     */
+    public function getProcesoFaena()
+    {
+        return $this->procesoFaena;
+    }
+
+    /**
+     * Set concepto
+     *
+     * @param \GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto
+     *
+     * @return ConceptoVenta
+     */
+    public function setConcepto(\GestionFaenaBundle\Entity\faena\ConceptoMovimiento $concepto = null)
+    {
+        $this->concepto = $concepto;
+
+        return $this;
+    }
+
+    /**
+     * Get concepto
+     *
+     * @return \GestionFaenaBundle\Entity\faena\ConceptoMovimiento
+     */
+    public function getConcepto()
+    {
+        return $this->concepto;
+    }
+
+    /**
+     * Set atributo
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo
+     *
+     * @return ConceptoVenta
+     */
+    public function setAtributo(\GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto $atributo = null)
+    {
+        $this->atributo = $atributo;
+
+        return $this;
+    }
+
+    /**
+     * Get atributo
+     *
+     * @return \GestionFaenaBundle\Entity\gestionBD\AtributoAbstracto
+     */
+    public function getAtributo()
+    {
+        return $this->atributo;
+    }
+}

@@ -1,0 +1,73 @@
+{% extends "FOSUserBundle::layout.html.twig" %}
+{% block fos_user_content %}
+<br>
+<hr>
+<span class="h5 card-title">Camiones de Transporte</span>
+<hr>
+{% for message in app.flashes('sussecc') %}
+	<div class="alert alert-success" role="alert">
+	  {{ message }}
+	</div>
+{% endfor %}
+
+    <br>
+    <span class="h5">Nuevo</span>
+    <hr>
+    	{{ form_start(trans, {'attr': {'novalidate': 'novalidate'}}) }}
+        <div class="form-row">
+          <div class="col-lg-2">
+              {{ form_label(trans.entidad.valor, 'Patente') }}
+              {{ form_widget(trans.entidad.valor) }}
+          </div>
+          <div class="col-lg-2">
+              {{ form_label(trans.acoplado, 'Patente Acoplado') }}
+              {{ form_widget(trans.acoplado) }}
+          </div>
+          <div class="col-lg-1">
+              {{ form_label(trans.cantPrecintos, 'Precintos') }}
+              {{ form_widget(trans.cantPrecintos) }}
+          </div>
+          <div class="col-lg-2">
+              {{ form_label(trans.senasa) }}
+              {{ form_widget(trans.senasa) }}
+          </div>
+          <div class="col">
+              {{ form_label(trans.empresa) }}
+              {{ form_widget(trans.empresa) }}
+          </div>
+
+        </div>
+        <div class="form-row">
+          <div class="col">
+              {{ form_widget(trans.guardar) }}
+          </div>
+        </div>
+    	{{ form_end(trans) }}
+    <br>
+    <span class="h5">Camiones de Transporte Existentes</span>
+    <hr>
+    <table class="table table-striped table-bordered table-hover table-sm ">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Patente</th>
+            <th>Acoplado</th>
+            <th>Precintos</th>
+            <th>SENASA</th>
+            <th>Propietario</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for f in camiones %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ f.valor|upper }}</td>  
+              <td>{{ f.acoplado|upper }}</td>            
+              <td>{{ f.cantPrecintos }}</td>
+              <td>{{ f.senasa|upper }}</td>
+              <td>{{ f.empresa }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+{% endblock fos_user_content %}

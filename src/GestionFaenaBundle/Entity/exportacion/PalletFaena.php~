@@ -85,6 +85,17 @@ class PalletFaena
     private $articulos;
 
 
+    public function getArticulosPallet()
+    {
+        $articulos = "";
+        foreach ($this->articulos as $art)
+        {
+            $articulos.=$art." (".$art->getCodigoInterno().")  ";
+        }
+        return $articulos;
+    }
+    
+
     public function __toString()
     {
         return strtoupper($this->codigo);
@@ -202,6 +213,7 @@ class PalletFaena
     public function __construct()
     {
         $this->valores = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->articulos = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -327,5 +339,39 @@ class PalletFaena
             $this->completo = true;
             $this->fechaFinalizacion = new \DateTime();
         }
+    }
+
+    /**
+     * Add articulo
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo
+     *
+     * @return PalletFaena
+     */
+    public function addArticulo(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        $this->articulos[] = $articulo;
+
+        return $this;
+    }
+
+    /**
+     * Remove articulo
+     *
+     * @param \GestionFaenaBundle\Entity\gestionBD\Articulo $articulo
+     */
+    public function removeArticulo(\GestionFaenaBundle\Entity\gestionBD\Articulo $articulo)
+    {
+        $this->articulos->removeElement($articulo);
+    }
+
+    /**
+     * Get articulos
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getArticulos()
+    {
+        return $this->articulos;
     }
 }

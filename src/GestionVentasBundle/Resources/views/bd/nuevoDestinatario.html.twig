@@ -1,4 +1,5 @@
 {% extends "FOSUserBundle::layout.html.twig" %}
+{% set mutipleselect = true %}
 {% block fos_user_content %}
 <br>
 <hr>
@@ -9,20 +10,50 @@
 <div class="">
 	{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
     <div class="form-row">
-      <div class="col-4">
+      <div class="col-3">
         {{ form_label(form.comercial.entidad.valor, 'Nombre/Razon Social') }}
         {{ form_widget(form.comercial.entidad.valor, { 'attr' : { 'class' : 'text-uppercase' }}) }}
         {{ form_errors(form.comercial.entidad.valor) }}
       </div>
-      <div class="col-4">
+      <div class="col-3">
         {{ form_label(form.comercial.cuit) }}
         {{ form_widget(form.comercial.cuit) }}
         {{ form_errors(form.comercial.cuit) }}
       </div>
-      <div class="col-4">
+      <div class="col-3">
         {{ form_label(form.comercial.direccion) }}
         {{ form_widget(form.comercial.direccion) }}
         {{ form_errors(form.comercial.direccion) }}
+      </div>
+      <div class="col-2">
+        {{ form_label(form.comercial.tiposVenta) }}
+        {{ form_widget(form.comercial.tiposVenta, {'attr' : {'class' : 'multiple-select'}}) }}
+        {{ form_errors(form.comercial.tiposVenta) }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="col-3">
+        {{ form_label(form.comercial.listaPrecio, 'Lista de Precios') }}
+        {{ form_widget(form.comercial.listaPrecio, { 'attr' : { 'class' : 'text-uppercase' }}) }}
+        {{ form_errors(form.comercial.listaPrecio) }}
+      </div>
+    </div>
+    <div class="form-row pt-2">
+      <div class="col-3">
+        {{ form_label(form.comercial.esConsignatario) }}
+        {{ form_widget(form.comercial.esConsignatario) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.comercial.generaSanitario) }}
+        {{ form_widget(form.comercial.generaSanitario) }}
+      </div>
+      <div class="col-3">
+        {{ form_label(form.comercial.facturaIndividual) }}
+        {{ form_widget(form.comercial.facturaIndividual) }}
+      </div>
+      <div class="col-2">
+        {{ form_label(form.comercial.bonificado) }}
+        {{ form_widget(form.comercial.bonificado) }}
       </div>
     </div>
     <div class="form-row">
@@ -67,6 +98,9 @@
 {% block javascripts %}
 
 <script type="text/javascript">
+  $('.multiple-select').multiselect({
+          buttonWidth: '150px'
+      });
 
   $('.btn-delete').click(function(event){
                       event.preventDefault();
