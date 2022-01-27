@@ -5,9 +5,6 @@ namespace DoctrineExtensions\Query\Mysql;
 use Doctrine\ORM\Query\QueryException;
 
 /**
- * Class DateSub
- * @package DoctrineExtensions\Query\Mysql
- *
  * @author Vas N <phpvas@gmail.com>
  */
 class DateSub extends DateAdd
