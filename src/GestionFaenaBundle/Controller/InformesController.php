@@ -89,6 +89,266 @@ class InformesController extends Controller
                             )
                           )
                         );
+
+    /**
+     * @Route("/informes/produccion", name="informes_produccion_faena")
+
+     */
+    public function informeProduccionFaena(Request $request)
+    {
+        //$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY')
+        $form = $this->getFormSelectFaena();
+        if ($request->isMethod('POST'))
+        {
+            $form->handleRequest($request);
+            if ($form->isValid())
+            {
+              $data = $form->getData();
+              $em = $this->getDoctrine()->getManager();
+              $repository = $em->getRepository('GestionFaenaBundle\Entity\faena\ValorNumerico');
+
+              $conceptoIngreso = $em->find(ConceptoMovimiento::class, 1); //Recepcion en Playa
+
+              $atributoPeso = $em->find(AtributoAbstracto::class, 2); //Peso Neto
+              $atributoCantidad = $em->find(AtributoAbstracto::class, 9); //Cantidad 
+
+              $kgTotalAves = $repository->getAcumuladoAtributo($data['faena'], $atributoPeso, $conceptoIngreso);
+              if (!$kgTotalAves)
+              {
+                $kgTotalAves['stock'] = 0;
+              }
+
+              $cantTotalAves = $repository->getAcumuladoAtributo($data['faena'], $atributoCantidad, $conceptoIngreso);
+              if (!$cantTotalAves)
+              {
+                $cantTotalAves['stock'] = 0;
+              }
+
+              
+
+              $conceptoDPM = $em->find(ConceptoMovimiento::class, 5); //Decomiso Post Mortem
+
+              $atributoDAM = $em->find(AtributoAbstracto::class, 12); //DAM (Peso)
+              $cantidadDAM = $em->find(AtributoAbstracto::class, 11); //DAM (Aves)
+
+              $stockDAM = $repository->getAcumuladoAtributo($data['faena'], $atributoDAM, $conceptoIngreso);
+              if (!$stockDAM)
+              {
+                $stockDAM['stock'] = 0;
+              }
+
+              $cantDAM = $repository->getAcumuladoAtributo($data['faena'], $cantidadDAM, $conceptoIngreso);
+              if (!$cantDAM)
+              {
+                $cantDAM['stock'] = 0;
+              }
+              $cantDPM = $repository->getAcumuladoAtributo($data['faena'], $atributoCantidad, $conceptoDPM);
+              if (!$cantDPM)
+              {
+                $cantDPM['stock'] = 0;
+              }
+              $kmDPM['stock'] = (($kgTotalAves['stock']-$stockDAM['stock'])/($cantTotalAves['stock']-$cantDAM['stock'])) * $cantDPM['stock'];
+
+
+              $frescoSA = $em->find(Articulo::class, 119); //Articulo SIN ALAS
+
+              $frescoMI = $em->find(Articulo::class, 117); //Articulo FRESCO MERCADO INTERNO
+              $frescoPP = $em->find(Articulo::class, 118); //Articulo PREMIUM
+
+              $repoMov = $em->getRepository(MovimientoStock::class);
+
+              $procesoFaena = $em->find(ProcesoFaena::class, 2);
+
+            //  throw new \Exception(" ".$data['faena']);
+
+              $utf = $em->find(Articulo::class, 91); //Arti
+
+             // throw new \Exception(" ".$utf);
+
+
+              $transformaciones = $repoMov->getTransformacionConOrigen($procesoFaena, $data['faena'], 91);
+
+              $kgRomaneoCamaraTrozadoFresco = 0;
+
+              foreach ($transformaciones as $tr)
+              {
+                $kgRomaneoCamaraTrozadoFresco+= ($tr['valor'] * $tr['presentacion']);
+              }
+
+               //Articulo Cajon Pollo Congelado
+              $atributoBulto = $em->find(AtributoAbstracto::class, 27); //Bulto
+
+              $procesoEmpaque = $em->find(ProcesoFaena::class, 5);
+
+              $conceptoTransf = $em->find(ConceptoMovimiento::class, 7);
+
+              $produccionFrescos = [];
+
+              $totalesCajones['f'] = ['cantidad' => 0, 'peso' => 0 ];
+              $totalesCajones['c'] = ['cantidad' => 0, 'peso' => 0 ];
+              $totalesCajones['t'] = ['cantidad' => 0, 'peso' => 0 ];
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                            $procesoEmpaque, 
+                                                                                            $frescoMI, 
+                                                                                            $conceptoTransf,
+                                                                                            $atributoBulto,
+                                                                                            TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $frescoMI->getPresentacionKg());
+                $produccionFrescos[0] = ['articulo' => 'FRESCO M.I.', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['f']['cantidad']+= $stock['stock'];
+                $totalesCajones['f']['peso']+= $kg;
+              }
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                            $procesoEmpaque, 
+                                                                                            $frescoPP, 
+                                                                                            $conceptoTransf,
+                                                                                            $atributoBulto,
+                                                                                            TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $frescoPP->getPresentacionKg());
+                $produccionFrescos[1] = ['articulo' => 'PREMIUM', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['f']['cantidad']+= $stock['stock'];
+                $totalesCajones['f']['peso']+= $kg;
+              }
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                            $procesoEmpaque, 
+                                                                                            $frescoSA, 
+                                                                                            $conceptoTransf,
+                                                                                            $atributoBulto,
+                                                                                            TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $frescoSA->getPresentacionKg());
+                $produccionFrescos[2] = ['articulo' => 'FRESCO S/Alas', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['f']['cantidad']+= $stock['stock'];
+                $totalesCajones['f']['peso']+= $kg;
+              }
+
+              $totalesCajones['t']['cantidad']+= $totalesCajones['f']['cantidad'];
+              $totalesCajones['t']['peso']+= $totalesCajones['f']['peso'];
+
+              $produccionCongelados = [];
+
+              $cajonCongeladoMI = $em->find(Articulo::class, 115);
+              $cajonCongeladoCHI = $em->find(Articulo::class, 116);
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                                $procesoEmpaque, 
+                                                                                                $cajonCongeladoMI, 
+                                                                                                $conceptoTransf,
+                                                                                                $atributoBulto,
+                                                                                                TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $cajonCongeladoMI->getPresentacionKg());
+                $produccionCongelados[0] = ['articulo' => 'CONGELADO M.I.', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['c']['cantidad']+= $stock['stock'];
+                $totalesCajones['c']['peso']+= $kg;
+              }
+
+              $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                                $procesoEmpaque, 
+                                                                                                $cajonCongeladoCHI, 
+                                                                                                $conceptoTransf,
+                                                                                                $atributoBulto,
+                                                                                                TransformarStock::class);
+              if ($stock)
+              {
+                $kg = ($stock['stock'] * $cajonCongeladoCHI->getPresentacionKg());
+                $produccionCongelados[1] = ['articulo' => 'CONGELADO CHILE', 'cantidad' => $stock['stock'], 'peso' => $kg];
+                $totalesCajones['c']['cantidad']+= $stock['stock'];
+                $totalesCajones['c']['peso']+= $kg;
+              }
+              $totalesCajones['t']['cantidad']+= $totalesCajones['c']['cantidad'];
+              $totalesCajones['t']['peso']+= $totalesCajones['c']['peso'];
+
+              $artAtrConceptoTrozado = $em->find(ArticuloAtributoConcepto::class, 146); //AAC para indicar la transferencia de Carcazas desde Empaque a Trozado
+
+              $artAtrTrozadoATransito = $em->find(ArticuloAtributoConcepto::class, 179);
+
+              $kgATrozado = $repository->getAcumuladoAtributoWhitAAC($data['faena'], $artAtrConceptoTrozado, $atributoPeso);
+              if (!$kgATrozado)
+              {
+                $kgATrozado['stock'] = 0;
+              }
+              $kgATransito = $repository->getAcumuladoAtributoWhitAAC($data['faena'], $artAtrTrozadoATransito, $atributoPeso);
+              if (!$kgATransito)
+              {
+                $kgATransito['stock'] = 0;
+              }
+
+              $artAtrTrozadoDeTransito = $em->find(ArticuloAtributoConcepto::class, 595);
+
+              $transitoInicial = $repository->getAcumuladoAtributoWhitAAC($data['faena'], $artAtrTrozadoDeTransito, $atributoPeso);
+              if (!$transitoInicial)
+              {
+                $transitoInicial['stock'] = 0;
+              }
+
+              //////////////////////
+
+                $trozadoACongelar = $em->find(Articulo::class, 96);
+
+                $procesoTrozado = $em->find(ProcesoFaena::class, 9);
+
+                $stock = $repository->getAcumuladoAtributoParaTipoMovimientoYArticulo($data['faena'], 
+                                                                                                  $procesoTrozado, 
+                                                                                                  $trozadoACongelar, 
+                                                                                                  $conceptoTransf,
+                                                                                                   $atributoPeso,
+                                                                                                  TransformarStock::class);
+                $trozadoCongelado = $stock;
+                if (!$stock)
+                {
+                  $trozadoCongelado['stock'] = 0;
+                }
+                
+
+              /////////////////////
+              $unidadTrozadoFresco = $em->find(Articulo::class, 91); //Unidad de Trozado Fresco
+              $procesoCamara = $em->find(ProcesoFaena::class, 2);
+
+              $romaneoTrozado = $repository->getArticulosTransformados($data['faena'], $unidadTrozadoFresco, $procesoCamara, SalidaStock::class);
+
+              $totalRomaneo = 0;
+
+              foreach ($romaneoTrozado as $r)
+              {
+                $kg = $r[0]->getMovimiento()->getArtProcFaena()->getArticulo()->getPresentacionKg();
+                $totalRomaneo+= ($r['stock'] * $kg*-1);
+              }
+
+             // $transitoInicial['stock'] = 0;
+            //  return $this->render('@GestionFaena/informes/informeRendimiento.html.twig', ['form' => $form->createView(), 'stock' => $stock]);
+              return $this->render('@GestionFaena/informes/informeProduccion.html.twig', 
+                                   ['dam' => $stockDAM, 
+                                    'cantDAM' => $cantDAM,
+                                    'total' => $kgTotalAves, 
+                                    'cantidad' => $cantTotalAves,
+                                    'cantDPM' => $cantDPM,
+                                    'faena' => $data['faena'],
+                                    'prodCamaraFresco' => $kgRomaneoCamaraTrozadoFresco,
+                                    'kmDPM' => $kmDPM,
+                                    'kgAtrozar' => $kgATrozado,
+                                    'transitoInicial' => $transitoInicial,
+                                    'kgAtransito' => $kgATransito,
+                                    'trozadoCamara' => $totalRomaneo,   
+                                    'trozadoCongelado' => $trozadoCongelado,                                
+                                    'cajones' => ['f' => $produccionFrescos, 'c' => $produccionCongelados, 't' => $totalesCajones], 
+                                    'form' => $form->createView()]);
+            }
+
+        }
+        return $this->render('@GestionFaena/informes/informeProduccion.html.twig', ['form' => $form->createView()]);
+    }
+
+
     /**
      * @Route("/informes/perform", name="informes_rendimientos_faena")
 

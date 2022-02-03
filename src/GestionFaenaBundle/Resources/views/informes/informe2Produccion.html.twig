@@ -1,0 +1,89 @@
+		  	{% set promedio, totalkg, totalaves = total.stock/cantidad.stock, total.stock, cantidad.stock %}
+		  	<div class="row mt-4 text-success">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> INGRESO AVES VIVAS: </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="t">{{ total.stock|number_format(0,'','.')  }}</span> KG </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="">{{ cantidad.stock|number_format(0,'','.')  }}</span> AVES</span>
+			    </div>		
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="">{{ (total.stock/cantidad.stock)|number_format(3,',','.')  }}</span> Kg/Ave</span>
+			    </div>				
+			</div>
+		  	<div class="row mt-2">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> DECOMISO ANTE MORTEM: </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ dam.stock|number_format(0,'','.')  }}</span> KG </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ cantDAM.stock|number_format(0,'','.')  }}</span> AVES</span>
+			    </div>	
+			    {% set totalkg, totalaves = totalkg - dam.stock, totalaves - cantDAM.stock %}			
+			</div>
+		  	<div class="row mt-2">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> TOTAL </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ totalkg|number_format(0,'','.')  }}</span> KG </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ totalaves|number_format(0,'','.')  }}</span> AVES</span>
+			    </div>					
+			</div>
+		  	<div class="row mt-2 text-primary font-weight-bold">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> MERMA FAENA </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="">{{ ((1-(totalkg/total.stock))*100)|number_format(2,',','.')  }}</span> %</span>
+			    </div>	
+			</div>
+			<hr>
+		  	<div class="row mt-4">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> DECOMISO POST MORTEM: </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ (cantDPM.stock*promedio)|number_format(0,'','.')  }}</span> KG </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ cantDPM.stock|number_format(0,'','.')  }}</span> AVES</span>
+			    </div>	
+			    {% set totalkg, totalaves = totalkg - (cantDPM.stock*promedio), totalaves - cantDPM.stock %}			
+			</div>
+		  	<div class="row mt-2 text-danger">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> TOTAL DECOMISO: </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="">{{ (dam.stock+(cantDPM.stock*promedio))|number_format(0,'','.')  }}</span> KG </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="">{{ (cantDAM.stock+cantDPM.stock)|number_format(0,'','.')  }}</span> AVES</span>
+			    </div>				
+			</div>
+		  	<div class="row mt-2">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> TOTAL </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ totalkg|number_format(0,'','.')  }}</span> KG </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="text-muted">{{ totalaves|number_format(0,'','.')  }}</span> AVES</span>
+			    </div>					
+			</div>
+		  	<div class="row mt-2 text-primary font-weight-bold">
+		  		<div class="col-lg-4">
+			    	<span class="card-title"> MERMA GENERAL </span>
+			    </div>
+			    <div class="col-lg-2 text-right">
+			    	<span class="ml-5"><span class="">{{ ((1-(totalkg/total.stock))*100)|number_format(2,',','.')  }}</span> %</span>
+			    </div>	
+			</div>

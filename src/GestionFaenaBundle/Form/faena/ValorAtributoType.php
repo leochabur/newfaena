@@ -14,6 +14,7 @@ use GestionFaenaBundle\Entity\faena\ValorTexto;
 use GestionFaenaBundle\Entity\faena\ValorExterno;
 use GestionFaenaBundle\Entity\gestionBD\Atributo;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Doctrine\ORM\EntityRepository;
 
 class ValorAtributoType extends AbstractType
 {
@@ -102,7 +103,16 @@ class ValorAtributoType extends AbstractType
         }
         elseif(ValorExterno::class == get_class($valor))
         {
-            $form->add('entidadExterna', EntityType::class, ['attr' => ['class' => 'col-4'], 'class' => $valor->getAtributo()->getClaseExterna()]);
+            $form->add('entidadExterna', 
+                      EntityType::class, 
+                      [
+                        'attr' => ['class' => 'col-4'], 
+                        'class' => $valor->getAtributo()->getClaseExterna(),
+                        'query_builder' => function(EntityRepository $er) {
+                                                                                return $er->createQueryBuilder('u')
+                                                                                    ->orderBy('u.valor', 'ASC');
+                                                                            }
+                      ]);
         }
         
     }
